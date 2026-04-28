@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界观创造软件 - 概念演示</title>
+    <!-- 引入 Leaflet 地图库的CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        /* 页面整体样式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        /* 主容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 头部样式 */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* 地图容器样式 */
+        #map {
+            height: 500px;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        /* 控制面板样式 */
+        .controls {
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        /* 时间轴容器样式 */
+        .timeline-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        /* 时间轴滑块样式 */
+        #timeline {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        /* 当前年份显示样式 */
+        #current-year {
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* 图例样式 */
+        .legend {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>世界观创造软件 - 概念演示</h1>
+            <p>基于地图的时空可视化系统</p>
+        </header>
+
+        <!-- 地图容器 -->
+        <div id="map"></div>
+
+        <div class="controls">
+            <div class="timeline-container">
+                <span>时间:</span>
+                <input type="range" id="timeline" min="1900" max="1950" value="1900">
+                <span id="current-year">1900</span>
+            </div>
+
+            <div class="legend">
+                <strong>演示说明:</strong> 拖动时间轴查看人物在不同年份的位置变化
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Leaflet 地图库的JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- 我们的JavaScript代码 -->
+<script>
+    // 等待页面完全加载后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('页面DOM加载完成');
+        
+        // 示例数据：不同年份的人物位置（更密集的路径点用于平滑移动）
+        const characterData = {
+            '张三': [
+                { year: 1900, lat: 39.9042, lng: 116.4074, location: '北京' },
+                { year: 1905, lat: 37.7749, lng: 120.3826, location: '天津附近' },
+                { year: 1910, lat: 31.2304, lng: 121.4737, location: '上海' },
+                { year: 1915, lat: 29.5630, lng: 121.0278, location: '宁波附近' },
+                { year: 1920, lat: 23.1291, lng: 113.2644, location: '广州' },
+                { year: 1925, lat: 22.3964, lng: 114.1095, location: '深圳附近' },
+                { year: 1930, lat: 34.3416, lng: 108.9398, location: '西安' },
+                { year: 1935, lat: 33.3886, lng: 109.8512, location: '洛阳附近' },
+                { year: 1940, lat: 31.8205, lng: 117.2274, location: '合肥' },
+                { year: 1945, lat: 32.0603, lng: 118.7969, location: '南京附近' },
+                { year: 1950, lat: 29.5630, lng: 106.5516, location: '重庆' }
+            ],
+            '李四': [
+                { year: 1900, lat: 23.1291, lng: 113.2644, location: '广州' },
+                { year: 1905, lat: 21.0220, lng: 110.3499, location: '湛江附近' },
+                { year: 1910, lat: 22.3964, lng: 114.1095, location: '香港' },
+                { year: 1915, lat: 23.4720, lng: 116.6784, location: '汕头附近' },
+                { year: 1920, lat: 24.1471, lng: 120.6736, location: '台湾' },
+                { year: 1925, lat: 25.0320, lng: 121.5654, location: '台北附近' },
+                { year: 1930, lat: 31.2304, lng: 121.4737, location: '上海' },
+                { year: 1935, lat: 30.2741, lng: 120.1551, location: '杭州附近' },
+                { year: 1940, lat: 39.9042, lng: 116.4074, location: '北京' },
+                { year: 1945, lat: 40.0725, lng: 116.5972, location: '昌平附近' },
+                { year: 1950, lat: 30.2741, lng: 120.1551, location: '杭州' }
+            ]
+        };
+
+        // 初始化地图
+        var map = L.map('map').setView([35.8617, 104.1954], 5); // 中国中心
+        
+        // 添加地图瓦片层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // 存储当前显示的标记和轨迹线
+        let currentMarkers = {};
+        let currentPolylines = {};
+        
+        // 时间轴相关元素
+        const timelineSlider = document.getElementById('timeline');
+        const currentYearDisplay = document.getElementById('current-year');
+        
+        // 人物图标样式
+        const iconStyles = {
+            '张三': L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }),
+            '李四': L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        };
+        
+        // 获取指定年份的人物位置（支持插值）
+        function getPositionAtYear(character, year) {
+            const positions = characterData[character];
+            if (!positions || positions.length === 0) return null;
+            
+            // 如果正好匹配某个年份
+            const exactPosition = positions.find(p => p.year === year);
+            if (exactPosition) return exactPosition;
+            
+            // 找到相邻的两个时间点进行插值
+            const beforePositions = positions.filter(p => p.year <= year).sort((a, b) => b.year - a.year);
+            const afterPositions = positions.filter(p => p.year >= year).sort((a, b) => a.year - b.year);
+            
+            if (beforePositions.length === 0 || afterPositions.length === 0) {
+                return positions[0]; // 返回第一个位置作为默认
+            }
+            
+            const before = beforePositions[0];
+            const after = afterPositions[0];
+            
+            if (before.year === after.year) return before;
+            
+            // 线性插值计算中间位置
+            const ratio = (year - before.year) / (after.year - before.year);
+            const lat = before.lat + (after.lat - before.lat) * ratio;
+            const lng = before.lng + (after.lng - before.lng) * ratio;
+            
+            return {
+                year: year,
+                lat: lat,
+                lng: lng,
+                location: `${before.location} → ${after.location}`
+            };
+        }
+        
+        // 平滑移动函数
+        function moveMarkerSmoothly(marker, newPosition, duration = 300) {
+            const startPos = marker.getLatLng();
+            const endPos = L.latLng(newPosition.lat, newPosition.lng);
+            
+            // 计算总距离和步数
+            const steps = Math.max(10, Math.floor(duration / 16)); // 约60fps
+            let currentStep = 0;
+            
+            function animate() {
+                currentStep++;
+                const progress = currentStep / steps;
+                
+                if (progress >= 1) {
+                    marker.setLatLng(endPos);
+                    return;
+                }
+                
+                // 线性插值
+                const lat = startPos.lat + (endPos.lat - startPos.lat) * progress;
+                const lng = startPos.lng + (endPos.lng - startPos.lng) * progress;
+                
+                marker.setLatLng([lat, lng]);
+                
+                if (currentStep < steps) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            
+            animate();
+        }
+        
+        // 更新地图显示的函数
+        function updateMap(year) {
+            // 为每个角色更新位置
+            for (const [characterName, locations] of Object.entries(characterData)) {
+                const position = getPositionAtYear(characterName, year);
+                if (position) {
+                    if (currentMarkers[characterName]) {
+                        // 如果标记已存在，平滑移动到新位置
+                        moveMarkerSmoothly(currentMarkers[characterName], position, 150);
+                        
+                        // 更新弹窗内容
+                        currentMarkers[characterName].unbindPopup().bindPopup(`${characterName}<br>${position.location} (${year.toFixed(1)}年)`);
+                    } else {
+                        // 创建新标记
+                        const marker = L.marker([position.lat, position.lng], {
+                            icon: iconStyles[characterName]
+                        }).addTo(map)
+                        .bindPopup(`${characterName}<br>${position.location} (${year.toFixed(1)}年)`);
+                        
+                        currentMarkers[characterName] = marker;
+                    }
+                    
+                    // 更新轨迹线
+                    if (currentPolylines[characterName]) {
+                        map.removeLayer(currentPolylines[characterName]);
+                    }
+                    
+                    const historicalPositions = locations.filter(loc => loc.year <= year);
+                    if (historicalPositions.length > 1) {
+                        const coordinates = historicalPositions.map(pos => [pos.lat, pos.lng]);
+                        const polyline = L.polyline(coordinates, {
+                            color: characterName === '张三' ? 'red' : 'blue',
+                            weight: 3,
+                            opacity: 0.7
+                        }).addTo(map);
+                        
+                        currentPolylines[characterName] = polyline;
+                    }
+                } else {
+                    // 如果角色在该年份没有数据，移除标记
+                    if (currentMarkers[characterName]) {
+                        map.removeLayer(currentMarkers[characterName]);
+                        delete currentMarkers[characterName];
+                    }
+                }
+            }
+            
+            console.log(`已更新到${year.toFixed(1)}年的数据`);
+        }
+        
+        // 鼠标按下状态跟踪（用于优化性能）
+        let isDragging = false;
+        
+        // 监听时间轴变化 - 使用mousedown/up来区分拖拽和平滑移动
+        timelineSlider.addEventListener('input', function() {
+            const currentYear = parseFloat(this.value);
+            currentYearDisplay.textContent = currentYear.toFixed(1);
+            
+            // 只有在拖拽时才实时更新，避免性能问题
+            if (isDragging) {
+                updateMap(currentYear);
+            }
+        });
+        
+        // 鼠标按下事件
+        timelineSlider.addEventListener('mousedown', function() {
+            isDragging = true;
+        });
+        
+        // 鼠标释放事件
+        timelineSlider.addEventListener('mouseup', function() {
+            isDragging = false;
+            const currentYear = parseFloat(this.value);
+            updateMap(currentYear);
+        });
+        
+        // 鼠标离开滑块区域
+        timelineSlider.addEventListener('mouseleave', function() {
+            if (isDragging) {
+                isDragging = false;
+                const currentYear = parseFloat(this.value);
+                updateMap(currentYear);
+            }
+        });
+        
+        // 初始化显示1900年的数据
+        updateMap(1900);
+        
+        console.log('地图和时间轴交互初始化完成（支持平滑移动）');
+    });
+</script>
+</body>
+
+</html>
