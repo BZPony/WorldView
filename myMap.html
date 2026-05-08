@@ -7,122 +7,10 @@
     <title>基于地图的时空可视化系统</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
     <link rel="stylesheet" href="css/base.css" />
-
     <link rel="stylesheet" href="css/sidebar.css" />
-
-    <style>
-        /* =====================================================
-        5. 时间轴系统
-        ===================================================== */
-
-        .timeline-container {
-            position: fixed;
-            bottom: 10px;
-
-            left: calc(50% + (var(--left-total) - var(--right-total)) / 2);
-            transform: translateX(-50%);
-
-            width: calc((100vw - var(--left-total) - var(--right-total)) * 0.8);
-            height: 50px;
-
-            overflow: hidden;
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 20px;
-
-            z-index: 1000;
-            transition: all var(--animation-duration) ease;
-        }
-
-        .timeline-track {
-            position: absolute;
-            height: 100%;
-            width: 5000px;
-
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-
-            cursor: grab;
-        }
-
-        .tick {
-            width: 100px;
-            height: 100%;
-
-            border-left: 1px solid #555;
-            box-sizing: border-box;
-            flex: 0 0 100px;
-            color: white;
-            font-size: 12px;
-
-            display: flex;
-            align-items: flex-end;
-            padding-bottom: 5px;
-        }
-
-        .timeline-cursor {
-            position: absolute;
-            left: 50%;
-            top: 0;
-
-            width: 2px;
-            height: 100%;
-
-            background: red;
-            transform: translateX(-50%);
-        }
-
-        /* =====================================================
-        6. 右键菜单
-        ===================================================== */
-        .context-menu {
-            position: fixed;
-            background: rgba(20, 20, 20, 0.8);
-            color: white;
-            border-radius: 10px;
-            padding: 5px 5px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            z-index: 3000;
-        }
-
-        /* 隐藏 */
-        .context-menu.hidden {
-            display: none;
-        }
-
-        /* 菜单项 */
-        .menu-item {
-            border-radius: 10px;
-            padding: 4px 14px;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: sans-serif;
-
-        }
-
-        .menu-item:hover {
-            background: #505050d3;
-        }
-
-        /* =====================================================
-        6. 地图标记样式
-        ===================================================== */
-        .person-marker-background {
-            width: 24px;
-            height: 24px;
-
-            background-size: cover;
-            border-radius: 50%;
-
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-        }
-    </style>
+    <link rel="stylesheet" href="css/timeline.css" />
+    <link rel="stylesheet" href="css/context-menu.css" />
 </head>
 
 <body>
@@ -173,7 +61,7 @@
                 </div>
 
                 <div class="sidebar-content-subpanel" id="person-list">
-
+                    
                 </div>
 
                 <div class="sidebar-content-panel-btn" data-name="organizations">
@@ -192,7 +80,7 @@
 
                 <div class="sidebar-content-panel-btn" data-name="countries">
                     <span class="icon" data-name="country"></span>
-                    国家
+                    政权
                     <span class="icon" data-name="rightArrow"></span>
                 </div>
 
@@ -230,409 +118,53 @@
     <!-- =====================================================
         4. 右键菜单
     ===================================================== -->
-    <div id="context-menu" class="context-menu hidden">
-        <div class="menu-item">创建人物</div>
-        <div class="menu-item">创建途径点</div>
+    <div id="context-menu" class="context-menu is-hidden">
+        <div class="context-menu-item" data-action="createPerson">创建人物</div>
+        <div class="context-menu-item" data-action="createWaypoint">创建途径点</div>
     </div>
 
     <!-- =====================================================
         5. JS依赖
     ===================================================== -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <script src="js/icons/svg-icons.js"></script>
-
     <script src="js/data/persons.js"></script>
 
-    <script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="js/core/eventBus.js"></script>
+    <script src="js/core/state.js"></script>
+    <script src="js/components/contextMenu.js"></script>
+    <script src="js/components/timeline.js"></script>
+    <script src="js/components/sidebar.js"></script>
+    <script src="js/components/layout.js"></script>
+    <script src="js/components/map.js"></script>
 
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             initIcons();
         });
-        /* =====================================================
-        1. 地图初始化
-        ===================================================== */
-        var map = L.map('map', {
-            center: [35.8617, 104.1954],
-            zoom: 6,
-            zoomControl: false
+
+        // 1. 设置初始数据（persons 已在 data/persons.js 全局声明，暂存到 AppState）
+        AppState.set('persons', persons);
+        AppState.set('currentTime', 0);
+
+        // 2. 按依赖顺序初始化模块
+        MapView.init('map');                // 地图必须先创建（Leaflet 实例）
+        ContextMenu.init(MapView.map);      // 传入地图实例
+        Timeline.init({
+            startYear: -1000,
+            endYear: 1000,
+            tickStep: 50,
+            tickWidth: 100,
+            containerId: 'timeline-container',
+            trackId: 'timeline-track'
         });
-
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        L.control.zoom({ position: 'topright' }).addTo(map);
-
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 100);
-
-        //右键菜单
-        const contextMenu = document.getElementById("context-menu");
-        map.on("contextmenu", function (e) {
-
-            //阻止浏览器默认右键菜单
-            e.originalEvent.preventDefault();
-
-            const x = e.originalEvent.clientX;
-            const y = e.originalEvent.clientY;
-
-            showContextMenu(x, y);
-        });
-
-        function showContextMenu(x, y) {
-
-            contextMenu.classList.remove("hidden");
-
-            //防止超出屏幕
-            const menuWidth = contextMenu.offsetWidth;
-            const menuHeight = contextMenu.offsetHeight;
-
-            const screenW = window.innerWidth;
-            const screenH = window.innerHeight;
-
-            if (x + menuWidth > screenW) {
-                x = screenW - menuWidth - 5;
-            }
-
-            if (y + menuHeight > screenH) {
-                y = screenH - menuHeight - 5;
-            }
-
-            contextMenu.style.left = x + "px";
-            contextMenu.style.top = y + "px";
-        }
-
-        //点击其他地方隐藏菜单
-        document.addEventListener("mousedown", (e) => {
-            if (e.button === 0 && !contextMenu.contains(e.target)) {
-                contextMenu.classList.add("hidden");
-            }
-        });
-        /*
-        =====================================================
-        2. 自动布局系统
-        ===================================================== */
-        const panels = {
-            sidebar: {
-                side: "left",
-                width: 220,
-                isOpen: true
-            }
-        };
-
-        function computeLayout() {
-            let left = 0;
-            let right = 0;
-
-            if (!document.body.classList.contains("sidebar--closed")) {
-                left += panels.sidebar.width;
-            }
-
-            console.log("layout计算:", left);
-
-            document.documentElement.style.setProperty("--left-total", left + "px");
-            document.documentElement.style.setProperty("--right-total", right + "px");
-        }
-
-        computeLayout();
-
-
-        /* =====================================================
-        3. 左侧面板控制
-        ===================================================== */
-        const btnClose = document.getElementById('sidebar-btn-close');
-        const btnOpen = document.getElementById('sidebar-btn-open');
-
-        btnClose.onclick = function () {
-            document.body.classList.add('sidebar--closed');
-            computeLayout();
-
-            setTimeout(() => {
-                renderTimeline();
-            }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
-        };
-
-        btnOpen.onclick = function () {
-            document.body.classList.remove('sidebar--closed');
-            computeLayout();
-
-            setTimeout(() => {
-                renderTimeline();
-            }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
-        };
-
-        /* =====================================================
-        4. 左侧面板 Tabs 切换
-        ===================================================== */
-
-        const tabButtons = document.querySelectorAll(".sidebar-tabs-btn");
-        const panelsDOM = document.querySelectorAll(".sidebar-content-panel");
-        const panelButtons = document.querySelectorAll(".sidebar-content-panel-btn");
-
-        tabButtons.forEach(btn => {
-            btn.onclick = () => {
-
-                const target = btn.dataset.name;
-
-                // 按钮状态
-                tabButtons.forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-
-                // 面板切换
-                panelsDOM.forEach(panel => {
-                    panel.classList.remove("active");
-                });
-
-                document.querySelector(".sidebar-content-panel--" + target)
-                    .classList.add("active");
-            };
-        });
-
-        panelButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                btn.classList.toggle("active");
-            });
-        });
-
-        function renderTabPanel() {
-
-            const container = document.getElementById("person-list");
-
-            // 清空旧内容
-            container.innerHTML = "";
-
-            persons.forEach(person => {
-
-                const item = document.createElement("div");
-                item.className = "sidebar-content-subitem";
-                item.innerText = person.name;
-
-                container.appendChild(item);
-            });
-        }
-
-        /* =====================================================
-        5. 时间轴初始化
-        ===================================================== */
-        const track = document.getElementById('timeline-track');
-        const container = document.getElementById('timeline-container');
-
-        const startYear = -1000;
-        const endYear = 1000;
-
-        //每50年一个刻度，每个刻度100px宽，总共40个刻度，轨道宽度4000px
-        const tickStep = 50;
-        const tickWidth = 100;
-
-        const totalTicks = (endYear - startYear) / tickStep;
-        const TRACK_WIDTH = totalTicks * tickWidth;
-
-        track.style.width = TRACK_WIDTH + "px";
-
-        let currentTime = 0;
-
-        for (let year = startYear; year <= endYear; year += tickStep) {
-            const tick = document.createElement('div');
-            tick.className = 'tick';
-            tick.innerText = year;
-            track.appendChild(tick);
-        }
-
-        // ================= 时间 → 像素 =================
-        function timeToOffset(time) {
-            const ratio = (time - startYear) / (endYear - startYear);
-            return -ratio * TRACK_WIDTH;
-        }
-
-        // ================= 像素 → 时间 =================
-        function offsetToTime(offsetX) {
-            const ratio = -offsetX / TRACK_WIDTH;
-            return startYear + ratio * (endYear - startYear);
-        }
-
-        // ================= 渲染函数（核心） =================
-        function renderTimeline() {
-            const offsetX = timeToOffset(currentTime) + container.clientWidth / 2;
-            track.style.transform = `translateX(${offsetX}px)`;
-            console.log(`当前时间: ${currentTime.toFixed(2)}`);
-            console.log(`当前偏移: ${offsetX.toFixed(2)}px`);
-            console.log('当前容器宽度:', container.clientWidth, 'px');
-        }
-
-
-        /* =====================================================
-        6. 时间轴拖动逻辑
-        ===================================================== */
-        let isDragging = false;
-        let startX = 0;
-        let startTime = 0;
-
-        track.onmousedown = (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startTime = currentTime;
-            track.style.cursor = "grabbing";
-        };
-
-        document.onmouseup = () => {
-            isDragging = false;
-            track.style.cursor = "grab";
-        };
-
-        document.onmousemove = (e) => {
-            if (!isDragging) return;
-
-            const container = document.querySelector(".timeline-container");
-            const width = container.clientWidth;
-
-            const deltaX = e.clientX - startX;
-
-            currentTime = startTime + (endYear - startYear) * (-deltaX / TRACK_WIDTH);
-
-            currentTime = Math.max(startYear, Math.min(endYear, currentTime));
-
-            renderAll();
-        };
-
-
-        // ================= resize 自适应 =================
-        window.addEventListener("resize", () => {
-            setTimeout(() => {
-                renderTimeline();
-            }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000);
-        });
-
-
-        /* =====================================================
-        7. 人物数据结构
-        ===================================================== */
-        function getPersonPosition(person, time) {
-
-            const t = person.timeline;
-
-            //人物出生前或死亡后，返回null
-            if (time < t[0].time) return null;
-            if (time > t[t.length - 1].time) return null;
-
-            for (let i = 0; i < t.length - 1; i++) {
-                const a = t[i];
-                const b = t[i + 1];
-
-                if (time >= a.time && time <= b.time) {
-
-                    /*线性插值 */
-                    const ratio = (time - a.time) / (b.time - a.time);
-
-                    return {
-                        lat: a.lat + (b.lat - a.lat) * ratio,
-                        lng: a.lng + (b.lng - a.lng) * ratio
-                    };
-                }
-            }
-        }
-
-        function createPersonIcon(person) {
-
-            // 如果有自定义图片
-            if (person.iconUrl) {
-                return L.icon({
-                    iconUrl: person.iconUrl,
-                    iconSize: person.iconSize || [32, 32]
-                });
-            }
-
-            // 否则自动生成
-            const html = `
-        <div class="person-marker-background" style="background:${person.color}">
-            <span class="icon" data-icon="man"></span>
-        </div>
-    `;
-
-            const wrapper = document.createElement("div");
-            wrapper.innerHTML = html;
-
-            // ❗关键：立刻初始化 SVG
-            wrapper.querySelectorAll(".icon").forEach(el => {
-                const name = el.dataset.icon;
-                el.innerHTML = getIcon(name, 16);
-            });
-
-            return L.divIcon({
-                className: "person-marker",
-                html: wrapper.innerHTML,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            });
-
-        }
-
-        function renderPersons() {
-
-            persons.forEach(p => {
-
-                const pos = getPersonPosition(p, currentTime);
-
-                if (pos === null) {
-                    /* 人物不存在，移除标记和轨迹 */
-                    if (p.marker) {
-                        map.removeLayer(p.marker);
-                        p.marker = null;
-                    }
-                    if (p.polyline) {
-                        map.removeLayer(p.polyline);
-                        p.polyline = null;
-                    }
-                    return;
-                }
-
-                /* --- marker --- */
-                if (!p.marker) {
-                    p.marker = L.marker([pos.lat, pos.lng], { icon: createPersonIcon(p) }).addTo(map);
-                }
-                else {
-                    p.marker.setLatLng([pos.lat, pos.lng]);
-                }
-
-                /* --- 轨迹 --- */
-                const path = [];
-
-                for (let i = 0; i < p.timeline.length; i++) {
-
-                    const node = p.timeline[i];
-
-                    if (node.time <= currentTime) {
-                        path.push([node.lat, node.lng]);
-                    } else {
-                        /* 当前段插值点 */
-                        const pos = getPersonPosition(p, currentTime);
-                        path.push([pos.lat, pos.lng]);
-                        break;
-                    }
-                }
-
-                if (!p.polyline) {
-                    p.polyline = L.polyline(path, {
-                        color: p.color,
-                        weight: 3,
-                        opacity: 0.9
-                    }).addTo(map);
-                } else {
-                    p.polyline.setLatLngs(path);
-                }
-
-            });
-        }
-
-        function renderAll() {
-            renderTimeline();
-            renderPersons();
-            renderTabPanel()
-        }
-
-        // ================= 初始化 =================
-        renderAll();
+        Sidebar.init();
+        LayoutManager.init();
+
+        // 3. 初始渲染（地图已自动调用一次，此处可省略）
+        // 侧边栏人物列表需手动触发一次
+        Sidebar.renderPersonList();
     </script>
 
 </body>

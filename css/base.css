@@ -31,7 +31,7 @@ body {
 /*在sidebar中的通用标题样式*/
 .sidebar h3 {
     color: rgba(255, 255, 255, 1);
-    font-size:28px;
+    font-size: 28px;
     font-family: sans-serif;
 }
 
@@ -39,4 +39,22 @@ body {
     color: rgba(255, 255, 255, 1);
     font-size: 14px;
     font-family: sans-serif;
+}
+
+/*
+=====================================================
+6. 地图标记样式
+=====================================================
+*/
+.person-marker-background {
+    width: 24px;
+    height: 24px;
+
+    background-size: cover;
+    border-radius: 50%;
+
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
