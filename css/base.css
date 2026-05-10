@@ -30,8 +30,22 @@ body {
 /* ---------- 通用样式 ---------- */
 /*在sidebar中的通用标题样式*/
 .sidebar h3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     color: rgba(255, 255, 255, 1);
-    font-size: 28px;
+    font-size: 20px;
+    font-family: sans-serif;
+}
+
+.detail h3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: rgb(255, 255, 255, 1);
+    font-size: 20px;
     font-family: sans-serif;
 }
 
@@ -39,6 +53,12 @@ body {
     color: rgba(255, 255, 255, 1);
     font-size: 14px;
     font-family: sans-serif;
+}
+
+.icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /*

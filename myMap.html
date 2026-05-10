@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/sidebar.css" />
+    <link rel="stylesheet" href="css/detail.css" />
     <link rel="stylesheet" href="css/timeline.css" />
     <link rel="stylesheet" href="css/context-menu.css" />
 </head>
@@ -61,7 +62,7 @@
                 </div>
 
                 <div class="sidebar-content-subpanel" id="person-list">
-                    
+
                 </div>
 
                 <div class="sidebar-content-panel-btn" data-name="organizations">
@@ -97,6 +98,19 @@
         </div>
     </aside>
 
+    <aside class="detail">
+        <div class="detail-header">
+            <button class="detail-toggle-btn--close" id="detail-btn-close">
+                <span class="icon" data-name="cross"></span>
+            </button>
+        </div>
+
+        <h3>detail</h3>
+
+        <div class="detail-content">
+
+        </div>
+    </aside>
 
     <button class="sidebar-toggle-btn--open" id="sidebar-btn-open">
         <span class="icon" data-name="menu"></span>
@@ -136,6 +150,7 @@
     <script src="js/components/contextMenu.js"></script>
     <script src="js/components/timeline.js"></script>
     <script src="js/components/sidebar.js"></script>
+    <script src="js/components/detail.js"></script>
     <script src="js/components/layout.js"></script>
     <script src="js/components/map.js"></script>
 
@@ -160,6 +175,7 @@
             trackId: 'timeline-track'
         });
         Sidebar.init();
+        DetailPanel.init()
         LayoutManager.init();
 
         // 3. 初始渲染（地图已自动调用一次，此处可省略）

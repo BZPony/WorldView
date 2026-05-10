@@ -25,6 +25,21 @@ const Sidebar = {
         this.elements.btnClose.addEventListener('click', () => this._toggle(false));
         this.elements.btnOpen.addEventListener('click', () => this._toggle(true));
 
+        // 3. 绑定点击人物事件
+        // 在 Sidebar 中为 person-list 添加点击委托
+        this.elements.personList.addEventListener('click', (e) => {
+            const item = e.target.closest('.sidebar-content-subitem');
+            if (!item) return;
+            const personName = item.textContent;
+            const person = persons.find(p => p.name === personName);
+            if (person) {
+                AppState.set('selectedItem', {
+                    type: 'person',
+                    data: person
+                });
+            }
+        });
+
         // 3. 绑定 Tab 切换
         this._initTabSwitching();
 

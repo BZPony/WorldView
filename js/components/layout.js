@@ -11,9 +11,13 @@ const LayoutManager = {
         sidebar: {
             side: 'left',
             width: 220,
-            isOpen: true      // 初始状态
+            isOpen: true// 初始状态
+        },
+        detail: {
+            side: 'left',
+            width: 280,
+            isOpen: true
         }
-        // 未来可扩展右侧面板等
     },
 
     /**
@@ -22,8 +26,12 @@ const LayoutManager = {
     init() {
         // 1. 从 AppState 读取侧边栏初始状态（如果存在）
         const sidebarOpen = AppState.get('isSidebarOpen');
+        const detailPanelOen = AppState.get('isSidebarOpen');
         if (sidebarOpen !== undefined) {
             this.panels.sidebar.isOpen = sidebarOpen;
+        }
+        if (detailPanelOen !== undefined) {
+            this.panels.detail.isOpen = detailPanelOen;
         }
 
         // 2. 立即计算一次
@@ -33,6 +41,10 @@ const LayoutManager = {
         EventBus.on('stateChange', (payload) => {
             if (payload.key === 'isSidebarOpen') {
                 this.panels.sidebar.isOpen = payload.value;
+                this.compute();
+            }
+            if (payload.key === 'isDetailPanelOpen') {
+                this.panels.detail.isOpen = payload.value;
                 this.compute();
             }
         });
@@ -53,13 +65,25 @@ const LayoutManager = {
         let leftTotal = 0;
         let rightTotal = 0;
 
-        if (this.panels.sidebar.isOpen) {
-            leftTotal += this.panels.sidebar.width;
-        }
+        Object.values(this.panels).forEach(panel => {
+            if (panel.isOpen) {
+                if (panel.side === 'left') {
+                    leftTotal += panel.width;
+                } else if (panel.side === 'right') {
+                    rightTotal += panel.width;
+                }
+            }
+        });
 
         // 更新 CSS 变量
         document.documentElement.style.setProperty('--left-total', leftTotal + 'px');
         document.documentElement.style.setProperty('--right-total', rightTotal + 'px');
+
+        // 计算详情面板的 left 值（紧贴侧边栏右侧，间距10px）
+        const sidebarOpen = this.panels.sidebar.isOpen;
+        const sidebarWidth = this.panels.sidebar.width;
+        const detailLeft = sidebarOpen ? (10 + sidebarWidth + 10) : 10;  // 侧边栏开：10+220+10=240，关：10
+        document.documentElement.style.setProperty('--detail-left', detailLeft + 'px');
 
         // 通知其他模块布局已更新
         EventBus.emit('layoutChange', {

@@ -2,8 +2,10 @@
 
 const AppState = {
     state: {
+        selectedItem: null,
         currentTime: 0,          // 当前时间
         isSidebarOpen: true,     // 侧边栏是否打开
+        isDetailPanelOpen:false,
         persons: []              // 人物数据（将由 data/persons.js 写入）
     },
 
