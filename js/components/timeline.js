@@ -65,10 +65,10 @@ const Timeline = {
         this._bindDragEvents();
 
         // 监听布局变化事件（如侧边栏开关）
-        EventBus.on('layoutChange', this._onLayoutChange.bind(this));
+        EventBus.on('layout:change', this._onLayoutChange.bind(this));
         
         // 监听 AppState 中 currentTime 的变化
-        EventBus.on('stateChange', this._onStateChange.bind(this));
+        EventBus.on('state:change', this._onStateChange.bind(this));
 
         // 初始渲染（使用 AppState 中的当前时间）
         const initialTime = AppState.get('currentTime');
@@ -142,7 +142,7 @@ const Timeline = {
         let newTime = this.startTime + (endYear - startYear) * (-deltaX / trackWidth);
         newTime = Math.max(startYear, Math.min(endYear, newTime));
 
-        // 通过 AppState 更新时间，这会触发 stateChange 事件，其他模块自动响应
+        // 通过 AppState 更新时间，这会触发 state:change 事件，其他模块自动响应
         AppState.set('currentTime', newTime);
     },
 

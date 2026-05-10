@@ -31,7 +31,7 @@ const DetailPanel = {
         this.elements.btnClose.addEventListener('click', () => this._toggle(false));
 
         // 3. 监听 AppState 变化
-        EventBus.on('stateChange', this._onStateChange.bind(this));
+        EventBus.on('state:change', this._onStateChange.bind(this));
 
         // 4. 根据初始状态设置面板
         const initialItem = AppState.get('selectedItem');

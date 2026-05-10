@@ -147,6 +147,7 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="js/core/eventBus.js"></script>
     <script src="js/core/state.js"></script>
+    <script src="js/core/selectManager.js"></script>
     <script src="js/components/contextMenu.js"></script>
     <script src="js/components/timeline.js"></script>
     <script src="js/components/sidebar.js"></script>
@@ -166,6 +167,7 @@
         // 2. 按依赖顺序初始化模块
         MapView.init('map');                // 地图必须先创建（Leaflet 实例）
         ContextMenu.init(MapView.map);      // 传入地图实例
+        SelectManager.init();
         Timeline.init({
             startYear: -1000,
             endYear: 1000,

@@ -35,14 +35,14 @@ const MapView = {
         this.renderPersons();
 
         // 3. 订阅时间变化，自动重绘
-        EventBus.on('stateChange', (data) => {
+        EventBus.on('state:change', (data) => {
             if (data.key === 'currentTime') {
                 this.renderPersons();
             }
         });
 
         // 4. 如果将来人物数据变化，也重绘
-        EventBus.on('stateChange', (data) => {
+        EventBus.on('state:change', (data) => {
             if (data.key === 'persons') {
                 this.renderPersons();
             }

@@ -30,14 +30,10 @@ const Sidebar = {
         this.elements.personList.addEventListener('click', (e) => {
             const item = e.target.closest('.sidebar-content-subitem');
             if (!item) return;
-            const personName = item.textContent;
-            const person = persons.find(p => p.name === personName);
-            if (person) {
-                AppState.set('selectedItem', {
-                    type: 'person',
-                    data: person
-                });
-            }
+            EventBus.emit('ui:select', {
+                type: item.dataset.type,
+                id: Number(item.dataset.id)
+            });
         });
 
         // 3. 绑定 Tab 切换
@@ -47,7 +43,7 @@ const Sidebar = {
         this._initPanelAccordion();
 
         // 5. 监听 AppState 变化
-        EventBus.on('stateChange', this._onStateChange.bind(this));
+        EventBus.on('state:change', this._onStateChange.bind(this));
 
         // 6. 根据初始状态设置 body 类
         if (AppState.get('isSidebarOpen') === false) {
@@ -125,7 +121,7 @@ const Sidebar = {
 
     /**
      * 实际执行打开/关闭的 UI 更新
-    * 由 stateChange 触发，而不是直接调用
+    * 由 state:change 触发，而不是直接调用
      */
     _updateOpenState(isOpen) {
         if (isOpen) {
@@ -149,8 +145,8 @@ const Sidebar = {
             const item = document.createElement('div');
             item.className = 'sidebar-content-subitem';
             item.textContent = person.name;
-            // 注意：这里我们使用了 <ul> 作为子面板容器，所以应当用 <li>。
-            // 如果你的 HTML 中 person-list 是 <div>，可暂时保留用 <div>，但建议改为 <ul>。
+            item.dataset.id = person.id;
+            item.dataset.type = 'person';
             container.appendChild(item);
         });
     },

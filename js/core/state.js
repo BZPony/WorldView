@@ -25,7 +25,7 @@ const AppState = {
      */
     set(key, value) {
         this.state[key] = value;
-        EventBus.emit('stateChange', {
+        EventBus.emit('state:change', {
             key: key,
             value: value,
             state: this.state

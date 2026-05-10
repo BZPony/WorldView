@@ -38,7 +38,7 @@ const LayoutManager = {
         this.compute();
 
         // 3. 监听状态变化（侧边栏开关）
-        EventBus.on('stateChange', (payload) => {
+        EventBus.on('state:change', (payload) => {
             if (payload.key === 'isSidebarOpen') {
                 this.panels.sidebar.isOpen = payload.value;
                 this.compute();
@@ -86,7 +86,7 @@ const LayoutManager = {
         document.documentElement.style.setProperty('--detail-left', detailLeft + 'px');
 
         // 通知其他模块布局已更新
-        EventBus.emit('layoutChange', {
+        EventBus.emit('layout:change', {
             left: leftTotal,
             right: rightTotal
         });

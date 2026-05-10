@@ -5,7 +5,7 @@ const EventBus = {
 
     /**
      * 订阅事件
-     * @param {string} event - 事件名（如 'stateChange'）
+     * @param {string} event - 事件名（如 'state:change'）
      * @param {Function} callback - 回调函数
      */
     on(event, callback) {
