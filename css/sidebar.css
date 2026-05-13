@@ -75,7 +75,7 @@ header 区
     color: white;
 
     cursor: pointer;
-    
+
     z-index: 1001;
 
     transition: all var(--animation-duration) ease;
@@ -110,7 +110,7 @@ header 区
     z-index: 1001;
 
     cursor: pointer;
-    
+
     transition: all var(--animation-duration) ease;
 }
 
@@ -133,23 +133,24 @@ Tabs 栏
     position: relative;
 
     gap: 5px;
-    margin:0px;
+    margin: 0px;
     padding: 5px 15px 10px 15px;
 
     /* 使用flex布局，垂直默认对齐顶部，水平默认拉伸对齐，设置垂直排列*/
     display: flex;
     flex-direction: column;
 
-    list-style:none;
+    list-style: none;
 }
 
 /* --------- Tabs 切换按钮 ---------- */
 .sidebar-tabs-btn {
-    width:100%;
-    gap:10px;
+    height: 36px;
+    width: 100%;
+    gap: 10px;
     padding: 8px 10px;
 
-    border:none;
+    border: none;
     border-radius: 8px;
     background-color: rgba(20, 20, 20, 0.5);
 
@@ -193,7 +194,7 @@ content 区
 
     /* 使用flex布局，垂直默认对齐顶部，水平默认拉伸对齐，设置垂直排列*/
     display: flex;
-    flex:1;
+    flex: 1;
     flex-direction: column;
     overflow: auto;
 }
@@ -211,17 +212,18 @@ content 区
 
 /* ---------- 面板一级按钮 ---------- */
 .sidebar-content-panel-btn {
+    height: 20px;
     gap: 10px;
     padding: 8px 10px;
     margin-bottom: 5px;
-    
+
     border: none;
     border-radius: 8px;
     background: rgba(20, 20, 20, 0.5);
 
     display: flex;
     align-items: center;
-    
+
     text-align: left;
     font-size: 14px;
     font-family: sans-serif;
@@ -257,25 +259,29 @@ content 区
     display: flex;
     flex-direction: column;
     overflow: auto;
-    
+
     transition: max-height var(--animation-duration) ease;
 }
 
 /* 一级按钮激活时展开子面板，按照内容多少自动调整高度，不固定高度 */
-.sidebar-content-panel-btn.active + .sidebar-content-subpanel {
+.sidebar-content-panel-btn.active+.sidebar-content-subpanel {
     max-height: 500px;
     margin-bottom: 5px;
 }
 
 /* 二级列表项 */
 .sidebar-content-subitem {
-    padding: 6px 10px;
+    height: 30px;
+    padding: 3px 3px;
+
+    display: flex;
+    align-items: center;
+    gap: 3px;
 
     border-radius: 8px;
     background: #333;
 
-    font-size: 12px;
-    font-size: 12px;
+    font-size: 14px;
     font-family: sans-serif;
     line-height: 1.2;
     color: white;
@@ -286,4 +292,15 @@ content 区
 
 .sidebar-content-subitem:hover {
     background: #4a4a4a;
+}
+
+.sidebar-content-subitem.active {
+    background-color: rgb(46, 95, 255);
+}
+
+.sidebar-content-subitem .icon {
+    display: block;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    width: auto;
 }

@@ -87,3 +87,119 @@ const persons = [
         polyline: null
     }
 ];
+
+const organization = [
+    {
+        id: 1,
+        name: "圣殿骑士",
+
+        color: "#ffdd1a",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 2,
+        name: "罗莎莉亚的指头",
+
+        color: "#c115b5",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 3,
+        name: "保护伞公司",
+
+        color: "#ff1d1d",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 4,
+        name: "猎魔人",
+
+        color: "#143869",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 5,
+        name: "避难所科技",
+
+        color: "#ff970f",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+]
+
+const regime = [
+    {
+        id: 1,
+        name: "天马城邦",
+
+        color: "#247290",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 2,
+        name: "洛斯里克王国",
+
+        color: "#247290",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 3,
+        name: "永恒之城诺克隆恩",
+
+        color: "#247290",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 4,
+        name: "博德之门",
+
+        color: "#247290",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+    {
+        id: 1,
+        name: "圣殿骑士",
+
+        color: "#247290",
+        iconUrl: null,
+        iconSize: [32, 32],
+
+        tags: [String],
+        marker: null,
+    },
+]

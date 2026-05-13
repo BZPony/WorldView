@@ -51,7 +51,7 @@ Sidebar.renderPersonList();   // 手动触发首次列表渲染
 ## 如何扩展
 
 ### 添加新的人物或实体
-编辑 `js/data/persons.js`，在数组中增加新对象，并确保 `id` 唯一。
+编辑 `js/data/entities.js`，在数组中增加新对象，并确保 `id` 唯一。
 
 ### 添加新的可选对象类型（如组织、国家）
 - 在侧边栏列表中渲染时，为每个项设置 `data-id` 和 `data-type` 属性。

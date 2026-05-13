@@ -27,14 +27,7 @@ const Sidebar = {
 
         // 3. 绑定点击人物事件
         // 在 Sidebar 中为 person-list 添加点击委托
-        this.elements.personList.addEventListener('click', (e) => {
-            const item = e.target.closest('.sidebar-content-subitem');
-            if (!item) return;
-            EventBus.emit('ui:select', {
-                type: item.dataset.type,
-                id: Number(item.dataset.id)
-            });
-        });
+        this._initContentSubitemClick();
 
         // 3. 绑定 Tab 切换
         this._initTabSwitching();
@@ -98,6 +91,20 @@ const Sidebar = {
         });
     },
 
+    _initContentSubitemClick() {
+        // 在 Sidebar 中为 person-list 添加点击委托
+        this.elements.personList.addEventListener('click', (e) => {
+            const item = e.target.closest('.sidebar-content-subitem');
+            if (!item) return;
+            EventBus.emit('ui:select', {
+                type: item.dataset.type,
+                id: Number(item.dataset.id)
+            });
+            const subItems = document.querySelectorAll('.sidebar-content-subitem');
+            subItems.forEach(b => b.classList.remove('active'));
+            item.classList.toggle('active');
+        });
+    },
     /**
      * 响应 AppState 变化
      */
@@ -144,9 +151,18 @@ const Sidebar = {
         persons.forEach(person => {
             const item = document.createElement('div');
             item.className = 'sidebar-content-subitem';
-            item.textContent = person.name;
             item.dataset.id = person.id;
             item.dataset.type = 'person';
+
+            const colorIcon = document.createElement('span');
+            colorIcon.className = 'icon';
+            colorIcon.dataset.name = 'color';
+            colorIcon.style.color = person.color;
+
+            const textNode = document.createTextNode(person.name);
+
+            item.appendChild(colorIcon);
+            item.appendChild(textNode);
             container.appendChild(item);
         });
     },

@@ -142,7 +142,7 @@
     ===================================================== -->
 
     <script src="js/icons/svg-icons.js"></script>
-    <script src="js/data/persons.js"></script>
+    <script src="js/data/entities.js"></script>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="js/core/eventBus.js"></script>
@@ -160,7 +160,7 @@
             initIcons();
         });
 
-        // 1. 设置初始数据（persons 已在 data/persons.js 全局声明，暂存到 AppState）
+        // 1. 设置初始数据（persons 已在 data/entities.js 全局声明，暂存到 AppState）
         AppState.set('persons', persons);
         AppState.set('currentTime', 0);
 
