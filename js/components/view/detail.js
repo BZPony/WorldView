@@ -26,6 +26,7 @@ const DetailPanel = {
         this.elements.panel = document.querySelector('.detail');
         this.elements.btnClose = document.getElementById('detail-btn-close');
         this.elements.content = document.querySelector('.detail-content');
+        this.elements.title = document.querySelector('.detail-content-title');
 
         // 2. 关闭按钮点击
         this.elements.btnClose.addEventListener('click', () => this._toggle(false));
@@ -88,7 +89,7 @@ const DetailPanel = {
         } else {
             html = `<p style="color:#ccc;">暂不支持此类型的详细信息显示。</p>`;
         }
-
+        this.elements.title.title = item.name;
         this.elements.content.innerHTML = html;
     },
 

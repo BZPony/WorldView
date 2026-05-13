@@ -105,10 +105,8 @@
             </button>
         </div>
 
-        <h3>detail</h3>
-
         <div class="detail-content">
-
+            <div class="detail-content-title">detail</div>
         </div>
     </aside>
 
@@ -148,12 +146,13 @@
     <script src="js/core/eventBus.js"></script>
     <script src="js/core/state.js"></script>
     <script src="js/core/selectManager.js"></script>
-    <script src="js/components/contextMenu.js"></script>
-    <script src="js/components/timeline.js"></script>
-    <script src="js/components/sidebar.js"></script>
-    <script src="js/components/detail.js"></script>
-    <script src="js/components/layout.js"></script>
-    <script src="js/components/map.js"></script>
+    <script src="js/core/commandHandler.js"></script>
+    <script src="js/components/view/contextMenu.js"></script>
+    <script src="js/components/view/timeline.js"></script>
+    <script src="js/components/view/sidebar.js"></script>
+    <script src="js/components/view/detail.js"></script>
+    <script src="js/components/view/layout.js"></script>
+    <script src="js/components/view/map.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -168,6 +167,8 @@
         MapView.init('map');                // 地图必须先创建（Leaflet 实例）
         ContextMenu.init(MapView.map);      // 传入地图实例
         SelectManager.init();
+        CommandHandler.init();
+        LayoutManager.init();
         Timeline.init({
             startYear: -1000,
             endYear: 1000,
@@ -178,7 +179,6 @@
         });
         Sidebar.init();
         DetailPanel.init()
-        LayoutManager.init();
 
         // 3. 初始渲染（地图已自动调用一次，此处可省略）
         // 侧边栏人物列表需手动触发一次

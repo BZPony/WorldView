@@ -100,9 +100,9 @@ const Sidebar = {
                 type: item.dataset.type,
                 id: Number(item.dataset.id)
             });
-            const subItems = document.querySelectorAll('.sidebar-content-subitem');
-            subItems.forEach(b => b.classList.remove('active'));
-            item.classList.toggle('active');
+            // const subItems = document.querySelectorAll('.sidebar-content-subitem');
+            // subItems.forEach(b => b.classList.remove('active'));
+            // item.classList.toggle('active');
         });
     },
     /**
@@ -121,6 +121,21 @@ const Sidebar = {
             case 'persons':
                 // 如果人物数据变化，刷新列表
                 this.renderPersonList();
+                break;
+            case 'selectedItem':
+                const subItems = document.querySelectorAll('.sidebar-content-subitem');
+                subItems.forEach(item => item.classList.remove('active'));
+                if (!data.value) return;
+
+                const selectedId = data.value.data.id.toString();
+                const subItemsArray = Array.from(subItems);
+                const entity = subItemsArray.find(item => item.dataset.id === selectedId);
+
+                if (entity) {
+                    entity.classList.add('active');
+                } else {
+                    console.warn(`未找到 ID 为 ${selectedId} 的 sidebar 项目`);
+                }
                 break;
             // 其他状态变化...
         }
@@ -165,5 +180,7 @@ const Sidebar = {
             item.appendChild(textNode);
             container.appendChild(item);
         });
+
+        initIconsForContainer(container);
     },
 };

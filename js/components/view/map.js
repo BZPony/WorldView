@@ -58,6 +58,11 @@ const MapView = {
     getPersonPosition(person, time) {
         const t = person.timeline;
         if (!t || t.length === 0) return null;
+
+        if (t.length === 1) {
+            return time === t[0].time ? { lat: t[0].lat, lng: t[0].lng } : null;
+        }
+
         if (time < t[0].time || time > t[t.length - 1].time) return null;
 
         for (let i = 0; i < t.length - 1; i++) {
@@ -71,6 +76,8 @@ const MapView = {
                 };
             }
         }
+
+        return null;
     },
 
     /**
@@ -81,6 +88,7 @@ const MapView = {
         const currentTime = AppState.get('currentTime') || 0;
 
         persons.forEach(person => {
+            console.log("rendering " + person.name);
             const pos = this.getPersonPosition(person, currentTime);
 
             if (pos === null) {

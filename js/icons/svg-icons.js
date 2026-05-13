@@ -35,3 +35,18 @@ function initIcons() {
         }
     });
 }
+
+/**
+ * 仅初始化指定容器内的图标
+ */
+function initIconsForContainer(container) {
+    // 只处理这个容器内的图标
+    container.querySelectorAll('.icon').forEach(icon => {
+        const name = icon.dataset.name;
+        if (name) {
+            const size = icon.dataset.size || 16;
+            // 直接填充SVG内容
+            icon.innerHTML = getIcon(name, size);
+        }
+    });
+}

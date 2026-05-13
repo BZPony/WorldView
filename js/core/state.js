@@ -2,11 +2,15 @@
 
 const AppState = {
     state: {
+        //应用状态，可以在view模块中修改
         selectedItem: null,
         currentTime: 0,          // 当前时间
         isSidebarOpen: true,     // 侧边栏是否打开
-        isDetailPanelOpen:false,
-        persons: []              // 人物数据（将由 data/persons.js 写入）
+        isDetailPanelOpen: false,
+
+        //应用数据，只能通过commandHandler模块修改
+        persons: []              // 人物数据（将由 data/entities.js 写入）
+
     },
 
     /**
@@ -32,3 +36,5 @@ const AppState = {
         });
     }
 };
+
+window.AppState = AppState;

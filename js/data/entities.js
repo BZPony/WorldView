@@ -1,3 +1,24 @@
+/**
+ * 创建一个新的人物（纯数据操作）
+ */
+function createPersonData({ name, lat, lng }) {
+    const persons = AppState.get('persons') || [];
+    const newId = Date.now();
+
+    return {
+        id: newId,
+        name: name,
+        timeline: [{ lat, lng, time: AppState.get('currentTime') || 0 }],
+        color: "#4f454f",
+        iconUrl: null,
+        iconSize: [32, 32],
+        tags: [],
+        marker: null,
+        polyline: null
+    };
+}
+
+
 const persons = [
     {
         id: 1,
@@ -90,7 +111,7 @@ const persons = [
 
 const organization = [
     {
-        id: 1,
+        id: 6,
         name: "圣殿骑士",
 
         color: "#ffdd1a",
@@ -101,7 +122,7 @@ const organization = [
         marker: null,
     },
     {
-        id: 2,
+        id: 7,
         name: "罗莎莉亚的指头",
 
         color: "#c115b5",
@@ -112,7 +133,7 @@ const organization = [
         marker: null,
     },
     {
-        id: 3,
+        id: 8,
         name: "保护伞公司",
 
         color: "#ff1d1d",
@@ -123,7 +144,7 @@ const organization = [
         marker: null,
     },
     {
-        id: 4,
+        id: 9,
         name: "猎魔人",
 
         color: "#143869",
@@ -134,7 +155,7 @@ const organization = [
         marker: null,
     },
     {
-        id: 5,
+        id: 10,
         name: "避难所科技",
 
         color: "#ff970f",
@@ -148,7 +169,7 @@ const organization = [
 
 const regime = [
     {
-        id: 1,
+        id: 11,
         name: "天马城邦",
 
         color: "#247290",
@@ -159,7 +180,7 @@ const regime = [
         marker: null,
     },
     {
-        id: 2,
+        id: 12,
         name: "洛斯里克王国",
 
         color: "#247290",
@@ -170,7 +191,7 @@ const regime = [
         marker: null,
     },
     {
-        id: 3,
+        id: 13,
         name: "永恒之城诺克隆恩",
 
         color: "#247290",
@@ -181,7 +202,7 @@ const regime = [
         marker: null,
     },
     {
-        id: 4,
+        id: 14,
         name: "博德之门",
 
         color: "#247290",
@@ -192,7 +213,7 @@ const regime = [
         marker: null,
     },
     {
-        id: 1,
+        id: 15,
         name: "圣殿骑士",
 
         color: "#247290",

@@ -17,3 +17,5 @@ const SelectManager = {
         });
     }
 };
+
+window.SelectManager = SelectManager;

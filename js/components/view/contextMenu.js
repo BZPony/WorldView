@@ -10,6 +10,7 @@ const ContextMenu = {
     // DOM 元素缓存
     menu: null,
     map: null,
+    lastClickLatLng: null,
 
     /**
      * 初始化模块
@@ -81,6 +82,8 @@ const ContextMenu = {
         event.originalEvent.preventDefault();
         const x = event.originalEvent.clientX;
         const y = event.originalEvent.clientY;
+        this.lastClickLatLng = event.latlng;
+
         this.show(x, y);
     },
 
@@ -94,7 +97,10 @@ const ContextMenu = {
     _onMenuItemClick(event) {
         const action = event.target.dataset.action;
         if (action) {
-            EventBus.emit('contextMenu:action', { action });
+            EventBus.emit('contextMenu:action', {
+                action,
+                latlng: this.lastClickLatLng
+            });
         }
         this.hide();
     }
