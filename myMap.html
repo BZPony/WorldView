@@ -161,6 +161,7 @@
 
         // 1. 设置初始数据（persons 已在 data/entities.js 全局声明，暂存到 AppState）
         AppState.set('persons', persons);
+        AppState.set('entities', defaultEntities);
         AppState.set('currentTime', 0);
 
         // 2. 按依赖顺序初始化模块

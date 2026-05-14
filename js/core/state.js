@@ -9,8 +9,8 @@ const AppState = {
         isDetailPanelOpen: false,
 
         //应用数据，只能通过commandHandler模块修改
-        persons: []              // 人物数据（将由 data/entities.js 写入）
-
+        persons: [],              // 人物数据（将由 data/entities.js 写入）
+        entities: []
     },
 
     /**

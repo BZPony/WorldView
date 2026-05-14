@@ -2,9 +2,9 @@
  * 地图模块（全局单例）
  * 职责：
  * - 初始化 Leaflet 地图
- * - 根据当前时间渲染所有人物标记和轨迹
+ * - 根据当前时间渲染所有实体标记和轨迹
  * - 监听 currentTime 变化自动重绘
- * - 监听 persons 数据变化
+ * - 监听 entities 数据变化
  */
 const MapView = {
     map: null,
@@ -32,42 +32,50 @@ const MapView = {
         }, 100);
 
         // 2. 初始化时立即渲染一次
-        this.renderPersons();
+        this.renderTimelineEntities();
 
         // 3. 订阅时间变化，自动重绘
         EventBus.on('state:change', (data) => {
             if (data.key === 'currentTime') {
-                this.renderPersons();
+                this.renderTimelineEntities();
             }
         });
 
-        // 4. 如果将来人物数据变化，也重绘
+        // 4. 如果将来实体数据变化，也重绘
         EventBus.on('state:change', (data) => {
-            if (data.key === 'persons') {
-                this.renderPersons();
+            if (data.key === 'entities') {
+                this.renderTimelineEntities();
             }
         });
     },
 
     /**
-    * 人物位置插值工具
-    * @param {Object} person - 包含 timeline 的人物对象
+    * 获取所有包含 timeline 组件的实体
+    */
+    getTimelineEntities() {
+        const entities = AppState.get('entities') || [];
+        return entities.filter(e => e.components.timeline);
+    },
+
+    /**
+    * 实体位置插值工具
+    * @param {Object} entities - 包含 timeline 的实体对象
     * @param {number} time - 当前时间
     * @returns {{ lat: number, lng: number } | null}
     */
-    getPersonPosition(person, time) {
-        const t = person.timeline;
-        if (!t || t.length === 0) return null;
+    getEntityPosition(entity, time) {
+        const waypoints = entity.components.timeline.waypoints;
+        if (!waypoints || waypoints.length === 0) return null;
 
-        if (t.length === 1) {
-            return time === t[0].time ? { lat: t[0].lat, lng: t[0].lng } : null;
+        if (waypoints.length === 1) {
+            return time === waypoints[0].time ? { lat: waypoints[0].lat, lng: waypoints[0].lng } : null;
         }
 
-        if (time < t[0].time || time > t[t.length - 1].time) return null;
+        if (time < waypoints[0].time || time > waypoints[waypoints.length - 1].time) return null;
 
-        for (let i = 0; i < t.length - 1; i++) {
-            const a = t[i];
-            const b = t[i + 1];
+        for (let i = 0; i < waypoints.length - 1; i++) {
+            const a = waypoints[i];
+            const b = waypoints[i + 1];
             if (time >= a.time && time <= b.time) {
                 const ratio = (time - a.time) / (b.time - a.time);
                 return {
@@ -81,47 +89,47 @@ const MapView = {
     },
 
     /**
-     * 渲染所有人物标记和轨迹
+     * 渲染所有实体标记和轨迹
      */
-    renderPersons() {
-        const persons = AppState.get('persons') || [];
+    renderTimelineEntities() {
+        const entities = this.getTimelineEntities() || [];
         const currentTime = AppState.get('currentTime') || 0;
 
-        persons.forEach(person => {
-            console.log("rendering " + person.name);
-            const pos = this.getPersonPosition(person, currentTime);
+        entities.forEach(entity => {
+            console.log("rendering " + entity.components.core.name);
+            const pos = this.getEntityPosition(entity, currentTime);
 
             if (pos === null) {
-                // 人物不存在，移除标记和轨迹
-                if (person._marker) {
-                    this.map.removeLayer(person._marker);
-                    person._marker = null;
+                // 实体不存在，移除标记和轨迹
+                if (entity._marker) {
+                    this.map.removeLayer(entity._marker);
+                    entity._marker = null;
                 }
-                if (person._polyline) {
-                    this.map.removeLayer(person._polyline);
-                    person._polyline = null;
+                if (entity._polyline) {
+                    this.map.removeLayer(entity._polyline);
+                    entity._polyline = null;
                 }
                 return;
             }
 
             // 更新或创建标记
-            if (!person._marker) {
-                person._marker = L.marker([pos.lat, pos.lng], {
-                    icon: this._createPersonIcon(person)
+            if (!entity._marker) {
+                entity._marker = L.marker([pos.lat, pos.lng], {
+                    icon: this._createEntityIcon(entity)
                 }).addTo(this.map);
             } else {
-                person._marker.setLatLng([pos.lat, pos.lng]);
+                entity._marker.setLatLng([pos.lat, pos.lng]);
             }
 
             // 构建轨迹坐标数组（截至当前时间的路径）
             const path = [];
-            for (let i = 0; i < person.timeline.length; i++) {
-                const node = person.timeline[i];
+            for (let i = 0; i < entity.components.timeline.waypoints.length; i++) {
+                const node = entity.components.timeline.waypoints[i];
                 if (node.time <= currentTime) {
                     path.push([node.lat, node.lng]);
                 } else {
                     // 添加当前插值点
-                    const interpolated = this.getPersonPosition(person, currentTime);
+                    const interpolated = this.getEntityPosition(entity, currentTime);
                     if (interpolated) {
                         path.push([interpolated.lat, interpolated.lng]);
                     }
@@ -129,48 +137,45 @@ const MapView = {
                 }
             }
 
-            if (!person._polyline) {
-                person._polyline = L.polyline(path, {
-                    color: person.color,
+            if (!entity._polyline) {
+                entity._polyline = L.polyline(path, {
+                    color: entity.components.core.color,
                     weight: 3,
                     opacity: 0.9
                 }).addTo(this.map);
             } else {
-                person._polyline.setLatLngs(path);
+                entity._polyline.setLatLngs(path);
             }
         });
     },
 
     /**
-     * 创建人物图标（自动生成或使用自定义图片）
-     * @param {Object} person
-     * @returns {L.Icon|L.DivIcon}
+     * 创建实体图标（始终使用 DivIcon 动态生成 SVG）
+     * @param {Object} entity
+     * @returns {L.DivIcon}
      */
-    _createPersonIcon(person) {
-        if (person.iconUrl) {
-            return L.icon({
-                iconUrl: person.iconUrl,
-                iconSize: person.iconSize || [32, 32]
-            });
-        }
+    _createEntityIcon(entity) {
+        const core = entity.components.core;
+        // 使用实体自己的图标名，fallback 到 'man'
+        const iconName = core.icon || 'man';
+        const color = core.color || '#333';
 
         const html = `
-            <div class="person-marker-background" style="background:${person.color}">
-                <span class="icon" data-name="man"></span>
-            </div>
-        `;
+        <div class="entity-marker-background" style="background:${color}">
+            <span class="icon" data-name="${iconName}"></span>
+        </div>
+    `;
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
 
-        // 初始化 SVG 图标
+        // 初始化内部的 SVG 图标
         wrapper.querySelectorAll('.icon').forEach(el => {
-            const name = el.dataset.name;
-            el.innerHTML = getIcon(name, 16);
+            el.innerHTML = getIcon(el.dataset.name, 16);
         });
 
         return L.divIcon({
-            className: 'person-marker',
+            className: 'entity-marker',
             html: wrapper.innerHTML,
             iconSize: [24, 24],
             iconAnchor: [12, 12]

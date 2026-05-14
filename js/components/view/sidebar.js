@@ -6,6 +6,7 @@
  * - 一级面板按钮的展开/折叠
  * - 动态渲染人物列表
  * - 响应时间变化（可选，为将来扩展）
+ * -
  */
 const Sidebar = {
     // 缓存的 DOM 元素
@@ -98,11 +99,8 @@ const Sidebar = {
             if (!item) return;
             EventBus.emit('ui:select', {
                 type: item.dataset.type,
-                id: Number(item.dataset.id)
+                id: item.dataset.id
             });
-            // const subItems = document.querySelectorAll('.sidebar-content-subitem');
-            // subItems.forEach(b => b.classList.remove('active'));
-            // item.classList.toggle('active');
         });
     },
     /**

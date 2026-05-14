@@ -8,6 +8,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.4.0] - 2026-05-14
+
+### Added
+
 - 新增 `sidebar.css` 中选择对象的高亮功能
 - 新增 `sidebar-content-subitem` 对象的`color`svg颜色图标
 - 新增 `organization` 和`regime`的示例数据结构

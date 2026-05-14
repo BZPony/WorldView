@@ -7,7 +7,7 @@ const SelectManager = {
 
             if (type === 'person') {
                 const persons = AppState.get('persons') || [];
-                const person = persons.find(p => p.id == id);
+                const person = persons.find(p => p.id === id);
                 if (person) {
                     AppState.set('selectedItem', { type: 'person', data: person });
                     console.log('selectedItem changed to' + ' person ' + id);
