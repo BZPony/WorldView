@@ -1,5 +1,5 @@
 /**
- * 创建一个新的人物（纯数据操作）
+ * 创建一个新的人物（纯数据操作），不修改persons，只返回一个默认的人物数据结构
  */
 function createPersonData({ name, lat, lng }) {
     const persons = AppState.get('persons') || [];
