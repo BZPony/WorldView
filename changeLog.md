@@ -8,9 +8,18 @@
 
 ### Added
 
+- 在 `entities.js` 中新增组件工厂函数
+- 添加 `sidebar.js` 对`organization`和`regime`的UI适配
+- 新增用户自定义标签的数据结构基础
+
 ### Changed
 
+- 将 `entities.js` 的数据结构重构为基于ECS的数据结构
+- 删除对旧数据结构的支持
+
 ### Fixed
+
+- 修复新建人物的UI无法响应点击事件的缺陷
 
 ## [0.4.0] - 2026-05-14
 
