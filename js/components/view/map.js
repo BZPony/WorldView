@@ -156,8 +156,8 @@ const MapView = {
      */
     _createEntityIcon(entity) {
         const core = entity.components.core;
-        // 使用实体自己的图标名，fallback 到 'man'
-        const iconName = core.icon || 'man';
+        // 使用实体自己的图标名，fallback 到 'person'
+        const iconName = core.icon || 'tag';
         const color = core.color || '#333';
 
         const html = `

@@ -20,26 +20,22 @@ const Sidebar = {
         this.elements.body = document.body;
         this.elements.btnClose = document.getElementById('sidebar-btn-close');
         this.elements.btnOpen = document.getElementById('sidebar-btn-open');
-        this.elements.personList = document.getElementById('person-list');
+        this.elements.explorerPanel = document.querySelector('.sidebar-content-panel--explorer');
 
         // 2. 绑定开关按钮事件
         this.elements.btnClose.addEventListener('click', () => this._toggle(false));
         this.elements.btnOpen.addEventListener('click', () => this._toggle(true));
 
-        // 3. 绑定点击人物事件
-        // 在 Sidebar 中为 person-list 添加点击委托
-        this._initContentSubitemClick();
+        // 3. 动态生成资源面板，并绑定点击事件
+        this._initContentSubitemClick(this.elements.explorerPanel);
 
         // 3. 绑定 Tab 切换
         this._initTabSwitching();
 
-        // 4. 绑定面板按钮的展开/折叠
-        this._initPanelAccordion();
-
-        // 5. 监听 AppState 变化
+        // 4. 监听 AppState 变化
         EventBus.on('state:change', this._onStateChange.bind(this));
 
-        // 6. 根据初始状态设置 body 类
+        // 5. 根据初始状态设置 body 类
         if (AppState.get('isSidebarOpen') === false) {
             this.elements.body.classList.add('sidebar--closed');
         }
@@ -80,27 +76,19 @@ const Sidebar = {
         });
     },
 
-    /**
-     * 面板按钮的折叠/展开（手风琴效果）
-     */
-    _initPanelAccordion() {
-        const panelButtons = document.querySelectorAll('.sidebar-content-panel-btn');
-        panelButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
-            });
-        });
-    },
-
-    _initContentSubitemClick() {
-        // 在 Sidebar 中为 person-list 添加点击委托
-        this.elements.personList.addEventListener('click', (e) => {
+    _initContentSubitemClick(container) {
+        container.addEventListener('click', (e) => {
             const item = e.target.closest('.sidebar-content-subitem');
             if (!item) return;
-            EventBus.emit('ui:select', {
-                type: item.dataset.type,
-                id: item.dataset.id
-            });
+
+            const entityId = item.dataset.entityId;
+            if (entityId) {
+                EventBus.emit('ui:select', {
+                    type: item.dataset.type,
+                    id: item.dataset.entityId,
+                });
+            }
+
         });
     },
     /**
@@ -112,30 +100,35 @@ const Sidebar = {
                 this._updateOpenState(data.value);
                 break;
             case 'currentTime':
-                // 当时间变化时，可以在此处筛选显示的人物（可选）
-                // 目前暂不处理，因为 renderPersonList 展示全部人物。
-                // 若你想只显示当前时间存在的人物，可在这里调用 renderPersonList 并加入过滤逻辑。
+                // 预留
                 break;
-            case 'persons':
+            case 'entities':
                 // 如果人物数据变化，刷新列表
-                this.renderPersonList();
+                this.renderResourceList();
                 break;
             case 'selectedItem':
-                const subItems = document.querySelectorAll('.sidebar-content-subitem');
-                subItems.forEach(item => item.classList.remove('active'));
-                if (!data.value) return;
-
-                const selectedId = data.value.data.id.toString();
-                const subItemsArray = Array.from(subItems);
-                const entity = subItemsArray.find(item => item.dataset.id === selectedId);
-
-                if (entity) {
-                    entity.classList.add('active');
-                } else {
-                    console.warn(`未找到 ID 为 ${selectedId} 的 sidebar 项目`);
-                }
+                this._highlightSelected(data.value);
                 break;
             // 其他状态变化...
+        }
+    },
+
+    /**
+    * 高亮当前选中的子项
+     * @param {Object|null} selectedItem - { type, data } 或 null
+     */
+    _highlightSelected(selectedItem) {
+        // 清除所有高亮
+        const allItems = document.querySelectorAll('.sidebar-content-subitem.active');
+        allItems.forEach(item => item.classList.remove('active'));
+
+        if (!selectedItem) return;
+
+        // selectedItem.data 现在是实体对象（SelectManager 改造后）
+        const entityId = selectedItem.data.id;
+        const item = document.querySelector(`.sidebar-content-subitem[data-entity-id="${entityId}"]`);
+        if (item) {
+            item.classList.add('active');
         }
     },
 
@@ -152,33 +145,97 @@ const Sidebar = {
     },
 
     /**
-    * 渲染人物列表（从 AppState 获取 persons）
+    * 根据实体组件类型动态生成资源列表
     */
-    renderPersonList() {
-        const container = this.elements.personList;
+    renderResourceList() {
+        const container = this.elements.explorerPanel;
         if (!container) return;
 
-        const persons = AppState.get('persons') || [];
+        const entities = AppState.get('entities') || [];
+
+        //按组件类型分类，默认组件类型为人物、组织、政权，还有用户自定义tag
+        const groups = {};
+        entities.forEach(entity => {
+            for (const comp of Object.values(entity.components)) {
+                if (comp.type !== 'person' && comp.type !== 'regime' &&
+                    comp.type !== 'organization' && comp.type !== 'customTags')
+                    continue;
+
+                if (comp.type === 'customTags') {
+                    //自定义标签组件
+                    const tags = comp.customTags || [];
+                    tags.forEach(tag => {
+                        if (!groups[tag]) {
+                            groups[tag] = []
+                        }
+                        groups[tag].push(entity);
+                    });
+                }
+                else {
+                    if (!groups[comp.type]) {
+                        groups[comp.type] = [];
+                    }
+                    groups[comp.type].push(entity);
+                }
+            }
+        })
+
+        //清空面板
         container.innerHTML = '';
 
-        persons.forEach(person => {
-            const item = document.createElement('div');
-            item.className = 'sidebar-content-subitem';
-            item.dataset.id = person.id;
-            item.dataset.type = 'person';
+        //为每种组件创建折叠区块
+        for (const [type, entitiesInGroup] of Object.entries(groups)) {
+            // 类型配置：包含中文标签和对应的图标名，非用户自定义
+            const typeConfig = {
+                person: { label: '人物', icon: 'person' },
+                organization: { label: '组织', icon: 'organization' },
+                regime: { label: '政权', icon: 'regime' }
+            };
 
-            const colorIcon = document.createElement('span');
-            colorIcon.className = 'icon';
-            colorIcon.dataset.name = 'color';
-            colorIcon.style.color = person.color;
+            const config = typeConfig[type] || { label: type, icon: 'tag' };   // 用户自定义类型默认使用 tag 图标
+            const btn = document.createElement('div');
+            btn.className = 'sidebar-content-panel-btn';
+            btn.innerHTML = `
+                <span class="icon" data-name="${config.icon}"></span>
+                ${config.label}
+                <span class="icon" data-name="rightArrow"></span>
+            `;
 
-            const textNode = document.createTextNode(person.name);
+            //子面板
+            const subPanel = document.createElement('div');
+            subPanel.className = 'sidebar-content-subpanel';
 
-            item.appendChild(colorIcon);
-            item.appendChild(textNode);
-            container.appendChild(item);
-        });
+            //填充实体子项
+            entitiesInGroup.forEach(entity => {
+                const core = entity.components.core;
+                const item = document.createElement('div');
+                item.className = 'sidebar-content-subitem';
+                item.dataset.entityId = entity.id;
+                item.dataset.type = 'entity';
 
-        initIconsForContainer(container);
+                //颜色图标
+                const colorIcon = document.createElement('span');
+                colorIcon.className = 'icon';
+                colorIcon.dataset.name = 'color';
+                colorIcon.style.color = core.color;
+
+                //实体名称
+                const textNode = document.createTextNode(core.name);
+
+                item.appendChild(colorIcon);
+                item.appendChild(textNode);
+                subPanel.appendChild(item);
+            });
+
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+            });
+
+            container.appendChild(btn);
+            container.appendChild(subPanel);
+
+            initIconsForContainer(btn);
+            initIconsForContainer(subPanel);
+        }
     },
 };

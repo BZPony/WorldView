@@ -68,8 +68,8 @@ const DetailPanel = {
     },
 
     /**
-     * 渲染详情内容（目前仅支持人物类型，未来可扩展）
-     * @param {Object} item - { type: 'person' | 'organization' | 'country', data: Object }
+     * 渲染详情内容
+     * @param {Object} item
      */
     renderDetail(item) {
         if (!this.elements.content) return;

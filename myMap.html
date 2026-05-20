@@ -55,47 +55,17 @@
 
             <!-- 资源管理器 -->
             <div class="sidebar-content-panel sidebar-content-panel--explorer">
+                <!-- 
                 <div class="sidebar-content-panel-btn" data-name="characters">
-                    <span class="icon" data-name="man"></span>
+                    <span class="icon" data-name="person"></span>
                     人物
                     <span class="icon" data-name="rightArrow"></span>
                 </div>
 
-                <div class="sidebar-content-subpanel" id="person-list">
-
-                </div>
-
-                <div class="sidebar-content-panel-btn" data-name="organizations">
-                    <span class="icon" data-name="organization"></span>
-                    组织
-                    <span class="icon" data-name="rightArrow"></span>
-                </div>
-
                 <div class="sidebar-content-subpanel">
-                    <div class="sidebar-content-subitem">圣殿骑士</div>
-                    <div class="sidebar-content-subitem">罗莎莉亚的指头</div>
-                    <div class="sidebar-content-subitem">保护伞公司</div>
-                    <div class="sidebar-content-subitem">猎魔人</div>
-                    <div class="sidebar-content-subitem">避难所科技</div>
                 </div>
-
-                <div class="sidebar-content-panel-btn" data-name="countries">
-                    <span class="icon" data-name="country"></span>
-                    政权
-                    <span class="icon" data-name="rightArrow"></span>
-                </div>
-
-                <div class="sidebar-content-subpanel">
-                    <div class="sidebar-content-subitem">天马城邦</div>
-                    <div class="sidebar-content-subitem">洛斯里克王国</div>
-                    <div class="sidebar-content-subitem">永恒之城诺克隆恩</div>
-                    <div class="sidebar-content-subitem">博德之门</div>
-                    <div class="sidebar-content-subitem">刚铎</div>
-                    <div class="sidebar-content-subitem">新加州共和国</div>
-                </div>
+                -->
             </div>
-
-        </div>
     </aside>
 
     <aside class="detail">
@@ -159,9 +129,8 @@
             initIcons();
         });
 
-        // 1. 设置初始数据（persons 已在 data/entities.js 全局声明，暂存到 AppState）
-        AppState.set('persons', persons);
-        AppState.set('entities', defaultEntities);
+        // 1. 设置初始数据
+        AppState.set('entities', entities);
         AppState.set('currentTime', 0);
 
         // 2. 按依赖顺序初始化模块
@@ -183,7 +152,7 @@
 
         // 3. 初始渲染（地图已自动调用一次，此处可省略）
         // 侧边栏人物列表需手动触发一次
-        Sidebar.renderPersonList();
+        Sidebar.renderResourceList();
     </script>
 
 </body>

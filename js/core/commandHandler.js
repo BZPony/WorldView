@@ -38,11 +38,11 @@ const CommandHandler = {
         const newPerson = createPersonData({ name: "新人物", lat: latlng.lat, lng: latlng.lng });
 
         // 2. 更新全局状态
-        const persons = AppState.get('persons') || [];
-        AppState.set('persons', [...persons, newPerson]);
+        const entities = AppState.get('entities') || [];
+        AppState.set('entities', [...entities, newPerson]);
 
         // 3. 自动选中新创建的人物，触发 DetailPanel 打开
-        AppState.set('selectedItem', { type: 'person', data: newPerson });
+        AppState.set('selectedItem', { type: 'entity', data: newPerson });
     },
 };
 
