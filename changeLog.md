@@ -8,43 +8,47 @@
 
 ### Added
 
-- 在 `entities.js` 中新增组件工厂函数
-- 添加 `sidebar.js` 对`organization`和`regime`的UI适配
-- 新增用户自定义标签的数据结构基础
+- 在 `entities.js` 中新增 ECS 组件工厂函数（`createCoreComponent`、`createTimelineComponent`、`createPersonComponent`、`createRegimeComponent`、`createOrganizationComponent`、`createCustomTagComponent`）
+- 新增 `createEntity()`、`createPersonEntity()`、`createOrganizationEntity()`、`createRegimeEntity()` 实体创建工厂函数
+- 添加 `sidebar.js` 对 `organization` 和 `regime` 类型的 UI 适配（按组件类型动态分类渲染）
+- 新增用户自定义标签组件数据结构 `customTags`
+- 新增 `detail.js` 中的组件式详情渲染系统（按组件类型独立渲染折叠区块）
 
 ### Changed
 
-- 将 `entities.js` 的数据结构重构为基于ECS的数据结构
-- 删除对旧数据结构的支持
+- 将 `entities.js` 的数据结构重构为 ECS（Entity-Component-System）架构
+- 删除对旧数据结构 `persons` 的支持，统一使用 `entities`
+- 侧边栏列表渲染由 `renderPersonList()` 更名为 `renderResourceList()`
 
 ### Fixed
 
-- 修复新建人物的UI无法响应点击事件的缺陷
+- 修复新建人物的 UI 无法响应点击事件的缺陷
+- 修正在 `entities.js` 中同时存在新旧数据格式导致的不一致问题
 
 ## [0.4.0] - 2026-05-14
 
 ### Added
 
 - 新增 `sidebar.css` 中选择对象的高亮功能
-- 新增 `sidebar-content-subitem` 对象的`color`svg颜色图标
-- 新增 `organization` 和`regime`的示例数据结构
+- 新增 `sidebar-content-subitem` 对象的 `color` SVG 颜色图标
+- 新增 `organization` 和 `regime` 的示例数据结构
 - 在 `contextMenu.js` 中添加 `lastClickLatLng` 变量，便于向事件传递位置参数
-- 新增 `commandHandler.js` 文件，负责 `AppState`中应用数据的修改
-- 在 `entities.js` 中新增 `createPersonData()` ，返回一个默认人物数据
+- 新增 `commandHandler.js` 文件，负责 `AppState` 中应用数据的修改
+- 在 `entities.js` 中新增 `createPersonData()`，返回一个默认人物数据
 - 在 `svg-icons.js` 中新增 `initIconsForContainer()`，仅初始化指定容器中的图标
 
 ### Changed
 
-- 修改 `sidebar.css`，中的布局格式，并添加选择高亮效果
+- 修改 `sidebar.css` 中的布局格式，并添加选择高亮效果
 - 将 `sidebar.js` 中 `init()` 函数中绑定人物事件功能提取为 `_initContentSubitemClick()`
 - 将 `persons.js` 文件名修改为 `entities.js`
 - 修改 `detail` 面板的布局结构
-- `sidebar.js` 中的 `_initContentSubitemClick()` 不再负责更改具体的DOM元素，现在由 `_onStateChange()` 统一负责响应
+- `sidebar.js` 中的 `_initContentSubitemClick()` 不再负责更改具体的 DOM 元素，现在由 `_onStateChange()` 统一负责响应
 
 ### Fixed
 
-- 修复 `map.js` 中函数 `getPersonPosition()` 当人物只存在一个途径点时函数错误返回 `undefined` 的缺陷
-- 修复渲染人物列表时 `.icon` 无法正确显示svg图片的问题
+- 修复 `map.js` 中函数 `getEntityPosition()` 当人物只存在一个途径点时函数错误返回 `undefined` 的缺陷
+- 修复渲染人物列表时 `.icon` 无法正确显示 SVG 图片的问题
 - 修复由于 `CommandHandler` 和 `LayoutManager` 初始化顺序问题引起的布局错误缺陷
 
 ## [0.3.0] - 2026-05-11
@@ -77,7 +81,7 @@
 
 ### Changed
 
-- 将上帝脚本 `index.html` 拆分为 12 个独立模块（CSS + JS）
+- 将上帝脚本 `myMap.html` 拆分为 12 个独立模块（CSS + JS）
 - 将侧边栏、时间轴、右键菜单的业务逻辑全部移入各自组件
 - 统一命名规范：CSS 类名采用 BEM 变体（区域-组件-层级），状态类统一为 `.active`、`.is-hidden`
 

@@ -7,32 +7,33 @@ detail面板系统
     /* 固定定位，使得侧边栏在页面滚动时保持位置不变 */
     position: absolute;
 
-    /* 设置侧边栏的四个边距，top和bottom为10px，left为240px，
-    width为220px，height未设置，自动拉伸，padding为0，margin默认为0 */
+    /* 设置详情面板的四个边距，top和bottom为10px，left为var(--detail-left)，
+    width为280px，height未设置，自动拉伸，padding为0，margin默认为0 */
     top: 10px;
-    left: var(--detail-left, 240px);  /* 使用变量，默认240px防止未定义 */
+    left: var(--detail-left, 240px);
+    /* 使用变量，默认240px防止未定义 */
     bottom: 10px;
     width: 280px;
     padding: 0;
 
-    /* 美化侧边栏，圆角、阴影和半透明背景 */
+    /* 美化详情面板，圆角、阴影和半透明背景 */
     border-radius: 20px;
     box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
     background-color: rgba(20, 20, 20, 0.8);
 
-    /* 使用flex布局，使得侧边栏内容垂直排列 */
+    /* 使用flex布局，使得详情面板内容垂直排列 */
     display: flex;
     flex-direction: column;
 
     /* 设置层级，使得侧边栏在地图之上 */
     z-index: 999;
 
-    /* 侧边栏的动画效果，使用CSS变量控制动画持续时间 */
-    transition: left calc(var(--animation-duration)*1.5)  ease-in-out;
+    /* 详情面板的动画效果，使用CSS变量控制动画持续时间 */
+    transition: left calc(var(--animation-duration)*1.5) ease-in-out;
 }
 
 /* detail面板关闭状态（页面级状态）*/
-body.detail--closed .detail{
+body.detail--closed .detail {
     left: -330px;
 }
 
@@ -53,7 +54,7 @@ header 区
     justify-content: flex-end;
 }
 
-/* ---------- 侧边栏开关按钮（头部关闭按钮） ---------- */
+/* ---------- 详情面板关闭按钮 ---------- */
 .detail-toggle-btn--close {
     position: absolute;
 
@@ -75,7 +76,7 @@ header 区
     color: white;
 
     cursor: pointer;
-    
+
     z-index: 1001;
 
     transition: all var(--animation-duration) ease;
@@ -100,7 +101,85 @@ content 区
 
     /* 使用flex布局，垂直默认对齐顶部，水平默认拉伸对齐，设置垂直排列*/
     display: flex;
-    flex:1;
+    flex: 1;
     flex-direction: column;
     overflow: auto;
+}
+
+.detail-content-title {
+    text-align: left;
+    font-size: 25px;
+    font-family: sans-serif;
+    line-height: 2.0;
+    color: rgb(255, 255, 255);
+}
+
+.detail-component-block {
+    margin-bottom: 15px;
+}
+
+.detail-component-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #ddd;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+}
+
+.detail-component-type {
+    font-weight: bold;
+    color: #ccc;
+}
+
+.detail-component-body {
+    padding-left: 6px;
+}
+
+.detail-property {
+    display: flex;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.property-label {
+    color: #999;
+    width: 70px;
+    flex-shrink: 0;
+}
+
+.property-value {
+    color: #eee;
+}
+
+/*颜色预览的小图标*/
+.color-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.detail-waypoint-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.waypoint-item {
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 3px;
+}
+
+/* 时间标签样式 */
+.time-badge {
+    background: #444;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 4px;
 }

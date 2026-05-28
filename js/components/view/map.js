@@ -96,7 +96,6 @@ const MapView = {
         const currentTime = AppState.get('currentTime') || 0;
 
         entities.forEach(entity => {
-            console.log("rendering " + entity.components.core.name);
             const pos = this.getEntityPosition(entity, currentTime);
 
             if (pos === null) {
@@ -120,6 +119,14 @@ const MapView = {
             } else {
                 entity._marker.setLatLng([pos.lat, pos.lng]);
             }
+
+            //向标记添加点击事件
+            entity._marker.addEventListener('click', () => {
+                EventBus.emit('ui:select', {
+                    type: 'entity',
+                    id: entity.id
+                });
+            })
 
             // 构建轨迹坐标数组（截至当前时间的路径）
             const path = [];

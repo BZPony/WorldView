@@ -105,6 +105,11 @@ const Sidebar = {
             case 'entities':
                 // 如果人物数据变化，刷新列表
                 this.renderResourceList();
+                // 重新渲染后，如果之前有选中项，需重新高亮
+                const currentSelected = AppState.get('selectedItem');
+                if (currentSelected) {
+                    this._highlightSelected(currentSelected);
+                }
                 break;
             case 'selectedItem':
                 this._highlightSelected(data.value);
@@ -163,7 +168,7 @@ const Sidebar = {
 
                 if (comp.type === 'customTags') {
                     //自定义标签组件
-                    const tags = comp.customTags || [];
+                    const tags = comp.tags || [];
                     tags.forEach(tag => {
                         if (!groups[tag]) {
                             groups[tag] = []

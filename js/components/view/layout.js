@@ -26,12 +26,12 @@ const LayoutManager = {
     init() {
         // 1. 从 AppState 读取侧边栏初始状态（如果存在）
         const sidebarOpen = AppState.get('isSidebarOpen');
-        const detailPanelOen = AppState.get('isSidebarOpen');
+        const detailPanelOpen = AppState.get('isDetailPanelOpen');
         if (sidebarOpen !== undefined) {
             this.panels.sidebar.isOpen = sidebarOpen;
         }
-        if (detailPanelOen !== undefined) {
-            this.panels.detail.isOpen = detailPanelOen;
+        if (detailPanelOpen !== undefined) {
+            this.panels.detail.isOpen = detailPanelOpen;
         }
 
         // 2. 立即计算一次

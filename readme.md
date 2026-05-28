@@ -34,21 +34,22 @@
 2. 直接在浏览器中打开 `myMap.html`（无需服务端，但某些资源 CDN 需要网络）。
 3. 系统会自动初始化地图、时间轴、侧边栏等模块。
 
-## 模块初始化顺序（index.html 内联脚本）
+## 模块初始化顺序（myMap.html 内联脚本）
 
 ```javascript
-AppState.set('persons', persons);
+AppState.set('entities', entities);
 AppState.set('currentTime', 0);
 
 MapView.init('map');
 ContextMenu.init(MapView.map);
 SelectManager.init();
+CommandHandler.init();
+LayoutManager.init();
 Timeline.init({ startYear: -1000, endYear: 1000, ... });
 Sidebar.init();
 DetailPanel.init();
-LayoutManager.init();
 
-Sidebar.renderPersonList();   // 手动触发首次列表渲染
+Sidebar.renderResourceList();   // 手动触发首次列表渲染
 ```
 
 ## 依赖
