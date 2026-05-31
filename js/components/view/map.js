@@ -8,6 +8,11 @@
  */
 const MapView = {
     map: null,
+    /**
+     * 实体图层组，统一管理所有实体的标记、轨迹、途径点
+     * undo/redo 整体替换 entities 时，清空整个图层组即可移除所有旧 Leaflet 图层
+     */
+    _entityLayerGroup: null,
 
     /**
      * 初始化地图
@@ -31,7 +36,10 @@ const MapView = {
             this.map.invalidateSize();
         }, 100);
 
-        // 2. 初始化时立即渲染一次
+        // 2. 创建实体图层组，所有实体标记、轨迹、途径点都加到这里
+        this._entityLayerGroup = L.layerGroup().addTo(this.map);
+
+        // 3. 初始化时立即渲染一次
         this.renderTimelineEntities();
 
         // 3. 订阅时间变化，自动重绘
@@ -41,9 +49,16 @@ const MapView = {
             }
         });
 
-        // 4. 如果将来实体数据变化，也重绘
+        // 4. 实体数据变化，清理图层组再重建（应对 undo/redo 整体替换 entities）
         EventBus.on('state:change', (data) => {
             if (data.key === 'entities') {
+                // 清除当前 entities 上的 Leaflet 引用，避免 pos===null 分支误操作已删除的图层
+                (data.value || []).forEach(entity => {
+                    entity._marker = null;
+                    entity._polyline = null;
+                    entity._waypointMarkers = [];
+                });
+                this._entityLayerGroup.clearLayers();
                 this.renderTimelineEntities();
             }
         });
@@ -133,7 +148,7 @@ const MapView = {
             if (!entity._marker) {
                 entity._marker = L.marker([pos.lat, pos.lng], {
                     icon: this._createEntityIcon(entity)
-                }).addTo(this.map);
+                }).addTo(this._entityLayerGroup);
 
                 // 只在首次创建标记时添加点击事件，避免重复监听
                 entity._marker.addEventListener('click', () => {
@@ -168,7 +183,7 @@ const MapView = {
                     color: entity.components.core.color,
                     weight: 3,
                     opacity: 0.9
-                }).addTo(this.map);
+                }).addTo(this._entityLayerGroup);
             } else {
                 entity._polyline.setLatLngs(path);
             }
@@ -203,7 +218,7 @@ const MapView = {
                 icon: icon,
                 interactive: false,
                 zIndexOffset: -100
-            }).addTo(this.map);
+            }).addTo(this._entityLayerGroup);
 
             entity._waypointMarkers.push(marker);
         });

@@ -276,17 +276,15 @@ const DetailPanel = {
             return;
         }
 
-        // 更新组件字段（直接修改引用，selectedItem.data 同步生效）
-        component[field] = newValue;
-
-        // 同步到 AppState，触发地图标记和侧边栏重绘
-        const entities = AppState.get('entities').map(e =>
-            e.id === entity.id ? entity : e
-        );
-        AppState.set('entities', entities);
-
-        // 重新渲染详情面板
-        this.renderDetail(selectedItem);
+        // 通过命令模式执行编辑，支持 Undo/Redo
+        EventBus.emit('command:execute', {
+            type: 'editEntityField',
+            entityId: entity.id,
+            componentType: componentType,
+            field: field,
+            oldValue: originalValue,
+            newValue: newValue
+        });
     },
 
     _getComponentLabel(type) {
