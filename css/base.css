@@ -66,6 +66,29 @@ body {
 6. 地图标记样式
 =====================================================
 */
+.entity-marker-outer {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgb(233, 233, 233);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.555);
+    transition: box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.entity-marker-outer.selected {
+    background: rgb(50, 120, 230);
+    box-shadow: 0 0 12px rgba(50, 120, 230, 0.8);
+}
+
+.entity-marker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .entity-marker-background {
     width: 24px;
     height: 24px;
@@ -77,4 +100,37 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.entity-marker-label {
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: bold;
+    font-family: sans-serif;
+    text-shadow:
+        -1px -1px 2px rgba(0, 0, 0, 0.5),
+        1px -1px 2px rgba(0, 0, 0, 0.5),
+        -1px 1px 2px rgba(0, 0, 0, 0.5),
+        1px 1px 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+/*
+7. 途径点标记样式
+*/
+.waypoint-marker-outer {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgb(251, 251, 251);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.585);
+}
+
+.waypoint-marker-inner {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
 }

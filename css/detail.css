@@ -122,7 +122,7 @@ content 区
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 14px;
+    font-size: 15px;
     color: #ddd;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     padding-bottom: 4px;
@@ -145,13 +145,15 @@ content 区
 }
 
 .property-label {
-    color: #999;
+    color: #bebebe;
     width: 70px;
+    align-items: center;
     flex-shrink: 0;
 }
 
 .property-value {
     color: #eee;
+    align-items: center;
 }
 
 /*颜色预览的小图标*/
@@ -174,12 +176,56 @@ content 区
     font-size: 12px;
     color: #ccc;
     margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* 时间标签样式 */
 .time-badge {
-    background: #444;
     padding: 1px 4px;
+    min-width: 42px;
+    flex-shrink: 0;
+}
+
+/* =====================================================
+   内联编辑输入框样式
+   ===================================================== */
+.detail-edit-input {
+    width: 100%;
+    height: 20px;
+    padding: 0 4px;
+    border: 1px solid #666;
     border-radius: 3px;
-    margin-right: 4px;
+    background: #2a2a2a;
+    color: #eee;
+    font-size: 13px;
+    line-height: 18px;
+    font-family: inherit;
+    box-sizing: border-box;
+    outline: none;
+    margin: -1px 0;
+}
+
+.detail-edit-input:focus {
+    border-color: rgb(46, 95, 255);
+}
+
+.detail-edit-textarea {
+    width: 100%;
+    min-height: 40px;
+    padding: 2px 4px;
+    border: 1px solid #666;
+    border-radius: 3px;
+    background: #2a2a2a;
+    color: #eee;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    outline: none;
+    resize: vertical;
+}
+
+.detail-edit-textarea:focus {
+    border-color: rgb(46, 95, 255);
 }

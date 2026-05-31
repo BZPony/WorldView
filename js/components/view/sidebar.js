@@ -112,8 +112,20 @@ const Sidebar = {
                 }
                 break;
             case 'selectedItem':
-                this._highlightSelected(data.value);
+                if (data.value) {
+                    // 确保侧边栏打开
+                    if (!AppState.get('isSidebarOpen')) {
+                        AppState.set('isSidebarOpen', true);
+                    }
+                    // 切换到资源管理器 Tab
+                    this._switchToTab('explorer');
+                    // 高亮、展开、滚动
+                    this._highlightAndReveal(data.value);
+                } else {
+                    this._highlightSelected(null);
+                }
                 break;
+
             // 其他状态变化...
         }
     },
@@ -135,6 +147,42 @@ const Sidebar = {
         if (item) {
             item.classList.add('active');
         }
+    },
+
+    _switchToTab(tabName) {
+        const tabBtn = document.querySelector(`.sidebar-tabs-btn[data-name="${tabName}"]`);
+        const targetPanel = document.querySelector(`.sidebar-content-panel--${tabName}`);
+        if (tabBtn && targetPanel) {
+            // 激活按钮
+            document.querySelectorAll('.sidebar-tabs-btn').forEach(b => b.classList.remove('active'));
+            tabBtn.classList.add('active');
+            // 切换面板
+            document.querySelectorAll('.sidebar-content-panel').forEach(p => p.classList.remove('active'));
+            targetPanel.classList.add('active');
+        }
+    },
+
+    _highlightAndReveal(selectedItem) {
+        const entityId = selectedItem.data.id;
+        const item = document.querySelector(`.sidebar-content-subitem[data-entity-id="${entityId}"]`);
+        if (!item) return;
+
+        // 清除所有高亮
+        document.querySelectorAll('.sidebar-content-subitem.active').forEach(el => el.classList.remove('active'));
+        // 设置高亮
+        item.classList.add('active');
+
+        // 展开包含该项的折叠面板
+        const subPanel = item.closest('.sidebar-content-subpanel');
+        if (subPanel) {
+            const btn = subPanel.previousElementSibling;
+            if (btn && btn.classList.contains('sidebar-content-panel-btn')) {
+                btn.classList.add('active');
+            }
+        }
+
+        // 滚动到该项
+        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     },
 
     /**

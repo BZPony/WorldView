@@ -5,6 +5,7 @@
  * - 管理详情面板的可见状态（写入 AppState.isDetailPanelOpen，触发布局更新）
  * - 提供关闭按钮，清空选中项
  * - 响应 isDetailPanelOpen 状态，更新 body 类
+ * - 支持双击属性值进行内联编辑，回车或失焦自动保存
  *
  * 与 Sidebar 的对应关系：
  *   - _toggle  → 不再直接由按钮调用，面板打开由 selectedItem 驱动
@@ -33,14 +34,19 @@ const DetailPanel = {
         // 3. 监听 AppState 变化
         EventBus.on('state:change', this._onStateChange.bind(this));
 
-        // 4. 根据初始状态设置面板
+        // 4. 双击编辑功能（事件委托）
+        this.elements.content.addEventListener('dblclick', (e) => {
+            const valueEl = e.target.closest('.property-value');
+            if (!valueEl || !valueEl.dataset.field) return;
+            this._makeEditable(valueEl);
+        });
+
+        // 5. 根据初始状态设置面板
         const initialItem = AppState.get('selectedItem');
         if (initialItem) {
-            console.log("selected Item");
             this.renderDetail(initialItem);
             this._toggle(true);
         } else {
-            console.log("none selected Item");
             this._toggle(false);
         }
     },
@@ -100,7 +106,7 @@ const DetailPanel = {
     _renderComponentSection(component) {
         const type = component.type;
         //core组件不参与渲染
-        if (type === 'core') return null;
+        //if (type === 'core') return null;
         //获取渲染器
         const renderer = this._getComponentRenderer(type);
         if (!renderer) return null;//未知组件不渲染
@@ -132,13 +138,14 @@ const DetailPanel = {
 
     /**
      * 根据组件类型返回渲染函数，函数返回 HTML 字符串
+     * 每个 .property-value 需携带 data-component 和 data-field 属性以支持双击编辑
     */
     _getComponentRenderer(type) {
         const renderers = {
             core: comp => `
-                <div class="detail-property"><span class="property-label">名称</span><span class="property-value">${comp.name}</span></div>
-                <div class="detail-property"><span class="property-label">颜色</span><span class="property-value"><span class="color-swatch" style="background:${comp.color}"></span>${comp.color}</span></div>
-                <div class="detail-property"><span class="property-label">默认图标</span><span class="property-value">${comp.icon}</span></div>
+                <div class="detail-property"><span class="property-label">名称</span><span class="property-value" data-component="core" data-field="name">${comp.name}</span></div>
+                <div class="detail-property"><span class="property-label">颜色</span><span class="property-value" data-component="core" data-field="color"><span class="color-swatch" style="background:${comp.color}"></span>${comp.color}</span></div>
+                <div class="detail-property"><span class="property-label">默认图标</span><span class="property-value" data-component="core" data-field="icon">${comp.icon}</span></div>
             `,
             timeline: comp => {
                 if (!comp.waypoints || comp.waypoints.length === 0) {
@@ -150,20 +157,20 @@ const DetailPanel = {
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },
             person: comp => `
-                <div class="detail-property"><span class="property-label">出生时间</span><span class="property-value">${comp.birthTime ?? '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">死亡时间</span><span class="property-value">${comp.deathTime ?? '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">性别</span><span class="property-value">${comp.gender ?? '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">描述</span><span class="property-value">${comp.description || '无'}</span></div>
+                <div class="detail-property"><span class="property-label">出生时间</span><span class="property-value" data-component="person" data-field="birthTime">${comp.birthTime ?? '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">死亡时间</span><span class="property-value" data-component="person" data-field="deathTime">${comp.deathTime ?? '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">性别</span><span class="property-value" data-component="person" data-field="gender">${comp.gender ?? '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">描述</span><span class="property-value" data-component="person" data-field="description">${comp.description || '无'}</span></div>
             `,
             organization: comp => `
-                <div class="detail-property"><span class="property-label">总部</span><span class="property-value">${comp.headquarters || '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">领袖</span><span class="property-value">${comp.leader || '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">成员</span><span class="property-value">${comp.members || '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">总部</span><span class="property-value" data-component="organization" data-field="headquarters">${comp.headquarters || '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">领袖</span><span class="property-value" data-component="organization" data-field="leader">${comp.leader || '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">成员</span><span class="property-value" data-component="organization" data-field="members">${comp.members || '未知'}</span></div>
             `,
             regime: comp => `
-                <div class="detail-property"><span class="property-label">首都</span><span class="property-value">${comp.capital || '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">人口</span><span class="property-value">${comp.population || '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">政体</span><span class="property-value">${comp.governmentType || '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">首都</span><span class="property-value" data-component="regime" data-field="capital">${comp.capital || '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">人口</span><span class="property-value" data-component="regime" data-field="population">${comp.population || '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">政体</span><span class="property-value" data-component="regime" data-field="governmentType">${comp.governmentType || '未知'}</span></div>
             `,
             customTags: comp => {
                 const tags = comp.tags || [];
@@ -182,10 +189,111 @@ const DetailPanel = {
         };
     },
 
+    /**
+     * 将属性值变为可编辑输入框
+     * @param {HTMLElement} valueEl - .property-value 元素
+     */
+    _makeEditable(valueEl) {
+        const currentText = valueEl.textContent;
+        const field = valueEl.dataset.field;
+
+        // 长文本字段使用 textarea
+        const useTextarea = field === 'description';
+
+        const input = useTextarea ? document.createElement('textarea') : document.createElement('input');
+
+        // 显示值为 '未知' 或 '无' 时输入框留空
+        const isPlaceholder = currentText === '未知' || currentText === '无';
+        const initialValue = isPlaceholder ? '' : currentText;
+
+        if (useTextarea) {
+            input.value = initialValue;
+            input.className = 'detail-edit-textarea';
+        } else {
+            // 数字字段使用 number 类型
+            if (field === 'birthTime' || field === 'deathTime') {
+                input.type = 'number';
+            } else {
+                input.type = 'text';
+            }
+            input.value = initialValue;
+            input.className = 'detail-edit-input';
+        }
+
+        input.dataset.component = valueEl.dataset.component;
+        input.dataset.field = field;
+
+        // 替换内容
+        valueEl.textContent = '';
+        valueEl.appendChild(input);
+        input.focus();
+        input.select();
+
+        // 保存回调
+        const saveHandler = () => this._saveEdit(input);
+
+        input.addEventListener('blur', saveHandler);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !useTextarea) {
+                e.preventDefault();
+                input.blur();
+            }
+            if (e.key === 'Escape') {
+                // 取消编辑，重新渲染面板还原
+                this.renderDetail(AppState.get('selectedItem'));
+            }
+        });
+    },
+
+    /**
+     * 保存编辑内容到实体数据，同步到 AppState
+     * @param {HTMLInputElement|HTMLTextAreaElement} input
+     */
+    _saveEdit(input) {
+        const componentType = input.dataset.component;
+        const field = input.dataset.field;
+        const rawValue = input.value;
+
+        const selectedItem = AppState.get('selectedItem');
+        if (!selectedItem) return;
+
+        const entity = selectedItem.data;
+        const component = entity.components[componentType];
+        if (!component) return;
+
+        // 保持与原始值类型一致（数字/字符串）
+        const originalValue = component[field];
+        let newValue;
+        if (typeof originalValue === 'number') {
+            newValue = rawValue === '' ? originalValue : Number(rawValue);
+        } else {
+            newValue = rawValue || originalValue;
+        }
+
+        // 值未变化则不更新
+        if (newValue === originalValue) {
+            this.renderDetail(selectedItem);
+            return;
+        }
+
+        // 更新组件字段（直接修改引用，selectedItem.data 同步生效）
+        component[field] = newValue;
+
+        // 同步到 AppState，触发地图标记和侧边栏重绘
+        const entities = AppState.get('entities').map(e =>
+            e.id === entity.id ? entity : e
+        );
+        AppState.set('entities', entities);
+
+        // 重新渲染详情面板
+        this.renderDetail(selectedItem);
+    },
+
     _getComponentLabel(type) {
         const labels = {
+            core: '基本信息',
             timeline: '时间轴轨迹',
-            person: '人物属性',
+            person: '人物信息',
             organization: '组织信息',
             regime: '政权信息',
             customTags: '自定义标签'
@@ -195,6 +303,7 @@ const DetailPanel = {
 
     _getComponentIcon(type) {
         const icons = {
+            core: 'page',
             timeline: 'timeline',
             person: 'person',
             organization: 'organization',
@@ -224,3 +333,5 @@ const DetailPanel = {
         }
     }
 };
+
+window.DetailPanel = DetailPanel;
