@@ -8,6 +8,11 @@
 
 ### Added
 
+- **Undo/Redo 操作回退功能** — 通过命令模式重构数据修改流程，所有应用数据修改统一走 `CommandHandler`
+- 新增 `CommandHandler.execute()` / `undo()` / `redo()` 方法，基于 `_undoStack` / `_redoStack` 双栈快照管理
+- 新增 `CommandHandler._cloneEntities()` 深拷贝函数，自动剥离 Leaflet 运行时属性，避免 `JSON.stringify` 循环引用
+- 新增命令工厂 `createEditFieldCommand()` / `createCreateEntityCommand()`
+- 快捷键支持：`Ctrl+Z` / `Cmd+Z`（撤销）、`Ctrl+Shift+Z` / `Cmd+Y`（重做）
 - 地图标记实体名称标签，鼠标悬浮时可查看实体名称，名称颜色随实体主色自动适配
 - 新增 `adjustColor()` HSL 颜色调整工具函数（`js/utils/color.js`）
 - 实体标记选中高亮效果 — 选中实体时灰色外环变为蓝色发光样式
@@ -22,10 +27,14 @@
 - 详情面板中 `core` 组件（名称/颜色/默认图标）现在可编辑，不再隐藏
 - 实体地图标记的点击事件改为只在首次创建时注册，避免重复监听
 - 标记图标尺寸由 `[24, 24]` 调整为 `[200, 28]`，锚点由 `[12, 12]` 调整为 `[14, 14]`，以容纳名称标签
+- `detail.js` 的 `_saveEdit()` 改为发射 `command:execute` 事件，不直接操作 `AppState`
+- 右键创建人物纳入命令模式，走 `CommandHandler.execute()`
+- 引入 `L.layerGroup`（`_entityLayerGroup`）统一管理所有实体图层，支持 undo/redo 整体替换时清理旧图层
 
 ### Fixed
 
 - 修复点击地图标记时图标重绘次数翻倍的恶性 bug（`addEventListener` 在每次 `renderTimelineEntities()` 时重复注册）
+- 修复 undo/redo 后地图图标越堆越多的问题（实体整体替换后清理旧 Leaflet 图层引用）
 
 ## [0.4.0] - 2026-05-14
 

@@ -58,6 +58,14 @@
 
 详情面板支持双击属性值直接编辑，适用于 `person`、`organization`、`regime`、`core` 组件的字段。修改后自动保存到 `AppState`，地图标记和侧边栏同步更新。
 
+### 8. Undo/Redo 操作回退
+
+所有数据修改（内联编辑、创建实体等）统一通过 `CommandHandler` 的命令模式管理：
+
+- **撤销** `Ctrl+Z` / `Cmd+Z` — 恢复到修改前的状态
+- **重做** `Ctrl+Shift+Z` / `Cmd+Y` — 重新应用已撤销的修改
+- 内部使用 `_undoStack` / `_redoStack` 双栈快照，每次执行自动保存 `entities` 的纯净深拷贝，支持无限次回退
+
 ## 快速开始
 
 1. 克隆或下载项目，确保文件结构如上所示。
