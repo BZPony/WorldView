@@ -8,22 +8,24 @@
 
 ### Added
 
-- 在 `entities.js` 中新增 ECS 组件工厂函数（`createCoreComponent`、`createTimelineComponent`、`createPersonComponent`、`createRegimeComponent`、`createOrganizationComponent`、`createCustomTagComponent`）
-- 新增 `createEntity()`、`createPersonEntity()`、`createOrganizationEntity()`、`createRegimeEntity()` 实体创建工厂函数
-- 添加 `sidebar.js` 对 `organization` 和 `regime` 类型的 UI 适配（按组件类型动态分类渲染）
-- 新增用户自定义标签组件数据结构 `customTags`
-- 新增 `detail.js` 中的组件式详情渲染系统（按组件类型独立渲染折叠区块）
+- 地图标记实体名称标签，鼠标悬浮时可查看实体名称，名称颜色随实体主色自动适配
+- 新增 `adjustColor()` HSL 颜色调整工具函数（`js/utils/color.js`）
+- 实体标记选中高亮效果 — 选中实体时灰色外环变为蓝色发光样式
+- 途径点小圆点标记（12px 外环 + 8px 内圆），时间轴拖动时自动更新
+- 详情面板新增双击内联编辑功能，支持 `person`、`organization`、`regime`、`core` 组件的字段编辑
+- 侧边栏自动跳转 — 点击地图标记时自动打开侧边栏、切换到资源管理 Tab、展开父面板并滚动到对应项
+- 新增 `page` SVG 图标
 
 ### Changed
 
-- 将 `entities.js` 的数据结构重构为 ECS（Entity-Component-System）架构
-- 删除对旧数据结构 `persons` 的支持，统一使用 `entities`
-- 侧边栏列表渲染由 `renderPersonList()` 更名为 `renderResourceList()`
+- 地图实体标记样式重构为三层结构：28px 灰色外环 → 24px 颜色圆形 → 16px SVG 图标
+- 详情面板中 `core` 组件（名称/颜色/默认图标）现在可编辑，不再隐藏
+- 实体地图标记的点击事件改为只在首次创建时注册，避免重复监听
+- 标记图标尺寸由 `[24, 24]` 调整为 `[200, 28]`，锚点由 `[12, 12]` 调整为 `[14, 14]`，以容纳名称标签
 
 ### Fixed
 
-- 修复新建人物的 UI 无法响应点击事件的缺陷
-- 修正在 `entities.js` 中同时存在新旧数据格式导致的不一致问题
+- 修复点击地图标记时图标重绘次数翻倍的恶性 bug（`addEventListener` 在每次 `renderTimelineEntities()` 时重复注册）
 
 ## [0.4.0] - 2026-05-14
 
