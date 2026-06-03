@@ -13,14 +13,12 @@ function createCoreComponent({ name, color, icon = 'person' }) {
 
 /**
  * 时间轴轨迹组件（可选）
- * 自动将 waypoint.time 补全为 { arrival, departure } 格式
- * 自动添加 resolution 字段
+ * 要求 waypoint.time 格式为 { arrival: {...}, departure: {...} }
+ * 自动补全缺失的 resolution
  */
 function createTimelineComponent(waypoints = []) {
     const normalized = waypoints.map(wp => {
-        // 如果 time 是数字，转为对象
-        const rawTime = typeof wp.time === 'number' ? { year: wp.time } : (wp.time || { year: 0 });
-        // 如果 time 已有 arrival/departure 结构，直接使用
+        const rawTime = wp.time || { arrival: { year: 0 }, departure: { year: 0 } };
         const arrival = rawTime.arrival || rawTime;
         const departure = rawTime.departure || rawTime;
         return {
@@ -34,13 +32,13 @@ function createTimelineComponent(waypoints = []) {
 
 /**
  * 人物组件（可选）
- * birthTime / deathTime 支持数字兼容，自动转为对象
+ * birthTime / deathTime 格式为 { year: number } | null
  */
 function createPersonComponent({ birthTime, deathTime, gender, description } = {}) {
     return {
         type: 'person',
-        birthTime: typeof birthTime === 'number' ? { year: birthTime } : (birthTime || null),
-        deathTime: typeof deathTime === 'number' ? { year: deathTime } : (deathTime || null),
+        birthTime: birthTime || null,
+        deathTime: deathTime || null,
         gender,
         description
     };
@@ -137,10 +135,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 30, lng: 110, time: { year: 0, month: 6, day: 15 }, resolution: 'day' },
-                    { lat: 32, lng: 115, time: { year: 20, month: 3, day: 1 }, resolution: 'day' },
-                    { lat: 35, lng: 120, time: { year: 40, month: 9, day: 10 }, resolution: 'day' },
-                    { lat: 40, lng: 116, time: { year: 80, month: 1, day: 1 }, resolution: 'day' }
+                    { lat: 30, lng: 110, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day' },
+                    { lat: 32, lng: 115, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day' },
+                    { lat: 35, lng: 120, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day' },
+                    { lat: 40, lng: 116, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -50 }, deathTime: { year: 100 }, gender: '男', description: '一位旅行者' }
@@ -153,10 +151,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 31, lng: 120, time: { year: -200, month: 5 }, resolution: 'year' },
-                    { lat: 33, lng: 118, time: { year: 0, month: 1, day: 1 }, resolution: 'day' },
-                    { lat: 36, lng: 122, time: { year: 50, month: 7, day: 14 }, resolution: 'day' },
-                    { lat: 38, lng: 119, time: { year: 150, month: 12 }, resolution: 'month' }
+                    { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year' },
+                    { lat: 33, lng: 118, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day' },
+                    { lat: 36, lng: 122, time: { arrival: { year: 50, month: 7, day: 14 }, departure: { year: 50, month: 7, day: 14 } }, resolution: 'day' },
+                    { lat: 38, lng: 119, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -250 }, deathTime: { year: 200 }, gender: '女', description: '小马谷的图书管理员' }
@@ -169,10 +167,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 28, lng: 115, time: { year: -50 }, resolution: 'year' },
-                    { lat: 30, lng: 118, time: { year: 0, month: 6 }, resolution: 'month' },
-                    { lat: 34, lng: 117, time: { year: 30, month: 3, day: 15 }, resolution: 'day' },
-                    { lat: 37, lng: 121, time: { year: 70 }, resolution: 'year' }
+                    { lat: 28, lng: 115, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'year' },
+                    { lat: 30, lng: 118, time: { arrival: { year: 0, month: 6 }, departure: { year: 0, month: 6 } }, resolution: 'month' },
+                    { lat: 34, lng: 117, time: { arrival: { year: 30, month: 3, day: 15 }, departure: { year: 30, month: 3, day: 15 } }, resolution: 'day' },
+                    { lat: 37, lng: 121, time: { arrival: { year: 70 }, departure: { year: 70 } }, resolution: 'year' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -100 }, deathTime: { year: 80 }, gender: '男', description: '卡密' }
@@ -185,10 +183,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 29, lng: 112, time: { year: -100, month: 3 }, resolution: 'year' },
-                    { lat: 31, lng: 114, time: { year: -20, month: 9, day: 1 }, resolution: 'day' },
-                    { lat: 33, lng: 116, time: { year: 10, month: 5 }, resolution: 'month' },
-                    { lat: 36, lng: 118, time: { year: 60, month: 1, day: 20 }, resolution: 'day' }
+                    { lat: 29, lng: 112, time: { arrival: { year: -100, month: 3 }, departure: { year: -100, month: 3 } }, resolution: 'year' },
+                    { lat: 31, lng: 114, time: { arrival: { year: -20, month: 9, day: 1 }, departure: { year: -20, month: 9, day: 1 } }, resolution: 'day' },
+                    { lat: 33, lng: 116, time: { arrival: { year: 10, month: 5 }, departure: { year: 10, month: 5 } }, resolution: 'month' },
+                    { lat: 36, lng: 118, time: { arrival: { year: 60, month: 1, day: 20 }, departure: { year: 60, month: 1, day: 20 } }, resolution: 'day' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -100 }, deathTime: { year: 60 }, gender: '女', description: '金发德国少女' }
@@ -201,10 +199,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 32, lng: 110, time: { year: -150 }, resolution: 'era' },
-                    { lat: 35, lng: 113, time: { year: -50 }, resolution: 'decade' },
-                    { lat: 38, lng: 116, time: { year: 50, month: 6 }, resolution: 'month' },
-                    { lat: 41, lng: 119, time: { year: 150, month: 3, day: 5 }, resolution: 'day' }
+                    { lat: 32, lng: 110, time: { arrival: { year: -150 }, departure: { year: -150 } }, resolution: 'era' },
+                    { lat: 35, lng: 113, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'decade' },
+                    { lat: 38, lng: 116, time: { arrival: { year: 50, month: 6 }, departure: { year: 50, month: 6 } }, resolution: 'month' },
+                    { lat: 41, lng: 119, time: { arrival: { year: 150, month: 3, day: 5 }, departure: { year: 150, month: 3, day: 5 } }, resolution: 'day' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -300 }, deathTime: { year: 150 }, gender: '男', description: '传奇猎魔人' }
@@ -335,36 +333,3 @@ const entities = [
         }
     }
 ];
-
-// 自动补全所有实体的 waypoint 为 arrival/departure 格式，处理旧数据兼容
-(function normalizeEntityData() {
-    (entities || []).forEach(entity => {
-        const tl = entity.components.timeline;
-        if (!tl || !tl.waypoints) return;
-
-        // 补全 person 组件中的时间
-        const person = entity.components.person;
-        if (person) {
-            if (person.birthTime != null && typeof person.birthTime === 'number') {
-                person.birthTime = { year: person.birthTime };
-            }
-            if (person.deathTime != null && typeof person.deathTime === 'number') {
-                person.deathTime = { year: person.deathTime };
-            }
-        }
-
-        // 补全 waypoint 时间
-        tl.waypoints.forEach(wp => {
-            if (wp.time == null) {
-                wp.time = { arrival: { year: 0 }, departure: { year: 0 } };
-            } else if (wp.time.arrival == null) {
-                // 直接传了时间对象或数字，补全为 arrival/departure
-                const raw = typeof wp.time === 'number' ? { year: wp.time } : wp.time;
-                wp.time = { arrival: raw, departure: raw };
-            }
-            if (!wp.resolution) {
-                wp.resolution = 'year';
-            }
-        });
-    });
-})();
