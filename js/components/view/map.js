@@ -200,11 +200,19 @@ const MapView = {
         // 清除旧的途径点标记
         this._clearWaypointMarkers(entity);
 
-        // 为每个已达到当前时间的途径点创建标记
+        // 计算轨迹显示窗口起始时间
+        const tw = TimeConfig.trackWindow;
+        const windowStart = tw && tw.enabled
+            ? TimeUtils.subtract(currentTime, tw.value, tw.unit)
+            : null;
+
+        // 为每个已达到当前时间且在窗口内的途径点创建标记
         waypoints.forEach((wp, index) => {
             // 使用 arrival 时间判断是否已到达
             const wpTime = wp.time.arrival || wp.time.departure || wp.time;
             if (TimeUtils.compare(currentTime, wpTime) < 0) return;
+            // 如果启用了 trackWindow，过滤掉窗口之外的途径点
+            if (windowStart && TimeUtils.compare(wpTime, windowStart) < 0) return;
 
             const icon = this._createWaypointIcon(color);
             const marker = L.marker([wp.lat, wp.lng], {
@@ -242,10 +250,18 @@ const MapView = {
     _renderSegments(entity, currentTime) {
         const waypoints = entity.components.timeline.waypoints || [];
 
-        // 构建截至当前时间的经纬度路径
+        // 计算轨迹显示窗口起始时间
+        const tw = TimeConfig.trackWindow;
+        const windowStart = tw && tw.enabled
+            ? TimeUtils.subtract(currentTime, tw.value, tw.unit)
+            : null;
+
+        // 构建截至当前时间且在窗口内的经纬度路径
         const path = [];
         for (let i = 0; i < waypoints.length; i++) {
             const wpTime = waypoints[i].time.arrival || waypoints[i].time.departure || waypoints[i].time;
+            // 过滤掉窗口之外的途径点
+            if (windowStart && TimeUtils.compare(wpTime, windowStart) < 0) continue;
             if (TimeUtils.compare(wpTime, currentTime) <= 0) {
                 path.push({ lat: waypoints[i].lat, lng: waypoints[i].lng, time: wpTime });
             } else {
