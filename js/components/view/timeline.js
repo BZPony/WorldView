@@ -66,7 +66,7 @@ const Timeline = {
 
         // 监听布局变化事件（如侧边栏开关）
         EventBus.on('layout:change', this._onLayoutChange.bind(this));
-        
+
         // 监听 AppState 中 currentTime 的变化
         EventBus.on('state:change', this._onStateChange.bind(this));
 
@@ -90,25 +90,28 @@ const Timeline = {
     },
 
     /**
-     * 将时间转换为轨道偏移量（像素）
-     * @param {number} time - 年份
+     * 将时间对象转换为轨道偏移量（像素）
+     * @param {Object} time - 时间对象 { year, month?, day? }
      * @returns {number} 偏移量
      */
     timeToOffset(time) {
         const { startYear, endYear, trackWidth } = this.config;
-        const ratio = (time - startYear) / (endYear - startYear);
+        // 从时间对象中取 year 作为主刻度
+        const t = time ? (time.year || 0) : 0;
+        const ratio = (t - startYear) / (endYear - startYear);
         return -ratio * trackWidth;
     },
 
     /**
-     * 将轨道偏移量转换为时间（年份）
+     * 将轨道偏移量转换为时间对象
      * @param {number} offsetX - 像素偏移
-     * @returns {number} 年份
+     * @returns {Object} 时间对象
      */
     offsetToTime(offsetX) {
         const { startYear, endYear, trackWidth } = this.config;
         const ratio = -offsetX / trackWidth;
-        return startYear + ratio * (endYear - startYear);
+        const year = startYear + ratio * (endYear - startYear);
+        return { year: Math.round(year) };
     },
 
     // ---------- 拖动事件处理 ----------
@@ -139,11 +142,13 @@ const Timeline = {
         const deltaX = e.clientX - this.startX;
         const { startYear, endYear, trackWidth } = this.config;
 
-        let newTime = this.startTime + (endYear - startYear) * (-deltaX / trackWidth);
-        newTime = Math.max(startYear, Math.min(endYear, newTime));
+        // startTime 现在是时间对象 { year }，取其 year 计算
+        const startYearVal = this.startTime ? (this.startTime.year || 0) : 0;
+        let newYear = startYearVal + (endYear - startYear) * (-deltaX / trackWidth);
+        newYear = Math.round(Math.max(startYear, Math.min(endYear, newYear)));
 
-        // 通过 AppState 更新时间，这会触发 state:change 事件，其他模块自动响应
-        AppState.set('currentTime', newTime);
+        // 通过 AppState 更新时间（时间对象），触发 state:change 事件
+        AppState.set('currentTime', { year: newYear });
     },
 
     // ---------- 事件监听回调 ----------
@@ -155,7 +160,7 @@ const Timeline = {
 
     /**
     * 渲染时间轴位置
-    * @param {number} time - 当前时间
+    * @param {Object} time - 当前时间对象 { year, month?, day? }
     */
     render(time) {
         const containerWidth = this.container.clientWidth;
@@ -163,8 +168,6 @@ const Timeline = {
 
         const offsetX = this.timeToOffset(time) + containerWidth / 2;
         this.track.style.transform = `translateX(${offsetX}px)`;
-        // 保留调试日志，可注释掉
-        // console.log(`Timeline render - time: ${time.toFixed(2)}, offset: ${offsetX.toFixed(2)}px`);
     },
 
     _onLayoutChange() {

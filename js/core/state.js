@@ -4,8 +4,9 @@ const AppState = {
     state: {
         //应用状态，可以在view模块中修改
         selectedItem: null,
-        currentTime: 0,          // 当前时间
-        isSidebarOpen: true,     // 侧边栏是否打开
+        currentTime: { year: 0 },   // 当前时间（时间对象）
+        timeZoomLevel: 'year',      // 当前时间轴缩放级别
+        isSidebarOpen: true,        // 侧边栏是否打开
         isDetailPanelOpen: false,
 
         //应用数据，只能通过commandHandler模块修改

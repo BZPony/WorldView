@@ -139,7 +139,7 @@ const DetailPanel = {
     /**
      * 判断一个途径点是否超出实体的寿命区间
      * @param {Object} entity - 实体对象（含 components）
-     * @param {number} time - 途径点时间
+     * @param {Object} time - 途径点时间对象
      * @returns {boolean} 是否超出寿命
      */
     _isWaypointOutsideLifespan(entity, time) {
@@ -148,8 +148,8 @@ const DetailPanel = {
         const { birthTime, deathTime } = personComp;
         // 如果没有设置寿命限制，则不标记异常
         if (birthTime == null && deathTime == null) return false;
-        if (birthTime != null && time < birthTime) return true;
-        if (deathTime != null && time > deathTime) return true;
+        if (birthTime != null && TimeUtils.compare(time, birthTime) < 0) return true;
+        if (deathTime != null && TimeUtils.compare(time, deathTime) > 0) return true;
         return false;
     },
 
@@ -186,16 +186,21 @@ const DetailPanel = {
                 const selectedItem = AppState.get('selectedItem');
                 const entity = selectedItem ? selectedItem.data : null;
 
+                const zoomLevel = AppState.get('timeZoomLevel') || 'year';
+
                 const listItems = comp.waypoints.map(wp => {
-                    const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time) : false;
+                    const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time.arrival || wp.time.departure || wp.time) : false;
                     const cls = isOutside ? 'waypoint-item waypoint-outside-lifespan' : 'waypoint-item';
-                    return `<li class="${cls}"><span class="time-badge">${wp.time}</span> (${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})</li>`;
+                    // 使用 arrival 时间显示
+                    const displayTime = wp.time.arrival || wp.time.departure || wp.time;
+                    const timeStr = TimeUtils.format(displayTime, zoomLevel);
+                    return `<li class="${cls}"><span class="time-badge">${timeStr}</span> (${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})</li>`;
                 }).join('');
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },
             person: comp => `
-                <div class="detail-property"><span class="property-label">出生时间</span><span class="property-value" data-component="person" data-field="birthTime">${comp.birthTime ?? '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">死亡时间</span><span class="property-value" data-component="person" data-field="deathTime">${comp.deathTime ?? '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">出生时间</span><span class="property-value" data-component="person" data-field="birthTime">${comp.birthTime ? TimeUtils.format(comp.birthTime, 'year') : '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">死亡时间</span><span class="property-value" data-component="person" data-field="deathTime">${comp.deathTime ? TimeUtils.format(comp.deathTime, 'year') : '未知'}</span></div>
                 <div class="detail-property"><span class="property-label">性别</span><span class="property-value" data-component="person" data-field="gender">${comp.gender ?? '未知'}</span></div>
                 <div class="detail-property"><span class="property-label">描述</span><span class="property-value" data-component="person" data-field="description">${comp.description || '无'}</span></div>
             `,
@@ -298,17 +303,23 @@ const DetailPanel = {
         const component = entity.components[componentType];
         if (!component) return;
 
-        // 保持与原始值类型一致（数字/字符串）
         const originalValue = component[field];
         let newValue;
-        if (typeof originalValue === 'number') {
+
+        // 时间字段（birthTime/deathTime）特殊处理：输入数字转为 { year: num }
+        if (field === 'birthTime' || field === 'deathTime') {
+            const parsed = rawValue === '' ? null : Number(rawValue);
+            newValue = parsed != null && !isNaN(parsed) ? { year: parsed } : originalValue;
+        } else if (typeof originalValue === 'number') {
+            // 保持数值类型一致
             newValue = rawValue === '' ? originalValue : Number(rawValue);
         } else {
+            // 字符串、对象等
             newValue = rawValue || originalValue;
         }
 
         // 值未变化则不更新
-        if (newValue === originalValue) {
+        if (newValue === originalValue || JSON.stringify(newValue) === JSON.stringify(originalValue)) {
             this.renderDetail(selectedItem);
             return;
         }

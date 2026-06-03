@@ -93,16 +93,27 @@ const MapView = {
         if (!waypoints || waypoints.length === 0) return null;
 
         if (waypoints.length === 1) {
-            return time === waypoints[0].time ? { lat: waypoints[0].lat, lng: waypoints[0].lng } : null;
+            const wpTime = waypoints[0].time;
+            const departure = wpTime.departure || wpTime.arrival || wpTime;
+            return TimeUtils.compare(time, departure) === 0
+                ? { lat: waypoints[0].lat, lng: waypoints[0].lng } : null;
         }
 
-        if (time < waypoints[0].time || time > waypoints[waypoints.length - 1].time) return null;
+        // 检查是否在时间范围内
+        const firstDeparture = waypoints[0].time.departure || waypoints[0].time.arrival || waypoints[0].time;
+        const lastArrival = waypoints[waypoints.length - 1].time.arrival || waypoints[waypoints.length - 1].time;
+        if (TimeUtils.compare(time, firstDeparture) < 0 || TimeUtils.compare(time, lastArrival) > 0) return null;
 
         for (let i = 0; i < waypoints.length - 1; i++) {
             const a = waypoints[i];
             const b = waypoints[i + 1];
-            if (time >= a.time && time <= b.time) {
-                const ratio = (time - a.time) / (b.time - a.time);
+            const segStart = a.time.departure || a.time.arrival || a.time;
+            const segEnd = b.time.arrival || b.time.departure || b.time;
+
+            if (TimeUtils.compare(time, segStart) >= 0 && TimeUtils.compare(time, segEnd) <= 0) {
+                const diff = TimeUtils.diff(segStart, segEnd);
+                const offset = TimeUtils.diff(segStart, time);
+                const ratio = diff !== 0 ? offset / diff : 0;
                 return {
                     lat: a.lat + (b.lat - a.lat) * ratio,
                     lng: a.lng + (b.lng - a.lng) * ratio
@@ -191,7 +202,9 @@ const MapView = {
 
         // 为每个已达到当前时间的途径点创建标记
         waypoints.forEach((wp, index) => {
-            if (wp.time > currentTime) return;
+            // 使用 arrival 时间判断是否已到达
+            const wpTime = wp.time.arrival || wp.time.departure || wp.time;
+            if (TimeUtils.compare(currentTime, wpTime) < 0) return;
 
             const icon = this._createWaypointIcon(color);
             const marker = L.marker([wp.lat, wp.lng], {
@@ -232,8 +245,9 @@ const MapView = {
         // 构建截至当前时间的经纬度路径
         const path = [];
         for (let i = 0; i < waypoints.length; i++) {
-            if (waypoints[i].time <= currentTime) {
-                path.push({ lat: waypoints[i].lat, lng: waypoints[i].lng, time: waypoints[i].time });
+            const wpTime = waypoints[i].time.arrival || waypoints[i].time.departure || waypoints[i].time;
+            if (TimeUtils.compare(wpTime, currentTime) <= 0) {
+                path.push({ lat: waypoints[i].lat, lng: waypoints[i].lng, time: wpTime });
             } else {
                 const interpolated = this.getEntityPosition(entity, currentTime);
                 if (interpolated) {
@@ -261,8 +275,8 @@ const MapView = {
             if (!personComp) return false;
             const { birthTime, deathTime } = personComp;
             if (birthTime == null && deathTime == null) return false;
-            if (birthTime != null && (timeA < birthTime || timeB < birthTime)) return true;
-            if (deathTime != null && (timeA > deathTime || timeB > deathTime)) return true;
+            if (birthTime != null && (TimeUtils.compare(timeA, birthTime) < 0 || TimeUtils.compare(timeB, birthTime) < 0)) return true;
+            if (deathTime != null && (TimeUtils.compare(timeA, deathTime) > 0 || TimeUtils.compare(timeB, deathTime) > 0)) return true;
             return false;
         };
 

@@ -110,9 +110,12 @@
     ===================================================== -->
 
     <script src="js/utils/color.js"></script>
+    <script src="js/data/timeConfig.js"></script>
 
     <script src="js/icons/svg-icons.js"></script>
     <script src="js/data/entities.js"></script>
+
+    <script src="js/utils/time.js"></script>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="js/core/eventBus.js"></script>
@@ -133,7 +136,7 @@
 
         // 1. 设置初始数据
         AppState.set('entities', entities);
-        AppState.set('currentTime', 0);
+        AppState.set('currentTime', { year: 0 });
 
         // 2. 按依赖顺序初始化模块
         MapView.init('map');                // 地图必须先创建（Leaflet 实例）
