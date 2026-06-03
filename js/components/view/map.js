@@ -52,10 +52,11 @@ const MapView = {
         // 4. 实体数据变化，清理图层组再重建（应对 undo/redo 整体替换 entities）
         EventBus.on('state:change', (data) => {
             if (data.key === 'entities') {
-                // 清除当前 entities 上的 Leaflet 引用，避免 pos===null 分支误操作已删除的图层
+                // 清除当前 entities 上的 Leaflet 引用
                 (data.value || []).forEach(entity => {
                     entity._marker = null;
                     entity._polyline = null;
+                    entity._segmentPolylines = [];
                     entity._waypointMarkers = [];
                 });
                 this._entityLayerGroup.clearLayers();
@@ -120,6 +121,7 @@ const MapView = {
      * - 实体不在时间范围内时自动清理所有图层
      */
     renderTimelineEntities() {
+        //获取具有时间轴组件的实体
         const entities = this.getTimelineEntities() || [];
         const currentTime = AppState.get('currentTime') || 0;
 
@@ -132,9 +134,10 @@ const MapView = {
                     this.map.removeLayer(entity._marker);
                     entity._marker = null;
                 }
-                if (entity._polyline) {
-                    this.map.removeLayer(entity._polyline);
-                    entity._polyline = null;
+                // 移除分段折线
+                if (entity._segmentPolylines) {
+                    entity._segmentPolylines.forEach(pl => this._entityLayerGroup.removeLayer(pl));
+                    entity._segmentPolylines = [];
                 }
                 // 移除途径点标记
                 this._clearWaypointMarkers(entity);
@@ -162,31 +165,8 @@ const MapView = {
                 entity._marker.setIcon(this._createEntityIcon(entity));
             }
 
-            // 构建轨迹坐标数组（截至当前时间的路径）
-            const path = [];
-            for (let i = 0; i < entity.components.timeline.waypoints.length; i++) {
-                const node = entity.components.timeline.waypoints[i];
-                if (node.time <= currentTime) {
-                    path.push([node.lat, node.lng]);
-                } else {
-                    // 添加当前插值点
-                    const interpolated = this.getEntityPosition(entity, currentTime);
-                    if (interpolated) {
-                        path.push([interpolated.lat, interpolated.lng]);
-                    }
-                    break;
-                }
-            }
-
-            if (!entity._polyline) {
-                entity._polyline = L.polyline(path, {
-                    color: entity.components.core.color,
-                    weight: 3,
-                    opacity: 0.9
-                }).addTo(this._entityLayerGroup);
-            } else {
-                entity._polyline.setLatLngs(path);
-            }
+            // 分段渲染轨迹线段（正常实线、超出寿命虚线）
+            this._renderSegments(entity, currentTime);
         });
     },
 
@@ -234,6 +214,78 @@ const MapView = {
                 this.map.removeLayer(marker);
             });
             entity._waypointMarkers = [];
+        }
+    },
+
+    /**
+     * 分段渲染实体的轨迹线
+     * 对于有人物组件的实体，逐段检查是否超出寿命区间：
+     *   - 两个途径点都存活 → 实线
+     *   - 任意一点在寿命外 → 虚线
+     * 对于无人物组件的实体，直接渲染普通实线
+     * @param {Object} entity - 实体对象
+     * @param {number} currentTime - 当前时间
+     */
+    _renderSegments(entity, currentTime) {
+        const waypoints = entity.components.timeline.waypoints || [];
+
+        // 构建截至当前时间的经纬度路径
+        const path = [];
+        for (let i = 0; i < waypoints.length; i++) {
+            if (waypoints[i].time <= currentTime) {
+                path.push({ lat: waypoints[i].lat, lng: waypoints[i].lng, time: waypoints[i].time });
+            } else {
+                const interpolated = this.getEntityPosition(entity, currentTime);
+                if (interpolated) {
+                    path.push({ lat: interpolated.lat, lng: interpolated.lng, time: currentTime });
+                }
+                break;
+            }
+        }
+
+        if (path.length < 2) {
+            // 不足两个点，不画线
+            if (entity._segmentPolylines) {
+                entity._segmentPolylines.forEach(pl => this._entityLayerGroup.removeLayer(pl));
+                entity._segmentPolylines = [];
+            }
+            return;
+        }
+
+        // 检查实体是否有人物组件（寿命限制）
+        const personComp = entity.components.person;
+        const color = entity.components.core.color;
+
+        // 判断一段是否超出寿命
+        const isOutside = (timeA, timeB) => {
+            if (!personComp) return false;
+            const { birthTime, deathTime } = personComp;
+            if (birthTime == null && deathTime == null) return false;
+            if (birthTime != null && (timeA < birthTime || timeB < birthTime)) return true;
+            if (deathTime != null && (timeA > deathTime || timeB > deathTime)) return true;
+            return false;
+        };
+
+        // 清除旧的分段折线
+        if (entity._segmentPolylines) {
+            entity._segmentPolylines.forEach(pl => this._entityLayerGroup.removeLayer(pl));
+        }
+        entity._segmentPolylines = [];
+
+        // 逐段创建折线
+        for (let i = 0; i < path.length - 1; i++) {
+            const a = path[i];
+            const b = path[i + 1];
+            const dashed = isOutside(a.time, b.time);
+
+            const pl = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], {
+                color: color,
+                weight: 3,
+                opacity: dashed ? 0.5 : 0.9,
+                dashArray: dashed ? '6, 6' : null
+            }).addTo(this._entityLayerGroup);
+
+            entity._segmentPolylines.push(pl);
         }
     },
 

@@ -137,10 +137,41 @@ const DetailPanel = {
     },
 
     /**
+     * 判断一个途径点是否超出实体的寿命区间
+     * @param {Object} entity - 实体对象（含 components）
+     * @param {number} time - 途径点时间
+     * @returns {boolean} 是否超出寿命
+     */
+    _isWaypointOutsideLifespan(entity, time) {
+        const personComp = entity.components.person;
+        if (!personComp) return false;
+        const { birthTime, deathTime } = personComp;
+        // 如果没有设置寿命限制，则不标记异常
+        if (birthTime == null && deathTime == null) return false;
+        if (birthTime != null && time < birthTime) return true;
+        if (deathTime != null && time > deathTime) return true;
+        return false;
+    },
+
+    /**
+     * 判断两个连续途径点之间的线段是否需要虚线样式
+     * 只要其中任一个点超出寿命区间，该段就为虚线
+     * @param {Object} entity - 实体对象
+     * @param {Object} wpA - 途径点 A
+     * @param {Object} wpB - 途径点 B
+     * @returns {boolean} 该段是否异常
+     */
+    _isSegmentOutOfLifespan(entity, wpA, wpB) {
+        return this._isWaypointOutsideLifespan(entity, wpA.time) ||
+            this._isWaypointOutsideLifespan(entity, wpB.time);
+    },
+
+    /**
      * 根据组件类型返回渲染函数，函数返回 HTML 字符串
      * 每个 .property-value 需携带 data-component 和 data-field 属性以支持双击编辑
     */
     _getComponentRenderer(type) {
+        const self = this; // 在模板函数中引用 this
         const renderers = {
             core: comp => `
                 <div class="detail-property"><span class="property-label">名称</span><span class="property-value" data-component="core" data-field="name">${comp.name}</span></div>
@@ -151,9 +182,15 @@ const DetailPanel = {
                 if (!comp.waypoints || comp.waypoints.length === 0) {
                     return '<div class="detail-property">无轨迹数据</div>';
                 }
-                const listItems = comp.waypoints.map(wp =>
-                    `<li class="waypoint-item"><span class="time-badge">${wp.time}</span> (${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})</li>`
-                ).join('');
+                // 获取实体对象（从当前选中的实体中查找）
+                const selectedItem = AppState.get('selectedItem');
+                const entity = selectedItem ? selectedItem.data : null;
+
+                const listItems = comp.waypoints.map(wp => {
+                    const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time) : false;
+                    const cls = isOutside ? 'waypoint-item waypoint-outside-lifespan' : 'waypoint-item';
+                    return `<li class="${cls}"><span class="time-badge">${wp.time}</span> (${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})</li>`;
+                }).join('');
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },
             person: comp => `

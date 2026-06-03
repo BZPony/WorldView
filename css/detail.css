@@ -181,6 +181,16 @@ content 区
     gap: 8px;
 }
 
+/* 超出寿命区间的途径点 */
+.waypoint-outside-lifespan {
+    color: #e74c3c !important;
+}
+
+.waypoint-outside-lifespan .time-badge {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
 /* 时间标签样式 */
 .time-badge {
     padding: 1px 4px;
