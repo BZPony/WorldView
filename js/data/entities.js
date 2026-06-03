@@ -19,8 +19,8 @@ function createCoreComponent({ name, color, icon = 'person' }) {
 function createTimelineComponent(waypoints = []) {
     const normalized = waypoints.map(wp => {
         const rawTime = wp.time || { arrival: { year: 0 }, departure: { year: 0 } };
-        const arrival = rawTime.arrival || rawTime;
-        const departure = rawTime.departure || rawTime;
+        const arrival = rawTime.arrival ?? rawTime;
+        const departure = rawTime.departure ?? rawTime;
         return {
             ...wp,
             time: { arrival, departure },
@@ -103,7 +103,7 @@ function createRegimeEntity({ id, name, color, icon, ...regimeOption }) {
     return createEntity(id, [
         createCoreComponent({ name, color, icon }),
         createRegimeComponent(regimeOption)
-    ])
+    ]);
 }
 
 /**

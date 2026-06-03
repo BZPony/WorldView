@@ -205,20 +205,36 @@ const MapView = {
         const windowStart = tw && tw.enabled
             ? TimeUtils.subtract(currentTime, tw.value, tw.unit)
             : null;
+        const wd = windowStart ? TimeUtils.diff(windowStart, currentTime) : 0;
 
-        // 为每个已达到当前时间且在窗口内的途径点创建标记
+        const getOpacity = (t) => {
+            if (!windowStart) return 1;
+            const ft = 1 / 3;
+            if (t >= ft) return 1;
+            if (t <= 0) return 0;
+            return t / ft;
+        };
+
+        // 为每个已达到当前时间的途径点创建标记（不做硬过滤，由 opacity 控制显示）
         waypoints.forEach((wp, index) => {
             // 使用 arrival 时间判断是否已到达
             const wpTime = wp.time.arrival || wp.time.departure || wp.time;
             if (TimeUtils.compare(currentTime, wpTime) < 0) return;
-            // 如果启用了 trackWindow，过滤掉窗口之外的途径点
-            if (windowStart && TimeUtils.compare(wpTime, windowStart) < 0) return;
 
-            const icon = this._createWaypointIcon(color);
+            // 计算透明度
+            let alpha = 1;
+            if (windowStart && wd > 0) {
+                const t = TimeUtils.diff(windowStart, wpTime) / wd;
+                alpha = getOpacity(t);
+            }
+            if (alpha < 0.01) return;
+
+            const icon = this._createWaypointIcon(color, alpha);
             const marker = L.marker([wp.lat, wp.lng], {
                 icon: icon,
                 interactive: false,
-                zIndexOffset: -100
+                zIndexOffset: -100,
+                opacity: alpha
             }).addTo(this._entityLayerGroup);
 
             entity._waypointMarkers.push(marker);
@@ -256,12 +272,10 @@ const MapView = {
             ? TimeUtils.subtract(currentTime, tw.value, tw.unit)
             : null;
 
-        // 构建截至当前时间且在窗口内的经纬度路径
+        // 构建截至当前时间的经纬度路径（不做窗口过滤，由逐段渲染的 opacity 控制显示）
         const path = [];
         for (let i = 0; i < waypoints.length; i++) {
             const wpTime = waypoints[i].time.arrival || waypoints[i].time.departure || waypoints[i].time;
-            // 过滤掉窗口之外的途径点
-            if (windowStart && TimeUtils.compare(wpTime, windowStart) < 0) continue;
             if (TimeUtils.compare(wpTime, currentTime) <= 0) {
                 path.push({ lat: waypoints[i].lat, lng: waypoints[i].lng, time: wpTime });
             } else {
@@ -296,6 +310,20 @@ const MapView = {
             return false;
         };
 
+        // ───── 渐变参数 ─────
+        // t = (time - windowStart) / (currentTime - windowStart)，范围 0~1
+        // 后 1/3 渐变区：t ∈ [0, 1/3) → opacity = t * 3（0 线性渐变到 1）
+        // 渐变区外: t ∈ [1/3, 1] → opacity = 1
+        const getOpacity = (t) => {
+            if (!windowStart) return 1;
+            const ft = 1 / 3;
+            if (t >= ft) return 1;
+            if (t <= 0) return 0;
+            return t / ft;
+        };
+        const wd = windowStart ? TimeUtils.diff(windowStart, currentTime) : 0;
+        const SUBDIVISIONS = 30;
+
         // 清除旧的分段折线
         if (entity._segmentPolylines) {
             entity._segmentPolylines.forEach(pl => this._entityLayerGroup.removeLayer(pl));
@@ -307,15 +335,63 @@ const MapView = {
             const a = path[i];
             const b = path[i + 1];
             const dashed = isOutside(a.time, b.time);
+            const baseOp = dashed ? 0.5 : 1;
 
-            const pl = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], {
-                color: color,
-                weight: 3,
-                opacity: dashed ? 0.5 : 0.9,
-                dashArray: dashed ? '6, 6' : null
-            }).addTo(this._entityLayerGroup);
+            // 判断该段是否部分进入渐变区
+            let needsSub = false;
+            if (windowStart && wd > 0) {
+                const aT = TimeUtils.diff(windowStart, a.time) / wd;
+                const bT = TimeUtils.diff(windowStart, b.time) / wd;
+                needsSub = Math.min(aT, bT) < 1 / 3;
+            }
 
-            entity._segmentPolylines.push(pl);
+            if (needsSub && baseOp > 0) {
+                // ── 渐变区：拆为微段 ──
+                const aT = TimeUtils.diff(windowStart, a.time) / wd;
+                const bT = TimeUtils.diff(windowStart, b.time) / wd;
+                // 段内渐变边界位置（比例）
+                const fadeRatio = Math.max(0, (1 / 3 - aT) / (bT - aT));
+                const subEnd = Math.min(fadeRatio, 1);
+                const n = Math.max(2, Math.round(SUBDIVISIONS * subEnd * 2));
+
+                for (let s = 0; s < n; s++) {
+                    const rA = (s / n) * subEnd;
+                    const rB = ((s + 1) / n) * subEnd;
+                    const midT = aT + ((rA + rB) / 2) * (bT - aT);
+                    const alpha = getOpacity(midT);
+                    const finalOp = baseOp * alpha;
+                    if (finalOp < 0.01) continue;
+                    const pl = L.polyline([
+                        [a.lat + (b.lat - a.lat) * rA, a.lng + (b.lng - a.lng) * rA],
+                        [a.lat + (b.lat - a.lat) * rB, a.lng + (b.lng - a.lng) * rB]
+                    ], { color, weight: 3, opacity: finalOp, dashArray: dashed ? '6,6' : null }).addTo(this._entityLayerGroup);
+                    entity._segmentPolylines.push(pl);
+                }
+                // 渐变区外的部分整段
+                if (fadeRatio < 1) {
+                    const rA = fadeRatio, rB = 1;
+                    const midT = aT + ((rA + rB) / 2) * (bT - aT);
+                    const alpha = getOpacity(midT);
+                    const finalOp = baseOp * alpha;
+                    if (finalOp >= 0.01) {
+                        const pl = L.polyline([
+                            [a.lat + (b.lat - a.lat) * rA, a.lng + (b.lng - a.lng) * rA],
+                            [b.lat, b.lng]
+                        ], { color, weight: 3, opacity: finalOp, dashArray: dashed ? '6,6' : null }).addTo(this._entityLayerGroup);
+                        entity._segmentPolylines.push(pl);
+                    }
+                }
+            } else {
+                // ── 渐变区外：整段 ──
+                const midT = wd > 0 ? TimeUtils.diff(windowStart, TimeUtils.lerp(a.time, b.time, 0.5)) / wd : 1;
+                const alpha = getOpacity(midT);
+                const finalOp = baseOp * alpha;
+                if (finalOp < 0.01) continue;
+                const pl = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], {
+                    color, weight: 3, opacity: finalOp, dashArray: dashed ? '6,6' : null
+                }).addTo(this._entityLayerGroup);
+                entity._segmentPolylines.push(pl);
+            }
         }
     },
 
@@ -324,9 +400,9 @@ const MapView = {
      * @param {string} color
      * @returns {L.DivIcon}
      */
-    _createWaypointIcon(color) {
+    _createWaypointIcon(color, opacity = 1) {
         const html = `
-            <div class="waypoint-marker-outer">
+            <div class="waypoint-marker-outer" style="opacity:${opacity}">
                 <div class="waypoint-marker-inner" style="background:${color}"></div>
             </div>
         `;

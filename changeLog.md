@@ -8,13 +8,18 @@
 
 ### Added
 
-- **Undo/Redo 操作回退功能** — 通过命令模式重构数据修改流程，所有应用数据修改统一走 `CommandHandler`
+- **时间系统重构** — 引入 `TimeConfig` 全局时间配置和 `TimeUtils` 工具函数，支持自定义年月日换算规则和分辨率级别
+- **Undo/Redo 操作回退** — 通过命令模式重构数据修改流程，所有应用数据修改统一走 `CommandHandler`
 - 新增 `CommandHandler.execute()` / `undo()` / `redo()` 方法，基于 `_undoStack` / `_redoStack` 双栈快照管理
-- 新增 `CommandHandler._cloneEntities()` 深拷贝函数，自动剥离 Leaflet 运行时属性，避免 `JSON.stringify` 循环引用
+- 新增 `CommandHandler._cloneEntities()` 深拷贝函数，自动剥离 Leaflet 运行时属性
 - 新增命令工厂 `createEditFieldCommand()` / `createCreateEntityCommand()`
 - 快捷键支持：`Ctrl+Z` / `Cmd+Z`（撤销）、`Ctrl+Shift+Z` / `Cmd+Y`（重做）
-- 地图标记实体名称标签，鼠标悬浮时可查看实体名称，名称颜色随实体主色自动适配
-- 新增 `adjustColor()` HSL 颜色调整工具函数（`js/utils/color.js`）
+- 新增 `TimeConfig` 配置模块（纪元起点、年月日换算规则、轨迹窗口、分辨率级别）
+- 新增 `TimeUtils` 工具函数（`toOffset`、`lerp`、`compare`、`format`、`isVisible`、`subtract`）
+- 途径点数据结构支持 `{ arrival, departure }` 双时间字段，为未来子轨迹展开奠定基础
+- 轨迹显示窗口（`trackWindow`）过滤，窗口后 1/3 区域透明渐变避免轨迹生硬消失
+- 地图标记实体名称标签，名称颜色随实体主色自动适配
+- 新增 `adjustColor()` HSL 颜色调整工具函数
 - 实体标记选中高亮效果 — 选中实体时灰色外环变为蓝色发光样式
 - 途径点小圆点标记（12px 外环 + 8px 内圆），时间轴拖动时自动更新
 - 详情面板新增双击内联编辑功能，支持 `person`、`organization`、`regime`、`core` 组件的字段编辑
@@ -23,18 +28,24 @@
 
 ### Changed
 
+- 所有时间字段从单一整数改为对象格式 `{ year, month?, day?, hour?, minute? }`
+- `state.js` 的 `currentTime` 默认值从 `0` 改为 `{ year: 0 }`，新增 `timeZoomLevel` 状态
 - 地图实体标记样式重构为三层结构：28px 灰色外环 → 24px 颜色圆形 → 16px SVG 图标
 - 详情面板中 `core` 组件（名称/颜色/默认图标）现在可编辑，不再隐藏
 - 实体地图标记的点击事件改为只在首次创建时注册，避免重复监听
-- 标记图标尺寸由 `[24, 24]` 调整为 `[200, 28]`，锚点由 `[12, 12]` 调整为 `[14, 14]`，以容纳名称标签
+- 标记图标尺寸由 `[24, 24]` 调整为 `[200, 28]`，锚点由 `[12, 12]` 调整为 `[14, 14]`
 - `detail.js` 的 `_saveEdit()` 改为发射 `command:execute` 事件，不直接操作 `AppState`
 - 右键创建人物纳入命令模式，走 `CommandHandler.execute()`
-- 引入 `L.layerGroup`（`_entityLayerGroup`）统一管理所有实体图层，支持 undo/redo 整体替换时清理旧图层
+- 引入 `L.layerGroup` 统一管理所有实体图层，支持 undo/redo 整体替换时清理旧图层
+- 途径点插入不再硬过滤，由透明度控制显示，确保跨窗口边界的轨迹线不会生硬中断
+- `entities.js` 工厂函数使用 `??` 替代 `||` 处理 `arrival`/`departure` 默认值
 
 ### Fixed
 
 - 修复点击地图标记时图标重绘次数翻倍的恶性 bug（`addEventListener` 在每次 `renderTimelineEntities()` 时重复注册）
 - 修复 undo/redo 后地图图标越堆越多的问题（实体整体替换后清理旧 Leaflet 图层引用）
+- 修复时间轴拖动时 `startTime` 为对象导致的 `[object Object]` 字符串拼接 bug
+- 修复 `entities.js` 中 `createRegimeEntity` 缺失分号
 
 ## [0.4.0] - 2026-05-14
 

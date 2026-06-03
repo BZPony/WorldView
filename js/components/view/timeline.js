@@ -18,7 +18,7 @@ const Timeline = {
     // 内部状态
     isDragging: false,
     startX: 0,
-    startTime: 0,
+    startTime: { year: 0 },
 
     /**
      * 初始化时间轴
@@ -72,7 +72,7 @@ const Timeline = {
 
         // 初始渲染（使用 AppState 中的当前时间）
         const initialTime = AppState.get('currentTime');
-        this.render(initialTime != null ? initialTime : 0);
+        this.render(initialTime != null ? initialTime : { year: 0 });
     },
 
     /**
@@ -159,8 +159,8 @@ const Timeline = {
     },
 
     /**
-    * 渲染时间轴位置
-    * @param {Object} time - 当前时间对象 { year, month?, day? }
+     * 渲染时间轴位置
+     * @param {Object} time - 当前时间对象 { year, month?, day? }
     */
     render(time) {
         const containerWidth = this.container.clientWidth;

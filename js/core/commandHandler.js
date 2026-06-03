@@ -145,10 +145,6 @@ const CommandHandler = {
                 });
                 AppState.set('entities', entities);
             },
-            undo: () => {
-                // undo 使用快照恢复，此方法实际上不会直接调用
-                // 而是通过快照机制恢复
-            }
         };
     },
 
@@ -174,9 +170,6 @@ const CommandHandler = {
                     AppState.set('selectedItem', { type: 'entity', data: entity });
                 }
             },
-            undo: () => {
-                // undo 使用快照恢复
-            }
         };
     },
 

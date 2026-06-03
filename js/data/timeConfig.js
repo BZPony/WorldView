@@ -25,24 +25,24 @@ const TimeConfig = {
     // 只显示当前时间往前 N 个时间单位内的轨迹，防止路径杂乱缠绕
     trackWindow: {
         enabled: true,
-        value: 200,
+        value: 30,
         unit: 'year'
     },
 
     // ───── 分辨率（缩放）级别定义 ─────
     // 按精度从低到高排列
     zoomLevels: [
-        { id: 'era',     label: '纪元',  minUnit: 'year', step: 100 },
-        { id: 'century', label: '世纪',  minUnit: 'year', step: 25 },
-        { id: 'decade',  label: '年代',  minUnit: 'year', step: 5 },
-        { id: 'year',    label: '年',    minUnit: 'year', step: 1 },
-        { id: 'halfyear',label: '半年',  minUnit: 'month',step: 6 },
-        { id: 'season',  label: '季度',  minUnit: 'month',step: 3 },
-        { id: 'month',   label: '月',    minUnit: 'month',step: 1 },
-        { id: 'week',    label: '周',    minUnit: 'day',   step: 7 },
-        { id: 'day',     label: '日',    minUnit: 'day',   step: 1 },
-        { id: 'hour',    label: '时',    minUnit: 'hour',  step: 1 },
-        { id: 'minute',  label: '分',    minUnit: 'minute',step: 1 },
+        { id: 'era', label: '纪元', minUnit: 'year', step: 100 },
+        { id: 'century', label: '世纪', minUnit: 'year', step: 25 },
+        { id: 'decade', label: '年代', minUnit: 'year', step: 5 },
+        { id: 'year', label: '年', minUnit: 'year', step: 1 },
+        { id: 'halfyear', label: '半年', minUnit: 'month', step: 6 },
+        { id: 'season', label: '季度', minUnit: 'month', step: 3 },
+        { id: 'month', label: '月', minUnit: 'month', step: 1 },
+        { id: 'week', label: '周', minUnit: 'day', step: 7 },
+        { id: 'day', label: '日', minUnit: 'day', step: 1 },
+        { id: 'hour', label: '时', minUnit: 'hour', step: 1 },
+        { id: 'minute', label: '分', minUnit: 'minute', step: 1 },
     ],
 
     /**
