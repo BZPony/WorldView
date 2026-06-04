@@ -32,7 +32,6 @@ function createTimelineComponent(waypoints = []) {
 
 /**
  * 人物组件（可选）
- * birthTime / deathTime 格式为 { year: number } | null
  */
 function createPersonComponent({ birthTime, deathTime, gender, description } = {}) {
     return {
@@ -42,6 +41,14 @@ function createPersonComponent({ birthTime, deathTime, gender, description } = {
         gender,
         description
     };
+}
+
+/**
+ * 地点组件（可选）
+ * 代表地图上具有固定位置的地点，如城市、地标、区域等
+ */
+function createPlaceComponent({ position, description } = {}) {
+    return { type: 'place', position: position || null, description };
 }
 
 /**
@@ -61,14 +68,9 @@ function createOrganizationComponent({ headquarters, leader, members } = {}) {
 function createCustomTagComponent(tags = []) {
     return { type: 'customTags', tags };
 }
-//未来有更多组件，则在此添加对应的组件创建函数
-//...
 
 /**
  * 创建实体
- * @param {string} id - 唯一标识
- * @param {Array<Object>} components - 组件数组，其中必须包含 core 组件
- * @returns {Object} 实体对象
  */
 function createEntity(id, components) {
     const componentMap = {};
@@ -92,6 +94,16 @@ function createPersonEntity({ id, name, color, waypoints, icon, ...personOptions
     ]);
 }
 
+/**
+ * 快速创建地点实体
+ */
+function createPlaceEntity({ id, name, color, icon = 'tag', position, description }) {
+    return createEntity(id, [
+        createCoreComponent({ name, color, icon }),
+        createPlaceComponent({ position, description })
+    ]);
+}
+
 function createOrganizationEntity({ id, name, color, icon, ...organizationOptions }) {
     return createEntity(id, [
         createCoreComponent({ name, color, icon }),
@@ -107,7 +119,7 @@ function createRegimeEntity({ id, name, color, icon, ...regimeOption }) {
 }
 
 /**
- * 创建一个新的人物（纯数据操作），不修改persons，只返回一个默认的人物数据结构
+ * 创建一个新的人物（纯数据操作）
  */
 function createPersonData({ name, lat, lng }) {
     const persons = AppState.get('entities') || [];
@@ -206,6 +218,43 @@ const entities = [
                 ]
             },
             person: { type: 'person', birthTime: { year: -300 }, deathTime: { year: 150 }, gender: '男', description: '传奇猎魔人' }
+        }
+    },
+
+    // ---------- 地点 ----------
+    {
+        id: 'place_1',
+        components: {
+            core: { type: 'core', name: '起源镇', color: '#5b8a5b', icon: 'tag' },
+            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' }
+        }
+    },
+    {
+        id: 'place_2',
+        components: {
+            core: { type: 'core', name: '小马谷', color: '#ff69b4', icon: 'tag' },
+            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' }
+        }
+    },
+    {
+        id: 'place_3',
+        components: {
+            core: { type: 'core', name: '凯尔莫罕', color: '#444444', icon: 'tag' },
+            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' }
+        }
+    },
+    {
+        id: 'place_4',
+        components: {
+            core: { type: 'core', name: '东京', color: '#cc3333', icon: 'tag' },
+            place: { type: 'place', position: { lat: 28, lng: 115 }, description: '日本的首都，夜神月在此获得了改变世界的力量' }
+        }
+    },
+    {
+        id: 'place_5',
+        components: {
+            core: { type: 'core', name: '柏林', color: '#887744', icon: 'tag' },
+            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' }
         }
     },
 

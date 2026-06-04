@@ -211,7 +211,8 @@ const Sidebar = {
         entities.forEach(entity => {
             for (const comp of Object.values(entity.components)) {
                 if (comp.type !== 'person' && comp.type !== 'regime' &&
-                    comp.type !== 'organization' && comp.type !== 'customTags')
+                    comp.type !== 'organization' && comp.type !== 'customTags' &&
+                    comp.type !== 'place')
                     continue;
 
                 if (comp.type === 'customTags') {
@@ -241,6 +242,7 @@ const Sidebar = {
             // 类型配置：包含中文标签和对应的图标名，非用户自定义
             const typeConfig = {
                 person: { label: '人物', icon: 'person' },
+                place: { label: '地点', icon: 'place' },
                 organization: { label: '组织', icon: 'organization' },
                 regime: { label: '政权', icon: 'regime' }
             };

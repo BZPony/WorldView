@@ -211,6 +211,13 @@ const DetailPanel = {
                 }).join('');
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },
+            place: comp => {
+                const pos = comp.position;
+                return `
+                <div class="detail-property"><span class="property-label">位置</span><span class="property-value">${pos ? `(${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})` : '未知'}</span></div>
+                <div class="detail-property"><span class="property-label">描述</span><span class="property-value">${comp.description || '无'}</span></div>
+                `;
+            },
             person: comp => `
                 <div class="detail-property"><span class="property-label">出生时间</span><span class="property-value" data-component="person" data-field="birthTime">${comp.birthTime ? TimeUtils.format(comp.birthTime, 'year') : '未知'}</span></div>
                 <div class="detail-property"><span class="property-label">死亡时间</span><span class="property-value" data-component="person" data-field="deathTime">${comp.deathTime ? TimeUtils.format(comp.deathTime, 'year') : '未知'}</span></div>
@@ -353,6 +360,7 @@ const DetailPanel = {
             core: '基本信息',
             timeline: '时间轴轨迹',
             person: '人物信息',
+            place: '地点信息',
             organization: '组织信息',
             regime: '政权信息',
             customTags: '自定义标签'
@@ -365,6 +373,7 @@ const DetailPanel = {
             core: 'page',
             timeline: 'timeline',
             person: 'person',
+            place: 'place',
             organization: 'organization',
             regime: 'regime',
             customTags: 'tag'
