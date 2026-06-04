@@ -191,12 +191,23 @@ const DetailPanel = {
                 const listItems = comp.waypoints.map(wp => {
                     const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time.arrival || wp.time.departure || wp.time) : false;
                     const cls = isOutside ? 'waypoint-item waypoint-outside-lifespan' : 'waypoint-item';
-                    // 使用 arrival 时间显示
-                    const displayTime = wp.time.arrival || wp.time.departure || wp.time;
-                    const timeStr = TimeUtils.format(displayTime, zoomLevel);
-                    // 显示地名或经纬度
+                    // 到达时间和离开时间各自按 resolution 格式化
+                    const arrival = wp.time.arrival || wp.time.departure || wp.time;
+                    const departure = wp.time.departure || wp.time.arrival || wp.time;
+                    // 使用途径点的 resolution 确定显示精度，fallback 到全局缩放级别
+                    const wpZoom = wp.resolution || zoomLevel;
+                    const arrivalStr = TimeUtils.format(arrival, wpZoom);
+                    const departureStr = TimeUtils.format(departure, wpZoom);
+                    // 地名或经纬度
                     const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
-                    return `<li class="${cls}"><span class="time-badge">${timeStr}</span> <span class="waypoint-location">${locationStr}</span></li>`;
+                    // 简要描述
+                    const descStr = wp.description || '';
+
+                    return `<li class="${cls}">
+                    <div class="waypoint-name-row">${locationStr}</div>
+                    <div class="waypoint-time-row"><span class="time-label">抵达</span><span class="time-badge">${arrivalStr}</span><span class="time-label">离开</span><span class="time-badge">${departureStr}</span></div>
+                        ${descStr ? `<div class="waypoint-desc-row">${descStr}</div>` : ''}
+                    </li>`;
                 }).join('');
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },

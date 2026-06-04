@@ -136,6 +136,8 @@ content 区
 
 .detail-component-body {
     padding-left: 6px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .detail-property {
@@ -173,12 +175,46 @@ content 区
 }
 
 .waypoint-item {
-    font-size: 12px;
+    font-size: 13px;
     color: #ccc;
-    margin-bottom: 3px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(20, 20, 20, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.waypoint-time-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.time-label {
+    color: #999;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.waypoint-time-row .time-badge {
+    font-size: 11px;
+    padding: 1px 3px;
+}
+
+.waypoint-name-row {
+    font-size: 13px;
+    color: #eee;
+    font-weight: 500;
+}
+
+.waypoint-desc-row {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 1px;
+    line-height: 1.4;
 }
 
 /* 超出寿命区间的途径点 */
