@@ -229,7 +229,10 @@ const MapView = {
             }
             if (alpha < 0.01) return;
 
-            const icon = this._createWaypointIcon(color, alpha);
+            // 获取途径点显示文本：name 或经纬度
+            const wpName = wp.name || `(${wp.lat.toFixed(2)}, ${wp.lng.toFixed(2)})`;
+
+            const icon = this._createWaypointIcon(color, alpha, wpName);
             const marker = L.marker([wp.lat, wp.lng], {
                 icon: icon,
                 interactive: false,
@@ -400,17 +403,20 @@ const MapView = {
      * @param {string} color
      * @returns {L.DivIcon}
      */
-    _createWaypointIcon(color, opacity = 1) {
+    _createWaypointIcon(color, opacity = 1, name = '') {
         const html = `
-            <div class="waypoint-marker-outer" style="opacity:${opacity}">
+        <div class="waypoint-marker-wrapper" style="opacity:${opacity}">
+            <div class="waypoint-marker-outer">
                 <div class="waypoint-marker-inner" style="background:${color}"></div>
             </div>
+            <span class="waypoint-marker-label">${name}</span>
+        </div>
         `;
 
         return L.divIcon({
             className: 'waypoint-marker',
             html: html,
-            iconSize: [12, 12],
+            iconSize: [200, 12],
             iconAnchor: [6, 6]
         });
     },

@@ -24,7 +24,7 @@ const TimeConfig = {
     // ───── 轨迹显示窗口 ─────
     // 只显示当前时间往前 N 个时间单位内的轨迹，防止路径杂乱缠绕
     trackWindow: {
-        enabled: true,
+        enabled: false,
         value: 30,
         unit: 'year'
     },

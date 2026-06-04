@@ -194,7 +194,9 @@ const DetailPanel = {
                     // 使用 arrival 时间显示
                     const displayTime = wp.time.arrival || wp.time.departure || wp.time;
                     const timeStr = TimeUtils.format(displayTime, zoomLevel);
-                    return `<li class="${cls}"><span class="time-badge">${timeStr}</span> (${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})</li>`;
+                    // 显示地名或经纬度
+                    const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
+                    return `<li class="${cls}"><span class="time-badge">${timeStr}</span> <span class="waypoint-location">${locationStr}</span></li>`;
                 }).join('');
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },

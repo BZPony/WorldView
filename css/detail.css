@@ -191,6 +191,11 @@ content 区
     font-weight: bold;
 }
 
+.waypoint-location {
+    color: #ddd;
+    flex: 1;
+}
+
 /* 时间标签样式 */
 .time-badge {
     padding: 1px 4px;

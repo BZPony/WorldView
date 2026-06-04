@@ -134,3 +134,23 @@ body {
     height: 8px;
     border-radius: 50%;
 }
+
+.waypoint-marker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.waypoint-marker-label {
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: normal;
+    font-family: sans-serif;
+    color: #eee;
+    text-shadow:
+        -1px -1px 1px rgba(0, 0, 0, 0.7),
+        1px -1px 1px rgba(0, 0, 0, 0.7),
+        -1px 1px 1px rgba(0, 0, 0, 0.7),
+        1px 1px 1px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}

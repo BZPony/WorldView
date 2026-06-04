@@ -33,6 +33,7 @@
 ```
 
 所有 `time` 字段统一改用此对象结构：
+
 - `entities.js` — `birthTime`、`deathTime`、`waypoint.time`
 - `state.js` — `currentTime`
 
@@ -217,6 +218,7 @@ const TimeUtils = {
 **分辨率显示规则：** 只有 `waypoint.resolution` 的精度 **≥** 当前时间轴缩放级别的精度时，才显示。
 
 例如时间轴在 `decade`（5年一格）级别：
+
 - `resolution: 'day'` → ✔ 显示（天比5年精细）
 - `resolution: 'century'` → ✘ 不显示（25年比5年粗糙）
 

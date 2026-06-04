@@ -135,10 +135,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 30, lng: 110, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day' },
-                    { lat: 32, lng: 115, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day' },
-                    { lat: 35, lng: 120, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day' },
-                    { lat: 40, lng: 116, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day' }
+                    { lat: 30, lng: 110, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day', name: '起源镇' },
+                    { lat: 32, lng: 115, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day', name: '白石渡' },
+                    { lat: 35, lng: 120, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day', name: '临海城' },
+                    { lat: 40, lng: 116, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day', name: '北境关' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -50 }, deathTime: { year: 100 }, gender: '男', description: '一位旅行者' }
@@ -151,10 +151,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year' },
-                    { lat: 33, lng: 118, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day' },
-                    { lat: 36, lng: 122, time: { arrival: { year: 50, month: 7, day: 14 }, departure: { year: 50, month: 7, day: 14 } }, resolution: 'day' },
-                    { lat: 38, lng: 119, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month' }
+                    { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year', name: '小马谷' },
+                    { lat: 33, lng: 118, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day', name: '水晶帝国' },
+                    { lat: 36, lng: 122, time: { arrival: { year: 50, month: 7, day: 14 }, departure: { year: 50, month: 7, day: 14 } }, resolution: 'day', name: '云中城' },
+                    { lat: 38, lng: 119, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month', name: '无尽之森' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -250 }, deathTime: { year: 200 }, gender: '女', description: '小马谷的图书管理员' }
@@ -167,10 +167,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 28, lng: 115, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'year' },
-                    { lat: 30, lng: 118, time: { arrival: { year: 0, month: 6 }, departure: { year: 0, month: 6 } }, resolution: 'month' },
-                    { lat: 34, lng: 117, time: { arrival: { year: 30, month: 3, day: 15 }, departure: { year: 30, month: 3, day: 15 } }, resolution: 'day' },
-                    { lat: 37, lng: 121, time: { arrival: { year: 70 }, departure: { year: 70 } }, resolution: 'year' }
+                    { lat: 28, lng: 115, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'year', name: '东京' },
+                    { lat: 30, lng: 118, time: { arrival: { year: 0, month: 6 }, departure: { year: 0, month: 6 } }, resolution: 'month', name: '京都' },
+                    { lat: 34, lng: 117, time: { arrival: { year: 30, month: 3, day: 15 }, departure: { year: 30, month: 3, day: 15 } }, resolution: 'day', name: '大阪' },
+                    { lat: 37, lng: 121, time: { arrival: { year: 70 }, departure: { year: 70 } }, resolution: 'year', name: '北海道' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -100 }, deathTime: { year: 80 }, gender: '男', description: '卡密' }
@@ -183,10 +183,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 29, lng: 112, time: { arrival: { year: -100, month: 3 }, departure: { year: -100, month: 3 } }, resolution: 'year' },
-                    { lat: 31, lng: 114, time: { arrival: { year: -20, month: 9, day: 1 }, departure: { year: -20, month: 9, day: 1 } }, resolution: 'day' },
-                    { lat: 33, lng: 116, time: { arrival: { year: 10, month: 5 }, departure: { year: 10, month: 5 } }, resolution: 'month' },
-                    { lat: 36, lng: 118, time: { arrival: { year: 60, month: 1, day: 20 }, departure: { year: 60, month: 1, day: 20 } }, resolution: 'day' }
+                    { lat: 29, lng: 112, time: { arrival: { year: -100, month: 3 }, departure: { year: -100, month: 3 } }, resolution: 'year', name: '柏林' },
+                    { lat: 31, lng: 114, time: { arrival: { year: -20, month: 9, day: 1 }, departure: { year: -20, month: 9, day: 1 } }, resolution: 'day', name: '慕尼黑' },
+                    { lat: 33, lng: 116, time: { arrival: { year: 10, month: 5 }, departure: { year: 10, month: 5 } }, resolution: 'month', name: '科隆' },
+                    { lat: 36, lng: 118, time: { arrival: { year: 60, month: 1, day: 20 }, departure: { year: 60, month: 1, day: 20 } }, resolution: 'day', name: '汉堡' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -100 }, deathTime: { year: 60 }, gender: '女', description: '金发德国少女' }
@@ -199,10 +199,10 @@ const entities = [
             timeline: {
                 type: 'timeline',
                 waypoints: [
-                    { lat: 32, lng: 110, time: { arrival: { year: -150 }, departure: { year: -150 } }, resolution: 'era' },
-                    { lat: 35, lng: 113, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'decade' },
-                    { lat: 38, lng: 116, time: { arrival: { year: 50, month: 6 }, departure: { year: 50, month: 6 } }, resolution: 'month' },
-                    { lat: 41, lng: 119, time: { arrival: { year: 150, month: 3, day: 5 }, departure: { year: 150, month: 3, day: 5 } }, resolution: 'day' }
+                    { lat: 32, lng: 110, time: { arrival: { year: -150 }, departure: { year: -150 } }, resolution: 'era', name: '凯尔莫罕' },
+                    { lat: 35, lng: 113, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'decade', name: '维吉玛' },
+                    { lat: 38, lng: 116, time: { arrival: { year: 50, month: 6 }, departure: { year: 50, month: 6 } }, resolution: 'month', name: '诺维格瑞' },
+                    { lat: 41, lng: 119, time: { arrival: { year: 150, month: 3, day: 5 }, departure: { year: 150, month: 3, day: 5 } }, resolution: 'day', name: '史凯利杰' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -300 }, deathTime: { year: 150 }, gender: '男', description: '传奇猎魔人' }
