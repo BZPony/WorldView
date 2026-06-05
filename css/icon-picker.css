@@ -1,0 +1,82 @@
+/* =====================================================
+图标选择器
+===================================================== */
+.icon-picker-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+}
+
+.icon-picker-overlay.is-hidden {
+    display: none;
+}
+
+.icon-picker {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 360px;
+    max-height: 300px;
+    background: rgba(30, 30, 30, 0.95);
+    border-radius: 16px;
+    padding: 16px;
+    z-index: 2001;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.icon-picker.is-hidden {
+    display: none;
+}
+
+.icon-picker-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ddd;
+    margin-bottom: 12px;
+}
+
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 220px;
+    padding: 4px;
+}
+
+.icon-picker-grid .icon-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    margin: 0 auto;
+}
+
+.icon-picker-grid .icon-picker-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.icon-picker-grid .icon-picker-item .icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #eee;
+}
+
+.icon-picker-grid .icon-picker-item .icon svg {
+    width: 24px;
+    height: 24px;
+}

@@ -262,6 +262,26 @@ content 区
     border-color: rgb(46, 95, 255);
 }
 
+.detail-edit-color {
+    width: 50px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+    outline: none;
+}
+
+.detail-edit-color::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.detail-edit-color::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
 .detail-edit-textarea {
     width: 100%;
     min-height: 40px;

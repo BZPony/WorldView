@@ -268,7 +268,23 @@ const DetailPanel = {
         const isPlaceholder = currentText === '未知' || currentText === '无';
         const initialValue = isPlaceholder ? '' : currentText;
 
-        if (useTextarea) {
+        if (field === 'color') {
+            // 颜色字段使用原生颜色选择器
+            input.type = 'color';
+            const colorMatch = valueEl.textContent.match(/#[0-9a-fA-F]{6}/);
+            input.value = colorMatch ? colorMatch[0] : '#4f454f';
+            input.className = 'detail-edit-color';
+        } else if (field === 'icon') {
+            // 图标字段弹出图标选择器
+            const currentIcon = valueEl.textContent.trim() || 'tag';
+            // 恢复原始显示，避免 input 闪烁
+            this.renderDetail(AppState.get('selectedItem'));
+            // 打开图标选择器
+            IconPicker.open(currentIcon, (newIcon) => {
+                this._saveIconField(currentIcon, newIcon);
+            });
+            return;
+        } else if (useTextarea) {
             input.value = initialValue;
             input.className = 'detail-edit-textarea';
         } else {
@@ -304,6 +320,23 @@ const DetailPanel = {
                 // 取消编辑，重新渲染面板还原
                 this.renderDetail(AppState.get('selectedItem'));
             }
+        });
+    },
+
+    /**
+     * 图标字段选择后的保存
+     */
+    _saveIconField(oldIcon, newIcon) {
+        const selectedItem = AppState.get('selectedItem');
+        if (!selectedItem || oldIcon === newIcon) return;
+
+        EventBus.emit('command:execute', {
+            type: 'editEntityField',
+            entityId: selectedItem.data.id,
+            componentType: 'core',
+            field: 'icon',
+            oldValue: oldIcon,
+            newValue: newIcon
         });
     },
 

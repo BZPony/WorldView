@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/detail.css" />
     <link rel="stylesheet" href="css/timeline.css" />
     <link rel="stylesheet" href="css/context-menu.css" />
+    <link rel="stylesheet" href="css/icon-picker.css" />
 </head>
 
 <body>
@@ -106,7 +107,16 @@
     </div>
 
     <!-- =====================================================
-        5. JS依赖
+        5. 图标选择器
+    ===================================================== -->
+    <div id="icon-picker" class="icon-picker is-hidden">
+        <div class="icon-picker-title">选择图标</div>
+        <div class="icon-picker-grid" id="icon-picker-grid"></div>
+    </div>
+    <div id="icon-picker-overlay" class="icon-picker-overlay is-hidden"></div>
+
+    <!-- =====================================================
+        6. JS依赖
     ===================================================== -->
 
     <script src="js/utils/color.js"></script>
@@ -123,6 +133,7 @@
     <script src="js/core/selectManager.js"></script>
     <script src="js/core/commandHandler.js"></script>
     <script src="js/components/view/contextMenu.js"></script>
+    <script src="js/components/view/iconPicker.js"></script>
     <script src="js/components/view/timeline.js"></script>
     <script src="js/components/view/sidebar.js"></script>
     <script src="js/components/view/detail.js"></script>
@@ -144,6 +155,7 @@
         SelectManager.init();
         CommandHandler.init();
         LayoutManager.init();
+        IconPicker.init();
         Timeline.init({
             startYear: -1000,
             endYear: 1000,
