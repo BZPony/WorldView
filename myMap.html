@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/detail.css" />
     <link rel="stylesheet" href="css/timeline.css" />
     <link rel="stylesheet" href="css/context-menu.css" />
-    <link rel="stylesheet" href="css/icon-picker.css" />
+    <link rel="stylesheet" href="css/modal.css" />
 </head>
 
 <body>
@@ -107,13 +107,13 @@
     </div>
 
     <!-- =====================================================
-        5. 图标选择器
+        5. 通用弹窗
     ===================================================== -->
-    <div id="icon-picker" class="icon-picker is-hidden">
-        <div class="icon-picker-title">选择图标</div>
-        <div class="icon-picker-grid" id="icon-picker-grid"></div>
+    <div id="modal-overlay" class="modal-overlay is-hidden"></div>
+    <div id="modal" class="modal is-hidden">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-body" id="modal-body"></div>
     </div>
-    <div id="icon-picker-overlay" class="icon-picker-overlay is-hidden"></div>
 
     <!-- =====================================================
         6. JS依赖
@@ -133,7 +133,7 @@
     <script src="js/core/selectManager.js"></script>
     <script src="js/core/commandHandler.js"></script>
     <script src="js/components/view/contextMenu.js"></script>
-    <script src="js/components/view/iconPicker.js"></script>
+    <script src="js/components/view/modal.js"></script>
     <script src="js/components/view/timeline.js"></script>
     <script src="js/components/view/sidebar.js"></script>
     <script src="js/components/view/detail.js"></script>
@@ -155,7 +155,7 @@
         SelectManager.init();
         CommandHandler.init();
         LayoutManager.init();
-        IconPicker.init();
+        Modal.init();
         Timeline.init({
             startYear: -1000,
             endYear: 1000,

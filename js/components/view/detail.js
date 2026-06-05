@@ -280,7 +280,7 @@ const DetailPanel = {
             // 恢复原始显示，避免 input 闪烁
             this.renderDetail(AppState.get('selectedItem'));
             // 打开图标选择器
-            IconPicker.open(currentIcon, (newIcon) => {
+            Modal.openIconPicker(currentIcon, (newIcon) => {
                 this._saveIconField(currentIcon, newIcon);
             });
             return;
