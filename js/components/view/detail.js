@@ -611,7 +611,7 @@ const DetailPanel = {
     /**
      * 创建 motion 组件新途径点的默认值
      * - 默认时间：由 _computeDefaultTime 根据相邻途径点计算
-     * - 默认位置：列表为空时使用地图中心，否则为 (0, 0)
+     * - 默认位置：由 _computeDefaultPosition 根据相邻途径点计算
      * - 默认名称："新途径点"，描述："请输入描述"
      */
     _createMotionDefault(items, afterIndex) {
@@ -626,12 +626,12 @@ const DetailPanel = {
             (item) => item.time.arrival || item.time.departure || item.time || { year: 0 }
         );
 
-        // 列表为空时使用地图中心作为位置
-        const center = items.length === 0 ? this._getMapCenter() : { lat: 0, lng: 0 };
+        // 计算默认位置
+        const defaultPos = this._computeDefaultPosition(items, afterIndex);
 
         return {
             time: { arrival: { ...defaultTime }, departure: { ...defaultTime } },
-            lat: center.lat, lng: center.lng,
+            lat: defaultPos.lat, lng: defaultPos.lng,
             name: '新途径点', description: '请输入描述',
             resolution: zoomLevel
         };
@@ -652,13 +652,27 @@ const DetailPanel = {
     },
 
     /**
-     * 获取 Leaflet 地图当前视口中心坐标
-     * 用于创建新途径点时的默认位置
-     * @returns {Object} { lat, lng }，获取失败时返回 (0, 0)
+     * 计算新途径点的默认位置
+     * - 空列表    → (0, 0)
+     * - 开头插入  → 后一个途径点的位置
+     * - 中间插入  → 前后途径点的位置中点
+     * - 末尾插入  → 前一个途径点的位置
+     * @param {Array} items      - 现有条目数组
+     * @param {number} afterIndex - 插入位置（-1 表示开头）
+     * @returns {Object} { lat, lng }
      */
-    _getMapCenter() {
-        try { const c = MapView.map.getCenter(); return { lat: c.lat, lng: c.lng }; }
-        catch (e) { return { lat: 0, lng: 0 }; }
+    _computeDefaultPosition(items, afterIndex) {
+        if (items.length === 0) return { lat: 0, lng: 0 };
+        if (afterIndex === -1) {
+            return { lat: items[0].lat, lng: items[0].lng };
+        }
+        if (afterIndex < items.length - 1) {
+            return {
+                lat: (items[afterIndex].lat + items[afterIndex + 1].lat) / 2,
+                lng: (items[afterIndex].lng + items[afterIndex + 1].lng) / 2
+            };
+        }
+        return { lat: items[afterIndex].lat, lng: items[afterIndex].lng };
     },
 
     /**
