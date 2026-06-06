@@ -178,7 +178,7 @@ const entities = [
             motion: {
                 type: 'motion',
                 waypoints: [
-                    { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year', name: '小马谷', description: '在图书馆研读魔法古籍，结交了五位挚友' },
+                    { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year', name: '小马谷', description: '在图书馆研读魔法古籍，结交了五位挚友占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符s' },
                     { lat: 33, lng: 118, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day', name: '水晶帝国', description: '帮助音韵公主驱散阴影，点亮水晶之心' },
                     { lat: 36, lng: 122, time: { arrival: { year: 50, month: 7, day: 14 }, departure: { year: 50, month: 7, day: 14 } }, resolution: 'day', name: '云中城', description: '参加赛博拉斯庆典，与云宝黛西翱翔天际' },
                     { lat: 38, lng: 119, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month', name: '无尽之森', description: '探索远古遗迹，封印噩梦之影' }
