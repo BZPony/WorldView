@@ -39,27 +39,26 @@ const MapView = {
     },
 
     /**
-     * 筛选出在地图上有位置的实体（motion / timeline / place）
+     * 筛选出在地图上有位置的实体
      */
     getPositionedEntities() {
         return (AppState.get('entities') || []).filter(e =>
-            e.components.motion || e.components.timeline || e.components.place
+            e.components.motion || e.components.place
         );
     },
 
     /**
-     * 获取实体的途径点数组（兼容 motion 和旧 timeline）
+     * 获取实体的途径点数组
      */
     _getWaypoints(entity) {
         if (entity.components.motion) return entity.components.motion.waypoints || [];
-        if (entity.components.timeline) return entity.components.timeline.waypoints || [];
         return [];
     },
 
     /**
      * 实体位置计算
-     *   place 类型：直接返回 place.position
-     *   motion/timeline 类型：线性插值
+     *   place：返回固定位置
+     *   motion：线性插值
      */
     getEntityPosition(entity, time) {
         // 固定位置（place 组件）
@@ -68,11 +67,10 @@ const MapView = {
             if (pos) return { lat: pos.lat, lng: pos.lng };
         }
 
+        // 以下为 motion 插值逻辑
         const waypoints = this._getWaypoints(entity);
         if (!waypoints || waypoints.length === 0) return null;
 
-        // 只有 place 无轨迹 → 只返回 place 位置（上面已处理）
-        // 以下为 motion/timeline 插值逻辑
         if (waypoints.length === 1) {
             const d = waypoints[0].time.departure || waypoints[0].time.arrival || waypoints[0].time;
             return TimeUtils.compare(time, d) === 0
@@ -106,7 +104,7 @@ const MapView = {
 
         entities.forEach(entity => {
             const pos = this.getEntityPosition(entity, ct);
-            const hasMotion = !!entity.components.motion || !!entity.components.timeline;
+            const hasMotion = !!entity.components.motion;
 
             if (pos === null) {
                 if (entity._marker) { this.map.removeLayer(entity._marker); entity._marker = null; }
@@ -135,7 +133,6 @@ const MapView = {
                 this._renderWaypointMarkers(entity, ct);
                 this._renderSegments(entity, ct);
             } else {
-                // 固定位置或纯 place → 清理轨迹信息
                 if (entity._segmentPolylines) {
                     entity._segmentPolylines.forEach(pl => this._entityLayerGroup.removeLayer(pl));
                     entity._segmentPolylines = [];
@@ -280,25 +277,14 @@ const MapView = {
 
     /**
      * 获取实体在当前时间下的显示名称
-     * 优先级：nameHistory → timeline waypoint.name → core.name
+     * 优先级：nameHistory → core.name
      */
     _getDisplayName(entity, currentTime) {
-        // nameHistory 组件（新）
         if (entity.components.nameHistory) {
             const entries = entity.components.nameHistory.entries || [];
             let bestName = null;
             for (const e of entries) {
                 if (TimeUtils.compare(e.time, currentTime) <= 0) bestName = e.name;
-            }
-            if (bestName) return bestName;
-        }
-        // 旧 timeline waypoint 名称（兼容）
-        if (entity.components.timeline) {
-            const waypoints = entity.components.timeline.waypoints || [];
-            let bestName = null;
-            for (const wp of waypoints) {
-                const wt = wp.time.arrival || wp.time.departure || wp.time;
-                if (TimeUtils.compare(wt, currentTime) <= 0) bestName = wp.name;
             }
             if (bestName) return bestName;
         }

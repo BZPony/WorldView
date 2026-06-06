@@ -12,29 +12,8 @@ function createCoreComponent({ name, color, icon = 'person' }) {
 }
 
 /**
- * 时间轴轨迹组件（可选，旧版）
- * 要求 waypoint.time 格式为 { arrival: {...}, departure: {...} }
- * 自动补全缺失的 resolution
- * 将被 motion 组件替代，仅用于向后兼容
- */
-function createTimelineComponent(waypoints = []) {
-    const normalized = waypoints.map(wp => {
-        const rawTime = wp.time || { arrival: { year: 0 }, departure: { year: 0 } };
-        const arrival = rawTime.arrival ?? rawTime;
-        const departure = rawTime.departure ?? rawTime;
-        return {
-            ...wp,
-            time: { arrival, departure },
-            resolution: wp.resolution || 'year'
-        };
-    });
-    return { type: 'timeline', waypoints: normalized };
-}
-
-/**
- * 运动轨迹组件（可选，取代 timeline）
- * 用于可移动实体（人物、动物等），waypoint 结构与旧 timeline 一致
- * 但不承载名称演变职责
+ * 运动轨迹组件（可选）
+ * 用于可移动实体（人物、动物等）
  */
 function createMotionComponent(waypoints = []) {
     const normalized = waypoints.map(wp => {
@@ -52,8 +31,6 @@ function createMotionComponent(waypoints = []) {
 
 /**
  * 名称演变组件（可选）
- * 记录实体的名称随时间变化的历史
- * entries 按时间升序排列
  */
 function createNameHistoryComponent(entries = []) {
     return { type: 'nameHistory', entries };
@@ -74,7 +51,6 @@ function createPersonComponent({ birthTime, deathTime, gender, description } = {
 
 /**
  * 地点组件（可选）
- * 代表地图上具有固定位置的地点，如城市、地标、区域等
  */
 function createPlaceComponent({ position, description } = {}) {
     return { type: 'place', position: position || null, description };
@@ -113,18 +89,7 @@ function createEntity(id, components) {
 }
 
 /**
- * 快速创建人物实体（使用旧 timeline 组件）
- */
-function createPersonEntity({ id, name, color, waypoints, icon, ...personOptions }) {
-    return createEntity(id, [
-        createCoreComponent({ name, color, icon }),
-        createTimelineComponent(waypoints),
-        createPersonComponent(personOptions)
-    ]);
-}
-
-/**
- * 快速创建运动人物实体（使用新 motion 组件）
+ * 快速创建运动人物实体
  */
 function createMotionEntity({ id, name, color, icon = 'person', waypoints, ...personOptions }) {
     return createEntity(id, [
@@ -137,14 +102,13 @@ function createMotionEntity({ id, name, color, icon = 'person', waypoints, ...pe
 /**
  * 快速创建地点实体
  */
-function createPlaceEntity({ id, name, color, icon = 'tag', position, waypoints, description }) {
+function createPlaceEntity({ id, name, color, icon = 'tag', position, nameHistory, description }) {
     const comps = [
         createCoreComponent({ name, color, icon }),
         createPlaceComponent({ position, description })
     ];
-    // 向后兼容：支持 timeline 和 motion 两种方式
-    if (waypoints) {
-        comps.push(createTimelineComponent(waypoints));
+    if (nameHistory) {
+        comps.push(createNameHistoryComponent(nameHistory));
     }
     return createEntity(id, comps);
 }
@@ -170,7 +134,7 @@ function createPersonData({ name, lat, lng }) {
     const persons = AppState.get('entities') || [];
     const newId = Date.now().toString();
 
-    return createPersonEntity({
+    return createMotionEntity({
         id: newId,
         name: name,
         color: '#4f454f',
@@ -189,8 +153,8 @@ const entities = [
         id: 'person_1',
         components: {
             core: { type: 'core', name: '张三', color: '#4f454f', icon: 'person' },
-            timeline: {
-                type: 'timeline',
+            motion: {
+                type: 'motion',
                 waypoints: [
                     { lat: 30, lng: 110, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day', name: '起源镇', description: '在此地结识了第一位同伴，踏上旅途' },
                     { lat: 32, lng: 115, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day', name: '白石渡', description: '以白色石桥闻名的渡口' },
@@ -205,8 +169,8 @@ const entities = [
         id: 'person_2',
         components: {
             core: { type: 'core', name: '暮光闪闪', color: '#ff4d4f', icon: 'person' },
-            timeline: {
-                type: 'timeline',
+            motion: {
+                type: 'motion',
                 waypoints: [
                     { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year', name: '小马谷', description: '在图书馆研读魔法古籍，结交了五位挚友' },
                     { lat: 33, lng: 118, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day', name: '水晶帝国', description: '帮助音韵公主驱散阴影，点亮水晶之心' },
@@ -221,8 +185,8 @@ const entities = [
         id: 'person_3',
         components: {
             core: { type: 'core', name: '夜神月', color: '#347290', icon: 'person' },
-            timeline: {
-                type: 'timeline',
+            motion: {
+                type: 'motion',
                 waypoints: [
                     { lat: 28, lng: 115, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'year', name: '东京', description: '捡到死亡笔记，开始制裁罪犯的正义之路' },
                     { lat: 30, lng: 118, time: { arrival: { year: 0, month: 6 }, departure: { year: 0, month: 6 } }, resolution: 'month', name: '京都', description: '与 L 展开巅峰对决，巧妙伪装身份' },
@@ -237,8 +201,8 @@ const entities = [
         id: 'person_4',
         components: {
             core: { type: 'core', name: '尤莉', color: '#359890', icon: 'person' },
-            timeline: {
-                type: 'timeline',
+            motion: {
+                type: 'motion',
                 waypoints: [
                     { lat: 29, lng: 112, time: { arrival: { year: -100, month: 3 }, departure: { year: -100, month: 3 } }, resolution: 'year', name: '柏林', description: '末世废墟中与好友相遇，结伴同行寻找食物' },
                     { lat: 31, lng: 114, time: { arrival: { year: -20, month: 9, day: 1 }, departure: { year: -20, month: 9, day: 1 } }, resolution: 'day', name: '慕尼黑', description: '在废弃图书馆发现旧世界的地图与唱片' },
@@ -253,8 +217,8 @@ const entities = [
         id: 'person_5',
         components: {
             core: { type: 'core', name: '利维亚的杰洛特', color: '#d7115d', icon: 'person' },
-            timeline: {
-                type: 'timeline',
+            motion: {
+                type: 'motion',
                 waypoints: [
                     { lat: 32, lng: 110, time: { arrival: { year: -150 }, departure: { year: -150 } }, resolution: 'era', name: '凯尔莫罕', description: '接受猎魔人训练，学习剑术与炼金术' },
                     { lat: 35, lng: 113, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'decade', name: '维吉玛', description: '解决泰莫利亚宫廷的诅咒，获得狮鹫勋章' },
@@ -270,53 +234,35 @@ const entities = [
     {
         id: 'place_1',
         components: {
-            core: { type: 'core', name: '起源镇', color: '#5b8a5b', icon: 'tag' },
-            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' },
-            timeline: {
-                type: 'timeline',
-                waypoints: [
-                    { lat: 30, lng: 110, time: { year: -200 }, name: '起源镇', description: '一座宁静的小镇' }
-                ]
-            }
+            core: { type: 'core', name: '起源镇', color: '#5b8a5b', icon: 'place' },
+            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' }
         }
     },
     {
         id: 'place_2',
         components: {
-            core: { type: 'core', name: '小马谷', color: '#ff69b4', icon: 'tag' },
-            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' },
-            timeline: {
-                type: 'timeline',
-                waypoints: [
-                    { lat: 31, lng: 120, time: { year: -300 }, name: '小马谷', description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' }
-                ]
-            }
+            core: { type: 'core', name: '小马谷', color: '#ff69b4', icon: 'place' },
+            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' }
         }
     },
     {
         id: 'place_3',
         components: {
-            core: { type: 'core', name: '凯尔莫罕', color: '#444444', icon: 'tag' },
-            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' },
-            timeline: {
-                type: 'timeline',
-                waypoints: [
-                    { lat: 32, lng: 110, time: { year: -500 }, name: '凯尔莫罕', description: '猎魔人的堡垒要塞' }
-                ]
-            }
+            core: { type: 'core', name: '凯尔莫罕', color: '#444444', icon: 'place' },
+            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' }
         }
     },
     {
         id: 'place_4',
         components: {
-            core: { type: 'core', name: '君士坦丁堡', color: '#cc3333', icon: 'tag' },
+            core: { type: 'core', name: '君士坦丁堡', color: '#cc3333', icon: 'place' },
             place: { type: 'place', position: { lat: 28, lng: 115 }, description: '一座横跨欧亚的历史名城，夜神月曾在此活动' },
-            timeline: {
-                type: 'timeline',
-                waypoints: [
-                    { lat: 28, lng: 115, time: { year: -300 }, name: '拜占庭', description: '古希腊殖民城市，名为拜占庭' },
-                    { lat: 28, lng: 115, time: { year: 330, month: 5 }, name: '君士坦丁堡', description: '君士坦丁大帝定为东罗马首都，改名君士坦丁堡' },
-                    { lat: 28, lng: 115, time: { year: 350 }, name: '伊斯坦布尔', description: '奥斯曼帝国征服后，更名为伊斯坦布尔' }
+            nameHistory: {
+                type: 'nameHistory',
+                entries: [
+                    { time: { year: -300 }, name: '拜占庭', description: '古希腊殖民城市，名为拜占庭' },
+                    { time: { year: 330, month: 5 }, name: '君士坦丁堡', description: '君士坦丁大帝定为东罗马首都，改名君士坦丁堡' },
+                    { time: { year: 1453 }, name: '伊斯坦布尔', description: '奥斯曼帝国征服后，更名为伊斯坦布尔' }
                 ]
             }
         }
@@ -324,14 +270,8 @@ const entities = [
     {
         id: 'place_5',
         components: {
-            core: { type: 'core', name: '柏林', color: '#887744', icon: 'tag' },
-            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' },
-            timeline: {
-                type: 'timeline',
-                waypoints: [
-                    { lat: 29, lng: 112, time: { year: -200 }, name: '柏林', description: '末日前的繁华都市' }
-                ]
-            }
+            core: { type: 'core', name: '柏林', color: '#887744', icon: 'place' },
+            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' }
         }
     },
 

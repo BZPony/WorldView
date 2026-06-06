@@ -178,42 +178,8 @@ const DetailPanel = {
                 <div class="detail-property"><span class="property-label">颜色</span><span class="property-value" data-component="core" data-field="color"><span class="color-swatch" style="background:${comp.color}"></span>${comp.color}</span></div>
                 <div class="detail-property"><span class="property-label">默认图标</span><span class="property-value" data-component="core" data-field="icon">${comp.icon}</span></div>
             `,
-            timeline: comp => {
-                if (!comp.waypoints || comp.waypoints.length === 0) {
-                    return '<div class="detail-property">无轨迹数据</div>';
-                }
-                // 获取实体对象（从当前选中的实体中查找）
-                const selectedItem = AppState.get('selectedItem');
-                const entity = selectedItem ? selectedItem.data : null;
-
-                const zoomLevel = AppState.get('timeZoomLevel') || 'year';
-
-                const listItems = comp.waypoints.map(wp => {
-                    const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time.arrival || wp.time.departure || wp.time) : false;
-                    const cls = isOutside ? 'waypoint-item waypoint-outside-lifespan' : 'waypoint-item';
-                    // 到达时间和离开时间各自按 resolution 格式化
-                    const arrival = wp.time.arrival || wp.time.departure || wp.time;
-                    const departure = wp.time.departure || wp.time.arrival || wp.time;
-                    // 使用途径点的 resolution 确定显示精度，fallback 到全局缩放级别
-                    const wpZoom = wp.resolution || zoomLevel;
-                    const arrivalStr = TimeUtils.format(arrival, wpZoom);
-                    const departureStr = TimeUtils.format(departure, wpZoom);
-                    // 地名或经纬度
-                    const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
-                    // 简要描述
-                    const descStr = wp.description || '';
-
-                    return `<li class="${cls}">
-                    <div class="waypoint-name-row">${locationStr}</div>
-                    <div class="waypoint-time-row"><span class="time-label">抵达</span><span class="time-badge">${arrivalStr}</span><span class="time-label">离开</span><span class="time-badge">${departureStr}</span></div>
-                        ${descStr ? `<div class="waypoint-desc-row">${descStr}</div>` : ''}
-                    </li>`;
-                }).join('');
-                return `<ul class="detail-waypoint-list">${listItems}</ul>`;
-            },
             /**
-             * motion 渲染器（新，取代 timeline）
-             * 与 timeline 渲染器行为一致，但不显示抵达/离开标签
+             * motion 渲染器
              */
             motion: comp => {
                 if (!comp.waypoints || comp.waypoints.length === 0) {
@@ -440,7 +406,6 @@ const DetailPanel = {
     _getComponentLabel(type) {
         const labels = {
             core: '基本信息',
-            timeline: '时间轴轨迹',
             motion: '运动轨迹',
             nameHistory: '名称演变',
             person: '人物信息',
@@ -455,7 +420,6 @@ const DetailPanel = {
     _getComponentIcon(type) {
         const icons = {
             core: 'page',
-            timeline: 'timeline',
             motion: 'timeline',
             nameHistory: 'page',
             person: 'person',

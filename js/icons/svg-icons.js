@@ -52,7 +52,6 @@ const svg_icons_tag = {
     building: 'entities',
     tree: 'entities',
     castle: 'entities',
-
 }
 
 // 获取SVG图标，设置宽高属性
