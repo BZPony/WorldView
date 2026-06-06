@@ -97,10 +97,11 @@ function createPersonEntity({ id, name, color, waypoints, icon, ...personOptions
 /**
  * 快速创建地点实体
  */
-function createPlaceEntity({ id, name, color, icon = 'tag', position, description }) {
+function createPlaceEntity({ id, name, color, icon = 'tag', position, waypoints, description }) {
     return createEntity(id, [
         createCoreComponent({ name, color, icon }),
-        createPlaceComponent({ position, description })
+        createPlaceComponent({ position, description }),
+        ...(waypoints ? [createTimelineComponent(waypoints)] : [])
     ]);
 }
 
@@ -226,35 +227,67 @@ const entities = [
         id: 'place_1',
         components: {
             core: { type: 'core', name: '起源镇', color: '#5b8a5b', icon: 'tag' },
-            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' }
+            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' },
+            timeline: {
+                type: 'timeline',
+                waypoints: [
+                    { lat: 30, lng: 110, time: { year: -200 }, name: '起源镇', description: '一座宁静的小镇' }
+                ]
+            }
         }
     },
     {
         id: 'place_2',
         components: {
             core: { type: 'core', name: '小马谷', color: '#ff69b4', icon: 'tag' },
-            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' }
+            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' },
+            timeline: {
+                type: 'timeline',
+                waypoints: [
+                    { lat: 31, lng: 120, time: { year: -300 }, name: '小马谷', description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' }
+                ]
+            }
         }
     },
     {
         id: 'place_3',
         components: {
             core: { type: 'core', name: '凯尔莫罕', color: '#444444', icon: 'tag' },
-            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' }
+            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' },
+            timeline: {
+                type: 'timeline',
+                waypoints: [
+                    { lat: 32, lng: 110, time: { year: -500 }, name: '凯尔莫罕', description: '猎魔人的堡垒要塞' }
+                ]
+            }
         }
     },
     {
         id: 'place_4',
         components: {
-            core: { type: 'core', name: '东京', color: '#cc3333', icon: 'tag' },
-            place: { type: 'place', position: { lat: 28, lng: 115 }, description: '日本的首都，夜神月在此获得了改变世界的力量' }
+            core: { type: 'core', name: '君士坦丁堡', color: '#cc3333', icon: 'tag' },
+            place: { type: 'place', position: { lat: 28, lng: 115 }, description: '一座横跨欧亚的历史名城，夜神月曾在此活动' },
+            timeline: {
+                type: 'timeline',
+                waypoints: [
+                    { lat: 28, lng: 115, time: { year: -300 }, name: '拜占庭', description: '古希腊殖民城市，名为拜占庭' },
+                    { lat: 28, lng: 115, time: { year: 330, month: 5 }, name: '君士坦丁堡', description: '君士坦丁大帝定为东罗马首都，改名君士坦丁堡' },
+                    { lat: 28, lng: 115, time: { year: 350 }, name: '伊斯坦布尔', description: '奥斯曼帝国征服后，更名为伊斯坦布尔' }
+                ]
+            }
         }
     },
     {
         id: 'place_5',
         components: {
             core: { type: 'core', name: '柏林', color: '#887744', icon: 'tag' },
-            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' }
+            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' },
+            timeline: {
+                type: 'timeline',
+                waypoints: [
+                    { lat: 29, lng: 112, time: { year: -200 }, name: '柏林', description: '末日前的繁华都市' }
+                ]
+            }
         }
     },
 
