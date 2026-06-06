@@ -4,11 +4,13 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased] - 开发中
+## [0.5.0] - 2026-06-06
 
 ### Added
 
 - **时间系统重构** — 引入 `TimeConfig` 全局时间配置和 `TimeUtils` 工具函数，支持自定义年月日换算规则和分辨率级别
+- **ECS 组件拆分** — 将臃肿的 `timeline` 组件拆分为 `motion`（运动轨迹）和 `nameHistory`（名称演变），遵循单一职责原则
+- **新增 `place` 组件类型** — 固定位置实体（地点、建筑等），自带 `position` 和 `description` 字段
 - **Undo/Redo 操作回退** — 通过命令模式重构数据修改流程，所有应用数据修改统一走 `CommandHandler`
 - 新增 `CommandHandler.execute()` / `undo()` / `redo()` 方法，基于 `_undoStack` / `_redoStack` 双栈快照管理
 - 新增 `CommandHandler._cloneEntities()` 深拷贝函数，自动剥离 Leaflet 运行时属性
@@ -22,9 +24,17 @@
 - 新增 `adjustColor()` HSL 颜色调整工具函数
 - 实体标记选中高亮效果 — 选中实体时灰色外环变为蓝色发光样式
 - 途径点小圆点标记（12px 外环 + 8px 内圆），时间轴拖动时自动更新
-- 详情面板新增双击内联编辑功能，支持 `person`、`organization`、`regime`、`core` 组件的字段编辑
+- 详情面板单击内联编辑功能，使用 `contenteditable` 替代旧 input/textarea 方案，支持所有文本字段直接编辑
 - 侧边栏自动跳转 — 点击地图标记时自动打开侧边栏、切换到资源管理 Tab、展开父面板并滚动到对应项
-- 新增 `page` SVG 图标
+- 通用 Modal 弹窗系统，支持多种内容变体
+- 图标选择器 — 按 `svg_icons_tag` 分组显示图标网格，支持实体 / 系统 / 操作分类
+- 颜色选择器 — 原生 color picker 弹出选择
+- `motion` 组件途径点名称、描述字段（`name` + `description`）
+- `nameHistory` 组件时间线条目（`entries` 数组，含 `time` / `name` / `description`）
+- 组件重构设计文档 (`devlog/component-refactor.md`) 和时间系统设计文档 (`devlog/time-system-design.md`)
+- `place` 实体右键菜单创建支持
+- 新增 `map`、`landmark`、`building`、`city`、`mountain`、`river`、`forest`、`fort`、`tower`、`explorer` SVG 图标
+- 新增 `add`、`delete` 图标
 
 ### Changed
 
@@ -32,6 +42,7 @@
 - `state.js` 的 `currentTime` 默认值从 `0` 改为 `{ year: 0 }`，新增 `timeZoomLevel` 状态
 - 地图实体标记样式重构为三层结构：28px 灰色外环 → 24px 颜色圆形 → 16px SVG 图标
 - 详情面板中 `core` 组件（名称/颜色/默认图标）现在可编辑，不再隐藏
+- 内联编辑从双击触发改为单击触发，使用 `contenteditable` 替代 `input`/`textarea` 元素
 - 实体地图标记的点击事件改为只在首次创建时注册，避免重复监听
 - 标记图标尺寸由 `[24, 24]` 调整为 `[200, 28]`，锚点由 `[12, 12]` 调整为 `[14, 14]`
 - `detail.js` 的 `_saveEdit()` 改为发射 `command:execute` 事件，不直接操作 `AppState`
@@ -39,6 +50,19 @@
 - 引入 `L.layerGroup` 统一管理所有实体图层，支持 undo/redo 整体替换时清理旧图层
 - 途径点插入不再硬过滤，由透明度控制显示，确保跨窗口边界的轨迹线不会生硬中断
 - `entities.js` 工厂函数使用 `??` 替代 `||` 处理 `arrival`/`departure` 默认值
+- 示例数据全部迁移为 `motion` / `nameHistory` / `place` 组件格式，旧 `timeline` 组件彻底移除
+- 详情面板 `<span>` 属性值添加渐变背景和边框，hover 时高亮提示可编辑
+- 详情面板数据字段使用 `data-component` + `data-field` 双属性标识，支持任意组件字段编辑
+- `person` 组件的 `birthTime` / `deathTime` 编辑支持 `{ year }` 对象格式
+- 地图标记点击事件自动打开侧边栏并跳转到对应实体
+- `_getComponentRenderer()` 新增 `motion`、`nameHistory`、`place` 渲染器
+- `detail.css` 属性值区域添加圆角边框、背景色、hover 高亮和 focus 取消轮廓线
+
+### Removed
+
+- 彻底移除臃肿的旧 `timeline` 组件及其所有消费端分支
+- 移除旧的 input/textarea 编辑方案，全面改用 contenteditable
+- 移除 `entities.js` 中所有旧 `timeline` 数据兼容代码
 
 ### Fixed
 
@@ -46,6 +70,10 @@
 - 修复 undo/redo 后地图图标越堆越多的问题（实体整体替换后清理旧 Leaflet 图层引用）
 - 修复时间轴拖动时 `startTime` 为对象导致的 `[object Object]` 字符串拼接 bug
 - 修复 `entities.js` 中 `createRegimeEntity` 缺失分号
+- 修复 Font Awesome 格式 SVG 图标（无 width/height 属性）无法显示的问题
+- 修复图标选择器滚动溢出问题
+- 修复 contenteditable 元素 focus 时出现浏览器默认轮廓线的问题
+- 修复 `place` 组件描述字段不可编辑的问题
 
 ## [0.4.0] - 2026-05-14
 

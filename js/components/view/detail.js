@@ -34,8 +34,8 @@ const DetailPanel = {
         // 3. 监听 AppState 变化
         EventBus.on('state:change', this._onStateChange.bind(this));
 
-        // 4. 双击编辑功能（事件委托）
-        this.elements.content.addEventListener('dblclick', (e) => {
+        // 4. 单击编辑功能（事件委托）
+        this.elements.content.addEventListener('click', (e) => {
             const valueEl = e.target.closest('.property-value');
             if (!valueEl || !valueEl.dataset.field) return;
             this._makeEditable(valueEl);
@@ -228,7 +228,7 @@ const DetailPanel = {
                 const pos = comp.position;
                 return `
                 <div class="detail-property"><span class="property-label">位置</span><span class="property-value">${pos ? `(${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})` : '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">描述</span><span class="property-value">${comp.description || '无'}</span></div>
+                <div class="detail-property"><span class="property-label">描述</span><span class="property-value" data-component="place" data-field="description">${comp.description || '无'}</span></div>
                 `;
             },
             person: comp => `
@@ -269,70 +269,122 @@ const DetailPanel = {
      * @param {HTMLElement} valueEl - .property-value 元素
      */
     _makeEditable(valueEl) {
-        const currentText = valueEl.textContent;
         const field = valueEl.dataset.field;
 
-        // 长文本字段使用 textarea
-        const useTextarea = field === 'description';
-
-        const input = useTextarea ? document.createElement('textarea') : document.createElement('input');
-
-        // 显示值为 '未知' 或 '无' 时输入框留空
-        const isPlaceholder = currentText === '未知' || currentText === '无';
-        const initialValue = isPlaceholder ? '' : currentText;
-
+        // 颜色字段：弹出原生颜色选择器
         if (field === 'color') {
-            // 颜色字段使用原生颜色选择器
+            const input = document.createElement('input');
             input.type = 'color';
             const colorMatch = valueEl.textContent.match(/#[0-9a-fA-F]{6}/);
             input.value = colorMatch ? colorMatch[0] : '#4f454f';
             input.className = 'detail-edit-color';
-        } else if (field === 'icon') {
-            // 图标字段弹出图标选择器
+            input.style.position = 'absolute';
+            input.style.opacity = '0';
+            input.style.pointerEvents = 'none';
+            input.dataset.component = valueEl.dataset.component;
+            input.dataset.field = field;
+            document.body.appendChild(input);
+            const saveHandler = () => {
+                this._saveEdit(input);
+                document.body.removeChild(input);
+            };
+            input.addEventListener('input', saveHandler);
+            input.addEventListener('blur', () => {
+                if (document.body.contains(input)) {
+                    this.renderDetail(AppState.get('selectedItem'));
+                    document.body.removeChild(input);
+                }
+            });
+            input.click();
+            return;
+        }
+
+        // 图标字段：弹出图标选择器
+        if (field === 'icon') {
             const currentIcon = valueEl.textContent.trim() || 'tag';
-            // 恢复原始显示，避免 input 闪烁
-            this.renderDetail(AppState.get('selectedItem'));
-            // 打开图标选择器
             Modal.openIconPicker(currentIcon, (newIcon) => {
                 this._saveIconField(currentIcon, newIcon);
             });
             return;
-        } else if (useTextarea) {
-            input.value = initialValue;
-            input.className = 'detail-edit-textarea';
-        } else {
-            // 数字字段使用 number 类型
-            if (field === 'birthTime' || field === 'deathTime') {
-                input.type = 'number';
-            } else {
-                input.type = 'text';
-            }
-            input.value = initialValue;
-            input.className = 'detail-edit-input';
         }
 
-        input.dataset.component = valueEl.dataset.component;
-        input.dataset.field = field;
+        // 其他文本/数字字段：使用 contenteditable 直接编辑
+        const currentText = valueEl.textContent;
+        const isPlaceholder = currentText === '未知' || currentText === '无';
 
-        // 替换内容
-        valueEl.textContent = '';
-        valueEl.appendChild(input);
-        input.focus();
-        input.select();
+        valueEl.contentEditable = true;
+        valueEl.textContent = isPlaceholder ? '' : currentText;
+        valueEl.focus();
 
-        // 保存回调
-        const saveHandler = () => this._saveEdit(input);
+        // 文本选择
+        if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
+            const range = document.createRange();
+            range.selectNodeContents(valueEl);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
 
-        input.addEventListener('blur', saveHandler);
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !useTextarea) {
+        const finishEdit = () => {
+            if (!valueEl.contentEditable) return;
+            valueEl.contentEditable = false;
+            this._saveContentEditable(valueEl);
+        };
+
+        valueEl.addEventListener('blur', finishEdit, { once: true });
+        valueEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
                 e.preventDefault();
-                input.blur();
+                valueEl.blur();
             }
             if (e.key === 'Escape') {
-                // 取消编辑，重新渲染面板还原
+                valueEl.contentEditable = false;
+                valueEl.textContent = currentText;
                 this.renderDetail(AppState.get('selectedItem'));
             }
+        });
+    },
+
+    /**
+     * 保存 contenteditable 字段的编辑
+     */
+    _saveContentEditable(valueEl) {
+        const componentType = valueEl.dataset.component;
+        const field = valueEl.dataset.field;
+        const rawValue = valueEl.textContent;
+
+        const selectedItem = AppState.get('selectedItem');
+        if (!selectedItem) return;
+
+        const entity = selectedItem.data;
+        const component = entity.components[componentType];
+        if (!component) return;
+
+        const originalValue = component[field];
+        let newValue;
+
+        // 数字字段转为数字
+        if (field === 'birthTime' || field === 'deathTime') {
+            const parsed = rawValue === '' ? null : Number(rawValue);
+            newValue = parsed != null && !isNaN(parsed) ? { year: parsed } : originalValue;
+        } else if (typeof originalValue === 'number') {
+            newValue = rawValue === '' ? originalValue : Number(rawValue);
+        } else {
+            newValue = rawValue || originalValue;
+        }
+
+        if (newValue === originalValue || JSON.stringify(newValue) === JSON.stringify(originalValue)) {
+            this.renderDetail(selectedItem);
+            return;
+        }
+
+        EventBus.emit('command:execute', {
+            type: 'editEntityField',
+            entityId: entity.id,
+            componentType,
+            field,
+            oldValue: originalValue,
+            newValue
         });
     },
 
