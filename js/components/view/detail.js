@@ -105,8 +105,6 @@ const DetailPanel = {
     */
     _renderComponentSection(component) {
         const type = component.type;
-        //core组件不参与渲染
-        //if (type === 'core') return null;
         //获取渲染器
         const renderer = this._getComponentRenderer(type);
         if (!renderer) return null;//未知组件不渲染
@@ -421,7 +419,7 @@ const DetailPanel = {
         const icons = {
             core: 'page',
             motion: 'timeline',
-            nameHistory: 'page',
+            nameHistory: 'calendar',
             person: 'person',
             place: 'place',
             organization: 'organization',

@@ -206,13 +206,13 @@ const Sidebar = {
 
         const entities = AppState.get('entities') || [];
 
-        //按组件类型分类，默认组件类型为人物、组织、政权，还有用户自定义tag
+        //按组件类型分类，默认组件类型为人物、组织、政权、地点，还有用户自定义tag
         const groups = {};
         entities.forEach(entity => {
             for (const comp of Object.values(entity.components)) {
                 if (comp.type !== 'person' && comp.type !== 'regime' &&
                     comp.type !== 'organization' && comp.type !== 'customTags' &&
-                    comp.type !== 'place' && comp.type !== 'motion')
+                    comp.type !== 'place')
                     continue;
 
                 if (comp.type === 'customTags') {

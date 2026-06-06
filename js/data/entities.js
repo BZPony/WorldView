@@ -70,6 +70,9 @@ function createOrganizationComponent({ headquarters, leader, members } = {}) {
     return { type: 'organization', headquarters, leader, members };
 }
 
+/**
+ * 用户自定义标签组件（可选）
+ */
 function createCustomTagComponent(tags = []) {
     return { type: 'customTags', tags };
 }
@@ -103,16 +106,16 @@ function createMotionEntity({ id, name, color, icon = 'person', waypoints, ...pe
  * 快速创建地点实体
  */
 function createPlaceEntity({ id, name, color, icon = 'tag', position, nameHistory, description }) {
-    const comps = [
+    return createEntity(id, [
         createCoreComponent({ name, color, icon }),
-        createPlaceComponent({ position, description })
-    ];
-    if (nameHistory) {
-        comps.push(createNameHistoryComponent(nameHistory));
-    }
-    return createEntity(id, comps);
+        createPlaceComponent({ position, description }),
+        createNameHistoryComponent(nameHistory)
+    ]);
 }
 
+/**
+ * 快速创建组织实体
+ */
 function createOrganizationEntity({ id, name, color, icon, ...organizationOptions }) {
     return createEntity(id, [
         createCoreComponent({ name, color, icon }),
@@ -120,6 +123,9 @@ function createOrganizationEntity({ id, name, color, icon, ...organizationOption
     ]);
 }
 
+/**
+ * 快速创建政权实体
+ */
 function createRegimeEntity({ id, name, color, icon, ...regimeOption }) {
     return createEntity(id, [
         createCoreComponent({ name, color, icon }),
@@ -235,21 +241,41 @@ const entities = [
         id: 'place_1',
         components: {
             core: { type: 'core', name: '起源镇', color: '#5b8a5b', icon: 'place' },
-            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' }
+            place: { type: 'place', position: { lat: 30, lng: 110 }, description: '一座宁静的小镇，依山傍水，是张三旅途的起点' },
+            nameHistory: {
+                type: 'nameHistory',
+                entries: [
+                    { time: { year: -500 }, name: '起源镇', description: '古老的村落，传说中由一位神秘旅者创立' },
+                ]
+            }
         }
     },
     {
         id: 'place_2',
         components: {
             core: { type: 'core', name: '小马谷', color: '#ff69b4', icon: 'place' },
-            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' }
+            place: { type: 'place', position: { lat: 31, lng: 120 }, description: '暮光闪闪的故乡，一座充满魔法与友谊的和谐小镇' },
+            nameHistory: {
+                type: 'nameHistory',
+                entries: [
+                    { time: { year: -1000 }, name: '小马谷', description: '原为一片荒地，后来被一群小马发现并定居，逐渐发展成现在的模样' },
+                ]
+            }
         }
     },
     {
         id: 'place_3',
         components: {
             core: { type: 'core', name: '凯尔莫罕', color: '#444444', icon: 'place' },
-            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' }
+            place: { type: 'place', position: { lat: 32, lng: 110 }, description: '猎魔人的堡垒要塞，位于蓝山深处，杰洛特的训练之地' },
+            nameHistory: {
+                type: 'nameHistory',
+                entries: [
+                    { time: { year: -1000 }, name: '凯尔莫罕', description: '古老的军事要塞，曾经是抵御北方入侵的前线' },
+                    { time: { year: -500 }, name: '猎魔人堡垒', description: '被一群猎魔人占领后改名，成为猎魔人的训练基地' },
+                    { time: { year: 0 }, name: '凯尔莫罕', description: '为了纪念最初的历史名称，重新采用了凯尔莫罕这个名字' }
+                ]
+            }
         }
     },
     {
@@ -261,8 +287,8 @@ const entities = [
                 type: 'nameHistory',
                 entries: [
                     { time: { year: -300 }, name: '拜占庭', description: '古希腊殖民城市，名为拜占庭' },
-                    { time: { year: 330, month: 5 }, name: '君士坦丁堡', description: '君士坦丁大帝定为东罗马首都，改名君士坦丁堡' },
-                    { time: { year: 1453 }, name: '伊斯坦布尔', description: '奥斯曼帝国征服后，更名为伊斯坦布尔' }
+                    { time: { year: 100, month: 5 }, name: '君士坦丁堡', description: '君士坦丁大帝定为东罗马首都，改名君士坦丁堡' },
+                    { time: { year: 110 }, name: '伊斯坦布尔', description: '奥斯曼帝国征服后，更名为伊斯坦布尔' }
                 ]
             }
         }
@@ -271,7 +297,15 @@ const entities = [
         id: 'place_5',
         components: {
             core: { type: 'core', name: '柏林', color: '#887744', icon: 'place' },
-            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' }
+            place: { type: 'place', position: { lat: 29, lng: 112 }, description: '末世后的柏林废墟，尤莉与好友相遇的地方' },
+            nameHistory: {
+                type: 'nameHistory',
+                entries: [
+                    { time: { year: -500 }, name: '柏林', description: '古老的部落聚居地，后来发展成城市' },
+                    { time: { year: 0 }, name: '柏林', description: '经历多次战争与重建，名字一直未变' },
+                    { time: { year: 100 }, name: '废墟之城', description: '末世后被废弃，成为废墟之城' }
+                ]
+            }
         }
     },
 
