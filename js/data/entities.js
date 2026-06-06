@@ -12,9 +12,10 @@ function createCoreComponent({ name, color, icon = 'person' }) {
 }
 
 /**
- * 时间轴轨迹组件（可选）
+ * 时间轴轨迹组件（可选，旧版）
  * 要求 waypoint.time 格式为 { arrival: {...}, departure: {...} }
  * 自动补全缺失的 resolution
+ * 将被 motion 组件替代，仅用于向后兼容
  */
 function createTimelineComponent(waypoints = []) {
     const normalized = waypoints.map(wp => {
@@ -28,6 +29,34 @@ function createTimelineComponent(waypoints = []) {
         };
     });
     return { type: 'timeline', waypoints: normalized };
+}
+
+/**
+ * 运动轨迹组件（可选，取代 timeline）
+ * 用于可移动实体（人物、动物等），waypoint 结构与旧 timeline 一致
+ * 但不承载名称演变职责
+ */
+function createMotionComponent(waypoints = []) {
+    const normalized = waypoints.map(wp => {
+        const rawTime = wp.time || { arrival: { year: 0 }, departure: { year: 0 } };
+        const arrival = rawTime.arrival ?? rawTime;
+        const departure = rawTime.departure ?? rawTime;
+        return {
+            ...wp,
+            time: { arrival, departure },
+            resolution: wp.resolution || 'year'
+        };
+    });
+    return { type: 'motion', waypoints: normalized };
+}
+
+/**
+ * 名称演变组件（可选）
+ * 记录实体的名称随时间变化的历史
+ * entries 按时间升序排列
+ */
+function createNameHistoryComponent(entries = []) {
+    return { type: 'nameHistory', entries };
 }
 
 /**
@@ -84,7 +113,7 @@ function createEntity(id, components) {
 }
 
 /**
- * 快速创建人物实体
+ * 快速创建人物实体（使用旧 timeline 组件）
  */
 function createPersonEntity({ id, name, color, waypoints, icon, ...personOptions }) {
     return createEntity(id, [
@@ -95,14 +124,29 @@ function createPersonEntity({ id, name, color, waypoints, icon, ...personOptions
 }
 
 /**
+ * 快速创建运动人物实体（使用新 motion 组件）
+ */
+function createMotionEntity({ id, name, color, icon = 'person', waypoints, ...personOptions }) {
+    return createEntity(id, [
+        createCoreComponent({ name, color, icon }),
+        createMotionComponent(waypoints),
+        createPersonComponent(personOptions)
+    ]);
+}
+
+/**
  * 快速创建地点实体
  */
 function createPlaceEntity({ id, name, color, icon = 'tag', position, waypoints, description }) {
-    return createEntity(id, [
+    const comps = [
         createCoreComponent({ name, color, icon }),
-        createPlaceComponent({ position, description }),
-        ...(waypoints ? [createTimelineComponent(waypoints)] : [])
-    ]);
+        createPlaceComponent({ position, description })
+    ];
+    // 向后兼容：支持 timeline 和 motion 两种方式
+    if (waypoints) {
+        comps.push(createTimelineComponent(waypoints));
+    }
+    return createEntity(id, comps);
 }
 
 function createOrganizationEntity({ id, name, color, icon, ...organizationOptions }) {
