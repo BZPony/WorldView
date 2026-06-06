@@ -23,17 +23,17 @@ const TimeUtils = {
     toOffset(t) {
         if (t == null) return 0;
         const scale = TimeConfig.getScale();
-        const year  = t.year || 0;
+        const year = t.year || 0;
         const month = (t.month || 1) - 1;   // 0-based
-        const day   = (t.day || 1) - 1;     // 0-based
-        const hour  = t.hour || 0;
-        const min   = t.minute || 0;
+        const day = (t.day || 1) - 1;     // 0-based
+        const hour = t.hour || 0;
+        const min = t.minute || 0;
 
         return year * scale.year
-             + month * scale.month
-             + day * scale.day
-             + hour * scale.hour
-             + min * scale.minute;
+            + month * scale.month
+            + day * scale.day
+            + hour * scale.hour
+            + min * scale.minute;
     },
 
     /**
@@ -187,6 +187,21 @@ const TimeUtils = {
         const unitScale = scale[unit] || scale.year;
         const offset = this.toOffset(t);
         return this.offsetToTime(offset - value * unitScale);
+    },
+
+    /**
+     * 获取当前时间分辨率对应的 minUnit 步进值
+     *
+     * @param {string} [zoomLevel] - 缩放级别 ID，默认从 AppState 读取
+     * @returns {number} 偏移量（minUnit）
+     */
+    getResolutionStep(zoomLevel) {
+        const zl = zoomLevel || (window.AppState ? AppState.get('timeZoomLevel') : 'year') || 'year';
+        const scale = TimeConfig.getScale();
+        const level = TimeConfig.zoomLevels.find(z => z.id === zl);
+        if (!level) return scale.year;
+        const unitScale = scale[level.minUnit] || scale.year;
+        return unitScale * (level.step || 1);
     }
 };
 

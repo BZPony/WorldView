@@ -179,7 +179,7 @@ const DetailPanel = {
                     const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
                     const descStr = wp.description || '';
                     const btns = self._renderWaypointBtns(idx);
-                    return `<li class="${cls}" data-wp-index="${idx}">
+                    return `<li class="${cls}" data-wp-index="${idx}" data-component="motion">
                         <div class="waypoint-item-content">
                             <div class="waypoint-name-row">${locationStr}</div>
                             <div class="waypoint-time-row"><span class="time-label">抵达</span><span class="time-badge">${arrivalStr}</span><span class="time-label">离开</span><span class="time-badge">${departureStr}</span></div>
@@ -206,7 +206,7 @@ const DetailPanel = {
                 const listItems = comp.entries.map((e, idx) => {
                     const timeStr = TimeUtils.format(e.time, e.time.month ? (e.time.day ? 'day' : 'month') : zoomLevel);
                     const btns = self._renderWaypointBtns(idx);
-                    return `<li class="waypoint-item" data-wp-index="${idx}">
+                    return `<li class="waypoint-item" data-wp-index="${idx}" data-component="nameHistory">
                         <div class="waypoint-item-content">
                             <div class="waypoint-name-row">${e.name}</div>
                             <div class="waypoint-time-row"><span class="time-label">始于</span><span class="time-badge">${timeStr}</span></div>
@@ -481,34 +481,6 @@ const DetailPanel = {
     // ──────────────────── 途径点 CRUD ────────────────────
 
     /**
-     * 获取当前时间分辨率对应的 minUnit 步进值
-     * @returns {number} 偏移量（minUnit）
-     */
-    _getResolutionStep() {
-        const zoomLevel = AppState.get('timeZoomLevel') || 'year';
-        const scale = TimeConfig.getScale();
-        const level = TimeConfig.zoomLevels.find(z => z.id === zoomLevel);
-        if (!level) return scale.year;
-        const unitScale = scale[level.minUnit] || scale.year;
-        return unitScale * (level.step || 1);
-    },
-
-    /**
-     * 计算两个时间对象的平均值
-     * @param {Object} t1
-     * @param {Object} t2
-     * @returns {Object}
-     */
-    _averageTime(t1, t2) {
-        if (!t1 && !t2) return { year: 0 };
-        if (!t1) return t2;
-        if (!t2) return t1;
-        const off1 = TimeUtils.toOffset(t1);
-        const off2 = TimeUtils.toOffset(t2);
-        return TimeUtils.offsetToTime(Math.round((off1 + off2) / 2));
-    },
-
-    /**
      * 处理途径点操作按钮点击
      * @param {HTMLElement} btn - 被点击的按钮
      */
@@ -520,46 +492,23 @@ const DetailPanel = {
         if (!selectedItem) return;
         const entity = selectedItem.data;
 
-        // add-first 按钮直接读 data-component
-        if (action === 'add-first-wp') {
-            const compFromBtn = btn.dataset.component;
-            if (compFromBtn) {
-                this._addWaypoint(entity, compFromBtn, -1);
-            }
-            return;
+        // 从按钮自身或父级 li 的 data-component 读取组件类型
+        let componentType = btn.dataset.component;
+        if (!componentType) {
+            const li = btn.closest('li[data-component]');
+            if (li) componentType = li.dataset.component;
         }
-
-        // 其他按钮：从组件区块标题获取组件类型
-        const componentBlock = btn.closest('.detail-component-block');
-        if (!componentBlock) return;
-        const typeEl = componentBlock.querySelector('.detail-component-type');
-        const componentType = typeEl ? this._getComponentTypeFromLabel(typeEl.textContent) : null;
         if (!componentType) return;
 
-        const index = parseInt(btn.dataset.wpIndex, 10);
-        if (isNaN(index)) return;
-
-        switch (action) {
-            case 'delete-wp':
-                this._deleteWaypoint(entity, componentType, index);
-                break;
-            case 'add-after-wp':
-                this._addWaypoint(entity, componentType, index);
-                break;
+        if (action === 'add-first-wp' || action === 'add-after-wp') {
+            const index = action === 'add-first-wp' ? -1 : parseInt(btn.dataset.wpIndex, 10);
+            if (action === 'add-after-wp' && isNaN(index)) return;
+            this._addWaypoint(entity, componentType, index);
+        } else if (action === 'delete-wp') {
+            const index = parseInt(btn.dataset.wpIndex, 10);
+            if (isNaN(index)) return;
+            this._deleteWaypoint(entity, componentType, index);
         }
-    },
-
-    /**
-     * 从中文标签获取组件类型
-     * @param {string} label
-     * @returns {string|null}
-     */
-    _getComponentTypeFromLabel(label) {
-        const map = {
-            '运动轨迹': 'motion',
-            '名称演变': 'nameHistory'
-        };
-        return map[label] || null;
     },
 
     /**
@@ -622,7 +571,7 @@ const DetailPanel = {
      */
     _createMotionDefault(items, afterIndex) {
         const zoomLevel = AppState.get('timeZoomLevel') || 'year';
-        const step = this._getResolutionStep();
+        const step = TimeUtils.getResolutionStep();
         const defaultTime = this._computeDefaultTime(
             items, afterIndex, step,
             // getPrev: 取前一个 waypoint 的 departure 时间（flat time object）
@@ -649,7 +598,7 @@ const DetailPanel = {
      * 创建 nameHistory 新条目默认值
      */
     _createNameHistoryDefault(items, afterIndex) {
-        const step = this._getResolutionStep();
+        const step = TimeUtils.getResolutionStep();
         const defaultTime = this._computeDefaultTime(
             items, afterIndex, step,
             (item) => item.time || { year: 0 },
@@ -662,19 +611,6 @@ const DetailPanel = {
         };
     },
 
-    /**
-     * 通用默认时间计算
-     * @param {Array} items - 现有条目数组
-     * @param {number} afterIndex - 插入位置
-     * @param {number} step - 步进值（minUnit）
-     * @param {Function} getPrev - 获取"前一个"时间的函数
-     * @param {Function} getNext - 获取"后一个"时间的函数
-     * @returns {Object} 时间对象
-     */
-    _getCurrentTime() {
-        return AppState.get('currentTime') || { year: 0 };
-    },
-
     _getMapCenter() {
         try {
             const center = MapView.map.getCenter();
@@ -684,10 +620,19 @@ const DetailPanel = {
         }
     },
 
+    /**
+     * 通用默认时间计算
+     * @param {Array} items - 现有条目数组
+     * @param {number} afterIndex - 插入位置
+     * @param {number} step - 步进值（minUnit）
+     * @param {Function} getPrev - 获取"前一个"时间的函数
+     * @param {Function} getNext - 获取"后一个"时间的函数
+     * @returns {Object} 时间对象
+     */
     _computeDefaultTime(items, afterIndex, step, getPrev, getNext) {
         // 空列表时使用当前时间
         if (items.length === 0) {
-            return this._getCurrentTime();
+            return AppState.get('currentTime') || { year: 0 };
         }
         if (afterIndex === -1) {
             // 在开头插入
@@ -699,7 +644,7 @@ const DetailPanel = {
             // 在两条目之间插入：前后平均
             const prevTime = getPrev(items[afterIndex]);
             const nextTime = getNext(items[afterIndex + 1]);
-            return this._averageTime(prevTime, nextTime);
+            return TimeUtils.lerp(prevTime, nextTime, 0.5);
         }
         // 在末尾插入：后推
         const lastTime = getPrev(items[afterIndex]);
