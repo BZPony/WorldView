@@ -42,15 +42,22 @@
 /* ───── 图标选择器变体 ───── */
 .modal-icon-picker {
     width: 360px;
-    max-height: 300px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 内容区域统一滚动 */
+.modal-icon-picker .modal-body {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 60vh;
 }
 
 .modal-icon-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 10px;
-    overflow-y: auto;
-    max-height: 220px;
     padding: 4px;
 }
 
@@ -83,4 +90,29 @@
 .modal-icon-grid .modal-icon-item .icon svg {
     width: 32px;
     height: 32px;
+}
+
+/* ───── 图标分组 ───── */
+.modal-icon-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modal-icon-group-label {
+    font-size: 14px;
+    color: #999;
+    padding: 6px 2px 6px 4px;
+    font-weight: bold;
+}
+
+.modal-icon-group-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 4px 0;
+}
+
+/* ───── 弹窗 body（通用） ───── */
+.modal-body {
+    overflow-y: auto;
 }

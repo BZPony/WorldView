@@ -70,47 +70,88 @@ const Modal = {
     // ───── 变体：IconPicker ─────
 
     /**
-     * 可选的图标列表
-     */
-    _iconNames: ['person', 'organization', 'regime', 'tag', 'page', 'timeline', 'place', 'delete', 'add'],
-
-    /**
      * 打开图标选择器
+     * 按 svg_icons_tag 分组显示，每组有标签标题和分隔线
      * @param {string} currentIcon - 当前图标名称
      * @param {Function} callback - 选择后的回调，接收图标名称
      */
     openIconPicker(currentIcon, callback) {
-        const grid = document.createElement('div');
-        grid.className = 'modal-icon-grid';
+        // 收集所有有 SVG 且属于可选范围的图标
+        const pickerIcons = Object.keys(svg_icons).filter(name => {
+            return name !== 'explorer' && name !== 'filter' && name !== 'color'; // 排除部分专用图标
+        });
 
-        this._iconNames.forEach(name => {
-            const svg = getIcon(name, 32);
-            if (!svg) return;
+        // 按 tag 分组
+        const groups = {};
+        pickerIcons.forEach(name => {
+            const tag = svg_icons_tag[name] || '其他';
+            if (!groups[tag]) groups[tag] = [];
+            groups[tag].push(name);
+        });
 
-            const item = document.createElement('div');
-            item.className = 'modal-icon-item';
-            item.dataset.iconName = name;
-            item.innerHTML = `<span class="icon">${svg}</span>`;
-            item.style.background = name === currentIcon ? 'rgba(50, 120, 230, 0.4)' : '';
+        // 定义 tag 显示标签
+        const tagLabels = {
+            entities: '实体',
+            system: '系统',
+            actions: '操作'
+        };
 
-            item.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.close(name);
+        // 构建分组 HTML
+        const container = document.createElement('div');
+        container.className = 'modal-icon-groups';
+
+        let isFirst = true;
+        for (const [tag, names] of Object.entries(groups)) {
+            // 分隔线（第一个组前不显示）
+            if (!isFirst) {
+                const divider = document.createElement('div');
+                divider.className = 'modal-icon-group-divider';
+                container.appendChild(divider);
+            }
+            isFirst = false;
+
+            // 组标签
+            const label = tagLabels[tag] || tag;
+            const labelEl = document.createElement('div');
+            labelEl.className = 'modal-icon-group-label';
+            labelEl.textContent = label;
+            container.appendChild(labelEl);
+
+            // 网格
+            const grid = document.createElement('div');
+            grid.className = 'modal-icon-grid';
+
+            names.forEach(name => {
+                const svg = getIcon(name, 32);
+                if (!svg) return;
+
+                const item = document.createElement('div');
+                item.className = 'modal-icon-item';
+                item.dataset.iconName = name;
+                item.innerHTML = `<span class="icon">${svg}</span>`;
+                item.style.background = name === currentIcon ? 'rgba(50, 120, 230, 0.4)' : '';
+
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.close(name);
+                });
+
+                grid.appendChild(item);
             });
 
-            grid.appendChild(item);
-        });
+            container.appendChild(grid);
+        }
 
         this.open({
             title: '选择图标',
-            html: grid.outerHTML,
+            html: container.innerHTML,
             className: 'modal-icon-picker',
             callback: (selected) => {
                 if (selected && callback) callback(selected);
             }
         });
 
-        // 重新绑定网格内 item 的点击（因为 outerHTML 丢失了事件监听器）
+        // 重新绑定事件
         this.elements.body.querySelectorAll('.modal-icon-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
