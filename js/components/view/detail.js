@@ -211,6 +211,55 @@ const DetailPanel = {
                 }).join('');
                 return `<ul class="detail-waypoint-list">${listItems}</ul>`;
             },
+            /**
+             * motion 渲染器（新，取代 timeline）
+             * 与 timeline 渲染器行为一致，但不显示抵达/离开标签
+             */
+            motion: comp => {
+                if (!comp.waypoints || comp.waypoints.length === 0) {
+                    return '<div class="detail-property">无轨迹数据</div>';
+                }
+                const selectedItem = AppState.get('selectedItem');
+                const entity = selectedItem ? selectedItem.data : null;
+                const zoomLevel = AppState.get('timeZoomLevel') || 'year';
+
+                const listItems = comp.waypoints.map(wp => {
+                    const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time.arrival || wp.time.departure || wp.time) : false;
+                    const cls = isOutside ? 'waypoint-item waypoint-outside-lifespan' : 'waypoint-item';
+                    const arrival = wp.time.arrival || wp.time.departure || wp.time;
+                    const departure = wp.time.departure || wp.time.arrival || wp.time;
+                    const wpZoom = wp.resolution || zoomLevel;
+                    const arrivalStr = TimeUtils.format(arrival, wpZoom);
+                    const departureStr = TimeUtils.format(departure, wpZoom);
+                    const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
+                    const descStr = wp.description || '';
+                    return `<li class="${cls}">
+                    <div class="waypoint-name-row">${locationStr}</div>
+                    <div class="waypoint-time-row"><span class="time-label">抵达</span><span class="time-badge">${arrivalStr}</span><span class="time-label">离开</span><span class="time-badge">${departureStr}</span></div>
+                        ${descStr ? `<div class="waypoint-desc-row">${descStr}</div>` : ''}
+                    </li>`;
+                }).join('');
+                return `<ul class="detail-waypoint-list">${listItems}</ul>`;
+            },
+            /**
+             * nameHistory 渲染器
+             * 显示实体名称随时间变化的条目列表
+             */
+            nameHistory: comp => {
+                if (!comp.entries || comp.entries.length === 0) {
+                    return '<div class="detail-property">无名称变更记录</div>';
+                }
+                const zoomLevel = AppState.get('timeZoomLevel') || 'year';
+                const listItems = comp.entries.map(e => {
+                    const timeStr = TimeUtils.format(e.time, e.time.month ? (e.time.day ? 'day' : 'month') : zoomLevel);
+                    return `<li class="waypoint-item">
+                        <div class="waypoint-name-row">${e.name}</div>
+                        <div class="waypoint-time-row"><span class="time-label">始于</span><span class="time-badge">${timeStr}</span></div>
+                        ${e.description ? `<div class="waypoint-desc-row">${e.description}</div>` : ''}
+                    </li>`;
+                }).join('');
+                return `<ul class="detail-waypoint-list">${listItems}</ul>`;
+            },
             place: comp => {
                 const pos = comp.position;
                 return `
@@ -392,6 +441,8 @@ const DetailPanel = {
         const labels = {
             core: '基本信息',
             timeline: '时间轴轨迹',
+            motion: '运动轨迹',
+            nameHistory: '名称演变',
             person: '人物信息',
             place: '地点信息',
             organization: '组织信息',
@@ -405,6 +456,8 @@ const DetailPanel = {
         const icons = {
             core: 'page',
             timeline: 'timeline',
+            motion: 'timeline',
+            nameHistory: 'page',
             person: 'person',
             place: 'place',
             organization: 'organization',

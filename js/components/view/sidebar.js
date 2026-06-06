@@ -212,7 +212,7 @@ const Sidebar = {
             for (const comp of Object.values(entity.components)) {
                 if (comp.type !== 'person' && comp.type !== 'regime' &&
                     comp.type !== 'organization' && comp.type !== 'customTags' &&
-                    comp.type !== 'place')
+                    comp.type !== 'place' && comp.type !== 'motion')
                     continue;
 
                 if (comp.type === 'customTags') {
