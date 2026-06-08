@@ -134,31 +134,54 @@ function createDetailPanel(config) {
             const component = entity.components[componentType];
             if (!component) return;
 
-            let originalValue, newValue;
+            // —— 判断是否处于二级面板的嵌套编辑 ——
+            const secContent = AppState.get('secondaryPanelContent');
+            const index = secContent?.data?._index;
+            const itemsField = componentType === 'motion' ? 'waypoints'
+                : componentType === 'nameHistory' ? 'entries' : null;
+            const isNestedEdit = index != null && itemsField != null;
 
-            const timeParts = field.match(/^(birthTime|deathTime)-(year|month|day)$/);
-            if (timeParts) {
-                const [, baseField, part] = timeParts;
-                const currentTime = component[baseField] || { year: 0, month: 1, day: 1 };
-                originalValue = { ...currentTime };
+            // 从正确路径读取原始值
+            const getValue = (key) => isNestedEdit
+                ? component[itemsField][index][key]
+                : component[key];
+            // 构造命令路径
+            const buildPath = (key) => isNestedEdit
+                ? [itemsField, index, key]
+                : [key];
+
+            // —— 时间复合字段（birthTime-year / time-month 等）——
+            const timeMatch = field.match(/^(birthTime|deathTime|time)-(year|month|day)$/);
+            if (timeMatch) {
+                const [, baseField, part] = timeMatch;
+                const originalTime = getValue(baseField) || { year: 0, month: 1, day: 1 };
                 const parsed = rawValue === '' ? null : Number(rawValue);
                 if (parsed == null || isNaN(parsed)) {
                     this.renderDetail(this._lastData);
                     return;
                 }
-                currentTime[part] = parsed;
-                newValue = currentTime;
-                field = baseField;
-            } else {
-                originalValue = component[field];
-                if (typeof originalValue === 'number') {
-                    newValue = rawValue === '' ? originalValue : Number(rawValue);
-                } else {
-                    newValue = rawValue || originalValue;
+                const newValue = { ...originalTime, [part]: parsed };
+                if (JSON.stringify(newValue) === JSON.stringify(originalTime)) {
+                    this.renderDetail(this._lastData);
+                    return;
                 }
+                EventBus.emit('command:execute', {
+                    type: 'editEntityField',
+                    entityId: entity.id,
+                    componentType,
+                    path: buildPath(baseField),
+                    oldValue: originalTime, newValue
+                });
+                return;
             }
 
-            if (newValue === originalValue || JSON.stringify(newValue) === JSON.stringify(originalValue)) {
+            // —— 普通字段 ——
+            const originalValue = getValue(field);
+            const newValue = typeof originalValue === 'number'
+                ? (rawValue === '' ? originalValue : Number(rawValue))
+                : (rawValue || originalValue);
+
+            if (newValue === originalValue) {
                 this.renderDetail(this._lastData);
                 return;
             }
@@ -166,7 +189,8 @@ function createDetailPanel(config) {
             EventBus.emit('command:execute', {
                 type: 'editEntityField',
                 entityId: entity.id,
-                componentType, path: [field],
+                componentType,
+                path: buildPath(field),
                 oldValue: originalValue, newValue
             });
         },
