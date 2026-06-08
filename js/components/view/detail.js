@@ -256,12 +256,25 @@ const DetailPanel = {
             },
 
             // —— person 渲染器（人物信息） ——
-            person: comp => `
-                <div class="detail-property"><span class="property-label">出生时间</span><span class="property-value" data-component="person" data-field="birthTime">${comp.birthTime ? TimeUtils.format(comp.birthTime, 'year') : '未知'}</span></div>
-                <div class="detail-property"><span class="property-label">死亡时间</span><span class="property-value" data-component="person" data-field="deathTime">${comp.deathTime ? TimeUtils.format(comp.deathTime, 'year') : '未知'}</span></div>
+            person: comp => {
+                // 获取时间分量，缺省年=0、月=1、日=1
+                const bt = comp.birthTime || { year: 0, month: 1, day: 1 };
+                const dt = comp.deathTime || { year: 0, month: 1, day: 1 };
+                return `
+                <div class="detail-property"><span class="property-label">出生时间</span>
+                    <span class="property-value" data-component="person" data-field="birthTime-year">${bt.year}</span><span class="property-value-font">年</span>
+                    <span class="property-value" data-component="person" data-field="birthTime-month">${bt.month}</span><span class="property-value-font">月</span>
+                    <span class="property-value" data-component="person" data-field="birthTime-day">${bt.day}</span><span class="property-value-font">日</span>
+                </div>
+                <div class="detail-property"><span class="property-label">死亡时间</span>
+                    <span class="property-value" data-component="person" data-field="deathTime-year">${dt.year}</span><span class="property-value-font">年</span>
+                    <span class="property-value" data-component="person" data-field="deathTime-month">${dt.month}</span><span class="property-value-font">月</span>
+                    <span class="property-value" data-component="person" data-field="deathTime-day">${dt.day}</span><span class="property-value-font">日</span>
+                </div>
                 <div class="detail-property"><span class="property-label">性别</span><span class="property-value" data-component="person" data-field="gender">${comp.gender ?? '未知'}</span></div>
                 <div class="detail-property"><span class="property-label">描述</span><span class="property-value" data-component="person" data-field="description">${comp.description || '无'}</span></div>
-            `,
+                `;
+            },
 
             // —— organization 渲染器（组织信息） ——
             organization: comp => `
@@ -464,7 +477,7 @@ const DetailPanel = {
     /**
      * 保存字段编辑结果（统一入口）
      * 自动处理类型转换：
-     * - birthTime/deathTime → { year: number }
+     * - 复合字段 (birthTime-year, deathTime-month 等) → 只更新对应时间分量
      * - 原始值为 number 则保持数值类型
      * - 其他字段保持字符串
      * 值未变化则不执行操作，通过 command:execute 实现可撤销
@@ -476,19 +489,35 @@ const DetailPanel = {
         const component = entity.components[componentType];
         if (!component) return;
 
-        const originalValue = component[field];
-        let newValue;
+        let originalValue, newValue;
 
-        // birthTime/deathTime：输入数字转为 { year: number } 格式
-        if (field === 'birthTime' || field === 'deathTime') {
+        // 检测复合字段名：birthTime-year, birthTime-month, birthTime-day 等
+        const timeParts = field.match(/^(birthTime|deathTime)-(year|month|day)$/);
+        if (timeParts) {
+            const [, baseField, part] = timeParts;
+            // 读取当前完整时间对象
+            const currentTime = component[baseField] || { year: 0, month: 1, day: 1 };
+            originalValue = { ...currentTime };
+            // 只更新对应的分量
             const parsed = rawValue === '' ? null : Number(rawValue);
-            newValue = parsed != null && !isNaN(parsed) ? { year: parsed } : originalValue;
-        } else if (typeof originalValue === 'number') {
-            // 数值字段转为数字
-            newValue = rawValue === '' ? originalValue : Number(rawValue);
+            if (parsed == null || isNaN(parsed)) {
+                this.renderDetail(selectedItem);
+                return;
+            }
+            currentTime[part] = parsed;
+            newValue = currentTime;
+            // 用 baseField 作为实际保存的字段名
+            field = baseField;
         } else {
-            // 字符串字段
-            newValue = rawValue || originalValue;
+            originalValue = component[field];
+
+            if (typeof originalValue === 'number') {
+                // 数值字段转为数字
+                newValue = rawValue === '' ? originalValue : Number(rawValue);
+            } else {
+                // 字符串字段
+                newValue = rawValue || originalValue;
+            }
         }
 
         // 值未变化 → 不操作，刷新面板显示

@@ -40,10 +40,15 @@ function createNameHistoryComponent(entries = []) {
  * 人物组件（可选）
  */
 function createPersonComponent({ birthTime, deathTime, gender, description } = {}) {
+    // 确保 birthTime/deathTime 包含 year/month/day（缺省月=1，日=1）
+    const normalizeTime = (t) => {
+        if (!t) return null;
+        return { year: t.year ?? 0, month: t.month ?? 1, day: t.day ?? 1 };
+    };
     return {
         type: 'person',
-        birthTime: birthTime || null,
-        deathTime: deathTime || null,
+        birthTime: normalizeTime(birthTime),
+        deathTime: normalizeTime(deathTime),
         gender,
         description
     };
@@ -145,8 +150,8 @@ function createPersonData({ name, lat, lng }) {
         name: name,
         color: '#4f454f',
         waypoints: [{ lat, lng, time: AppState.get('currentTime') || { year: 0 } }],
-        birthTime: { year: 0 },
-        deathTime: { year: 100 },
+        birthTime: { year: 0, month: 1, day: 1 },
+        deathTime: { year: 100, month: 1, day: 1 },
         gender: '男',
         description: '新人物'
     });
@@ -168,7 +173,7 @@ const entities = [
                     { lat: 40, lng: 116, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day', name: '北境关', description: '抵御北方入侵的军事要塞' }
                 ]
             },
-            person: { type: 'person', birthTime: { year: -50 }, deathTime: { year: 100 }, gender: '男', description: '一位旅行者' }
+            person: { type: 'person', birthTime: { year: -50, month: 3, day: 15 }, deathTime: { year: 100, month: 8, day: 20 }, gender: '男', description: '一位旅行者' }
         }
     },
     {
@@ -184,7 +189,7 @@ const entities = [
                     { lat: 38, lng: 119, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month', name: '无尽之森', description: '探索远古遗迹，封印噩梦之影' }
                 ]
             },
-            person: { type: 'person', birthTime: { year: -250 }, deathTime: { year: 200 }, gender: '女', description: '小马谷的图书管理员' }
+            person: { type: 'person', birthTime: { year: -250, month: 6, day: 1 }, deathTime: { year: 200, month: 12, day: 31 }, gender: '女', description: '小马谷的图书管理员' }
         }
     },
     {
@@ -200,7 +205,7 @@ const entities = [
                     { lat: 37, lng: 121, time: { arrival: { year: 70 }, departure: { year: 70 } }, resolution: 'year', name: '北海道', description: '在雪原别墅中设下最后陷阱，与尼亚对决' }
                 ]
             },
-            person: { type: 'person', birthTime: { year: -100 }, deathTime: { year: 80 }, gender: '男', description: '卡密' }
+            person: { type: 'person', birthTime: { year: -100, month: 1, day: 28 }, deathTime: { year: 80, month: 11, day: 5 }, gender: '男', description: '卡密' }
         }
     },
     {
@@ -216,7 +221,7 @@ const entities = [
                     { lat: 36, lng: 118, time: { arrival: { year: 60, month: 1, day: 20 }, departure: { year: 60, month: 1, day: 20 } }, resolution: 'day', name: '汉堡', description: '到达海岸，遥望远方或许存在的文明' }
                 ]
             },
-            person: { type: 'person', birthTime: { year: -100 }, deathTime: { year: 60 }, gender: '女', description: '金发德国少女' }
+            person: { type: 'person', birthTime: { year: -100, month: 4, day: 10 }, deathTime: { year: 60, month: 9, day: 15 }, gender: '女', description: '金发德国少女' }
         }
     },
     {
@@ -232,7 +237,7 @@ const entities = [
                     { lat: 41, lng: 119, time: { arrival: { year: 150, month: 3, day: 5 }, departure: { year: 150, month: 3, day: 5 } }, resolution: 'day', name: '史凯利杰', description: '参加国王选举挑战，击败狂猎的远征队' }
                 ]
             },
-            person: { type: 'person', birthTime: { year: -300 }, deathTime: { year: 150 }, gender: '男', description: '传奇猎魔人' }
+            person: { type: 'person', birthTime: { year: -300, month: 5, day: 1 }, deathTime: { year: 150, month: 7, day: 20 }, gender: '男', description: '传奇猎魔人' }
         }
     },
 

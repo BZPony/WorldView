@@ -119,8 +119,10 @@ body.detail--closed .detail {
 .property-label {
     color: #bebebe;
     width: 70px;
-    align-items: center;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .property-value {
@@ -134,6 +136,14 @@ body.detail--closed .detail {
     cursor: pointer;
     flex: 1;
     transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.property-value-font {
+    color: #bebebe;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .property-value:hover {
