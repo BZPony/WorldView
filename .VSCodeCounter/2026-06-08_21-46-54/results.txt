@@ -1,0 +1,68 @@
+Date : 2026-06-08 21:46:54
+Directory : /Users/bzpony/Documents/WorldView
+Total : 31 files,  4096 codes, 718 comments, 891 blanks, all 5705 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JavaScript |         16 |      2,174 |        585 |        337 |      3,096 |
+| Markdown   |          8 |      1,045 |          2 |        350 |      1,397 |
+| PostCSS    |          6 |        742 |         98 |        174 |      1,014 |
+| HTML       |          1 |        135 |         33 |         30 |        198 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                   |         31 |      4,096 |        718 |        891 |      5,705 |
+| . (Files)                                                           |          3 |        417 |         33 |        121 |        571 |
+| css                                                                 |          6 |        742 |         98 |        174 |      1,014 |
+| devlog                                                              |          6 |        763 |          2 |        259 |      1,024 |
+| js                                                                  |         16 |      2,174 |        585 |        337 |      3,096 |
+| js/components                                                       |          7 |      1,319 |        294 |        236 |      1,849 |
+| js/components/view                                                  |          7 |      1,319 |        294 |        236 |      1,849 |
+| js/core                                                             |          4 |        198 |        114 |         42 |        354 |
+| js/data                                                             |          2 |        416 |         79 |         28 |        523 |
+| js/icons                                                            |          1 |         82 |          9 |          8 |         99 |
+| js/utils                                                            |          2 |        159 |         89 |         23 |        271 |
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                            | language   | code       | comment    | blank      | total      |
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| /Users/bzpony/Documents/WorldView/changeLog.md                      | Markdown   |        117 |          0 |         34 |        151 |
+| /Users/bzpony/Documents/WorldView/css/base.css                      | PostCSS    |        116 |         20 |         21 |        157 |
+| /Users/bzpony/Documents/WorldView/css/context-menu.css              | PostCSS    |         22 |          5 |          4 |         31 |
+| /Users/bzpony/Documents/WorldView/css/detail.css                    | PostCSS    |        268 |         23 |         51 |        342 |
+| /Users/bzpony/Documents/WorldView/css/modal.css                     | PostCSS    |         96 |          7 |         15 |        118 |
+| /Users/bzpony/Documents/WorldView/css/sidebar.css                   | PostCSS    |        197 |         40 |         69 |        306 |
+| /Users/bzpony/Documents/WorldView/css/timeline.css                  | PostCSS    |         43 |          3 |         14 |         60 |
+| /Users/bzpony/Documents/WorldView/devlog/component-refactor.md      | Markdown   |        149 |          0 |         51 |        200 |
+| /Users/bzpony/Documents/WorldView/devlog/secondary-detail-panel.md  | Markdown   |        129 |          2 |         39 |        170 |
+| /Users/bzpony/Documents/WorldView/devlog/secondary-panel-edit.md    | Markdown   |         86 |          0 |         33 |        119 |
+| /Users/bzpony/Documents/WorldView/devlog/time-edit-design.md        | Markdown   |         74 |          0 |         41 |        115 |
+| /Users/bzpony/Documents/WorldView/devlog/time-system-design.md      | Markdown   |        255 |          0 |         65 |        320 |
+| /Users/bzpony/Documents/WorldView/devlog/waypoint-crud.md           | Markdown   |         70 |          0 |         30 |        100 |
+| /Users/bzpony/Documents/WorldView/js/components/view/contextMenu.js | JavaScript |         60 |         30 |         17 |        107 |
+| /Users/bzpony/Documents/WorldView/js/components/view/detail.js      | JavaScript |        549 |         57 |         91 |        697 |
+| /Users/bzpony/Documents/WorldView/js/components/view/layout.js      | JavaScript |         61 |         24 |          9 |         94 |
+| /Users/bzpony/Documents/WorldView/js/components/view/map.js         | JavaScript |        257 |         25 |         28 |        310 |
+| /Users/bzpony/Documents/WorldView/js/components/view/modal.js       | JavaScript |        103 |         36 |         23 |        162 |
+| /Users/bzpony/Documents/WorldView/js/components/view/sidebar.js     | JavaScript |        188 |         67 |         41 |        296 |
+| /Users/bzpony/Documents/WorldView/js/components/view/timeline.js    | JavaScript |        101 |         55 |         27 |        183 |
+| /Users/bzpony/Documents/WorldView/js/core/commandHandler.js         | JavaScript |        138 |         82 |         30 |        250 |
+| /Users/bzpony/Documents/WorldView/js/core/eventBus.js               | JavaScript |         20 |         16 |          5 |         41 |
+| /Users/bzpony/Documents/WorldView/js/core/selectManager.js          | JavaScript |         16 |          3 |          2 |         21 |
+| /Users/bzpony/Documents/WorldView/js/core/state.js                  | JavaScript |         24 |         13 |          5 |         42 |
+| /Users/bzpony/Documents/WorldView/js/data/entities.js               | JavaScript |        367 |         54 |         19 |        440 |
+| /Users/bzpony/Documents/WorldView/js/data/timeConfig.js             | JavaScript |         49 |         25 |          9 |         83 |
+| /Users/bzpony/Documents/WorldView/js/icons/svg-icons.js             | JavaScript |         82 |          9 |          8 |         99 |
+| /Users/bzpony/Documents/WorldView/js/utils/color.js                 | JavaScript |         47 |         11 |          5 |         63 |
+| /Users/bzpony/Documents/WorldView/js/utils/time.js                  | JavaScript |        112 |         78 |         18 |        208 |
+| /Users/bzpony/Documents/WorldView/myMap.html                        | HTML       |        135 |         33 |         30 |        198 |
+| /Users/bzpony/Documents/WorldView/readme.md                         | Markdown   |        165 |          0 |         57 |        222 |
+| Total                                                               |            |      4,096 |        718 |        891 |      5,705 |
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+

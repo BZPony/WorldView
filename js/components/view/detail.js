@@ -640,6 +640,7 @@ SecondaryDetailPanel.renderDetail = function (content) {
     this._lastData = content;
     const data = content.data || {};
     const title = content.title || '详情';
+    const compType = data._componentType || 'motion';
 
     this.elements.content.innerHTML = '';
 
@@ -648,34 +649,48 @@ SecondaryDetailPanel.renderDetail = function (content) {
     titleEl.textContent = title;
     this.elements.content.appendChild(titleEl);
 
-    // 渲染扁平字段（过滤内部字段）
-    const skipKeys = ['_componentType', '_index'];
+    // 字段标签映射
+    const fieldLabels = {
+        time: '时间', arrival: '抵达时间', departure: '离开时间',
+        lat: '纬度', lng: '经度', name: '名称',
+        description: '描述', resolution: '精度',
+        gender: '性别', birthTime: '出生', deathTime: '死亡'
+    };
+
+    // 遍历扁平数据，为每个字段生成带 data-component / data-field 的 DOM
     Object.entries(data).forEach(([key, value]) => {
-        if (skipKeys.includes(key)) return;
-        if (key === 'time' || key === 'arrival' || key === 'departure') {
-            const formatted = typeof value === 'object' && value !== null
-                ? TimeUtils.format(value, 'day')
-                : String(value);
-            const row = document.createElement('div');
-            row.className = 'detail-property';
-            row.innerHTML = `<span class="property-label">${key}</span><span class="property-value">${formatted}</span>`;
-            this.elements.content.appendChild(row);
-        } else if (typeof value === 'object' && value !== null) {
-            // 嵌套对象如 { year, month, day } → 格式化为可读字符串
-            if (value.year !== undefined) {
-                const formatted = TimeUtils.format(value, 'day');
-                const row = document.createElement('div');
-                row.className = 'detail-property';
-                row.innerHTML = `<span class="property-label">${key}</span><span class="property-value">${formatted}</span>`;
-                this.elements.content.appendChild(row);
-            }
+        if (key === '_componentType' || key === '_index') return;
+
+        const label = fieldLabels[key] || key;
+        const row = document.createElement('div');
+        row.className = 'detail-property';
+
+        // { year, month, day } 时间对象：拆为三个可编辑分量
+        if (typeof value === 'object' && value !== null && value.year !== undefined) {
+            const y = value.year ?? 0;
+            const m = value.month ?? 1;
+            const d = value.day ?? 1;
+            row.innerHTML = `
+                <span class="property-label">${label}</span>
+                <span class="property-value" data-component="${compType}" data-field="${key}-year">${y}</span><span class="property-value-font">年</span>
+                <span class="property-value" data-component="${compType}" data-field="${key}-month">${m}</span><span class="property-value-font">月</span>
+                <span class="property-value" data-component="${compType}" data-field="${key}-day">${d}</span><span class="property-value-font">日</span>
+            `;
+            // { arrival, departure } 嵌套时间：只读格式化显示
+        } else if (typeof value === 'object' && value !== null && (value.arrival !== undefined || value.departure !== undefined)) {
+            const zl = AppState.get('timeZoomLevel') || 'year';
+            const aStr = value.arrival ? TimeUtils.format(value.arrival, zl) : '—';
+            const dStr = value.departure ? TimeUtils.format(value.departure, zl) : '—';
+            row.innerHTML = `<span class="property-label">${label}</span>
+                <span class="property-value-font">抵达 </span><span class="time-badge">${aStr}</span>
+                <span class="property-value-font">离开 </span><span class="time-badge">${dStr}</span>`;
+            // 简单标量字段（可编辑）
         } else {
             const displayValue = value != null ? String(value) : '未知';
-            const row = document.createElement('div');
-            row.className = 'detail-property';
-            row.innerHTML = `<span class="property-label">${key}</span><span class="property-value">${displayValue}</span>`;
-            this.elements.content.appendChild(row);
+            row.innerHTML = `<span class="property-label">${label}</span><span class="property-value" data-component="${compType}" data-field="${key}">${displayValue}</span>`;
         }
+
+        this.elements.content.appendChild(row);
     });
 };
 
