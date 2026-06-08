@@ -84,7 +84,7 @@ function createDetailPanel(config) {
                 EventBus.emit('command:execute', {
                     type: 'editEntityField',
                     entityId: selectedItem.data.id,
-                    componentType: 'core', field: 'icon',
+                    componentType: 'core', path: ['icon'],
                     oldValue: currentIcon, newValue: newIcon
                 });
             });
@@ -165,7 +165,8 @@ function createDetailPanel(config) {
 
             EventBus.emit('command:execute', {
                 type: 'editEntityField',
-                entityId: entity.id, componentType, field,
+                entityId: entity.id,
+                componentType, path: [field],
                 oldValue: originalValue, newValue
             });
         },
@@ -413,8 +414,11 @@ DetailPanel._deleteWaypoint = function (entity, componentType, index) {
     const oldValue = JSON.parse(JSON.stringify(items));
     const newValue = items.filter((_, i) => i !== index);
     EventBus.emit('command:execute', {
-        type: 'editEntityField', entityId: entity.id, componentType,
-        field: this._getItemsField(componentType), oldValue, newValue
+        type: 'editEntityField',
+        entityId: entity.id, componentType,
+        path: [this._getItemsField(componentType)],
+        oldValue,
+        newValue
     });
 };
 
@@ -428,8 +432,12 @@ DetailPanel._addWaypoint = function (entity, componentType, afterIndex) {
     const newValue = [...items];
     newValue.splice(afterIndex === -1 ? 0 : afterIndex + 1, 0, newItem);
     EventBus.emit('command:execute', {
-        type: 'editEntityField', entityId: entity.id, componentType,
-        field: this._getItemsField(componentType), oldValue, newValue
+        type: 'editEntityField',
+        entityId: entity.id,
+        componentType,
+        path: [this._getItemsField(componentType)],
+        oldValue,
+        newValue
     });
 };
 

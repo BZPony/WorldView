@@ -114,33 +114,59 @@ const CommandHandler = {
         }
     },
 
-    // ───── 命令创建工厂 ─────
+    /**
+     * 沿路径读取嵌套属性
+     */
+    _getByPath(obj, path) {
+        let current = obj;
+        for (const key of path) {
+            if (current == null) return undefined;
+            current = current[key];
+        }
+        return current;
+    },
 
     /**
-     * 创建编辑实体字段的命令
+     * 沿路径设置嵌套属性，不可变更新
+     */
+    _setByPath(obj, path, value) {
+        if (path.length === 0) return value;
+        const [head, ...rest] = path;
+        if (Array.isArray(obj)) {
+            const copy = [...obj];
+            copy[head] = rest.length > 0 ? this._setByPath(obj[head], rest, value) : value;
+            return copy;
+        }
+        return { ...obj, [head]: rest.length > 0 ? this._setByPath(obj[head], rest, value) : value };
+    },
+
+    /**
+     * 创建编辑实体字段的命令（统一 path 模式）
      * @param {Object} params
      * @param {string} params.entityId
      * @param {string} params.componentType
-     * @param {string} params.field
+     * @param {Array} params.path - 如 ['name'] 或 ['waypoints', 0, 'name']
      * @param {*} params.oldValue
      * @param {*} params.newValue
      * @returns {Object} command
      */
-    createEditFieldCommand({ entityId, componentType, field, oldValue, newValue }) {
-        const description = `编辑字段 ${componentType}.${field}`;
+    createEditFieldCommand({ entityId, componentType, path, oldValue, newValue }) {
+        const pathStr = `${componentType}.${path.join('.')}`;
         return {
             type: 'editEntityField',
-            description,
+            description: `编辑字段 ${pathStr}`,
             entityId,
             componentType,
-            field,
+            path,
             oldValue,
             newValue,
             execute: () => {
                 const entities = AppState.get('entities').map(e => {
                     if (e.id !== entityId) return e;
-                    const comp = { ...e.components[componentType] };
-                    comp[field] = newValue;
+                    const comp = this._setByPath(
+                        JSON.parse(JSON.stringify(e.components[componentType])),
+                        path, newValue
+                    );
                     return { ...e, components: { ...e.components, [componentType]: comp } };
                 });
                 AppState.set('entities', entities);
