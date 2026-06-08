@@ -1,7 +1,7 @@
 /**
  * 详情面板工厂
  * 创建可编辑的详情面板实例。Primary Panel 和 Secondary Panel 共享所有编辑方法，
- * 但渲染逻辑各自独立（Primary 按 ECS 组件渲染，Secondary 按扁平数据渲染）。
+ * 但渲染逻辑各自独立（Primary 按 ECS 组件渲染，Secondary 按条目渲染）。
  */
 
 /**
@@ -9,7 +9,6 @@
  * @param {Object} config
  *   - stateKey：AppState 中控制面板开关的 key
  *   - bodyClosedClass：面板关闭时 body 上的 CSS 类名
- *   - allowEdit：是否启用编辑（事件委托），默认 false（secondary 不编辑）
  * @returns {Object}
  */
 function createDetailPanel(config) {
@@ -17,15 +16,6 @@ function createDetailPanel(config) {
         config,
         elements: {},
 
-        // ───── 初始化 ─────
-
-        /**
-         * @param {Object} opts
-         *   - containerSelector：DOM 容器选择器
-         *   - contentSelector：内容区 DOM 选择器
-         *   - btnCloseSelector：关闭按钮 DOM 选择器
-         *   - allowEdit：是否启用编辑（默认 false）
-         */
         init(opts) {
             this.elements.body = document.body;
             this.elements.panel = document.querySelector(opts.containerSelector);
@@ -33,13 +23,9 @@ function createDetailPanel(config) {
             this.elements.btnClose = document.querySelector(opts.btnCloseSelector);
             this._allowEdit = opts.allowEdit !== false;
 
-            // 关闭按钮
             this.elements.btnClose.addEventListener('click', () => this._toggle(false));
-
-            // 监听 AppState
             EventBus.on('state:change', this._onStateChange.bind(this));
 
-            // 编辑事件委托
             this.elements.content.addEventListener('click', (e) => {
                 if (!this._allowEdit) return;
                 const valueEl = e.target.closest('.property-value');
@@ -49,16 +35,7 @@ function createDetailPanel(config) {
             });
         },
 
-        // ───── 状态响应 ─────
-
-        /**
-         * 子类必须覆盖此方法，处理自己关注的状态变化
-         */
-        _onStateChange(data) {
-            // 在子类实例中覆盖
-        },
-
-        // ───── 面板开关 ─────
+        _onStateChange(data) {},
 
         _toggle(open) {
             AppState.set(this.config.stateKey, open);
@@ -67,8 +44,6 @@ function createDetailPanel(config) {
         _updateOpenState(isOpen) {
             this.elements.body.classList.toggle(this.config.bodyClosedClass, !isOpen);
         },
-
-        // ───── 内联编辑 ─────
 
         _makeEditable(valueEl) {
             const field = valueEl.dataset.field;
@@ -161,7 +136,6 @@ function createDetailPanel(config) {
 
             let originalValue, newValue;
 
-            // 复合字段名：birthTime-year, deathTime-month 等
             const timeParts = field.match(/^(birthTime|deathTime)-(year|month|day)$/);
             if (timeParts) {
                 const [, baseField, part] = timeParts;
@@ -196,11 +170,8 @@ function createDetailPanel(config) {
             });
         },
 
-        // ───── 渲染（子类覆盖） ─────
-
         renderDetail(data) {
             this._lastData = data;
-            // 由子类实现
         }
     };
 
@@ -216,138 +187,42 @@ const DetailPanel = createDetailPanel({
     bodyClosedClass: 'detail--closed'
 });
 
-// 渲染器生成函数
-DetailPanel._getComponentRenderer = function () {
-    const self = this;
-    const renderers = {
-        core: comp => `
-            <div class="detail-property"><span class="property-label">名称</span><span class="property-value" data-component="core" data-field="name">${comp.name}</span></div>
-            <div class="detail-property"><span class="property-label">颜色</span><span class="property-value" data-component="core" data-field="color"><span class="color-swatch" style="background:${comp.color}"></span>${comp.color}</span></div>
-            <div class="detail-property"><span class="property-label">默认图标</span><span class="property-value" data-component="core" data-field="icon">${comp.icon}</span></div>
-        `,
-
-        motion: comp => {
-            const selectedItem = AppState.get('selectedItem');
-            const entity = selectedItem ? selectedItem.data : null;
-            const zoomLevel = AppState.get('timeZoomLevel') || 'year';
-            const addIcon = getIcon('add', 14);
-
-            const firstAdd = `<li class="waypoint-item waypoint-add-first" title="在开头创建途径点">
-                <button class="waypoint-btn" data-action="add-first-wp" data-component="motion">${addIcon}</button>
-            </li>`;
-
-            if (!comp.waypoints || comp.waypoints.length === 0) {
-                return `<ul class="detail-waypoint-list">${firstAdd}</ul>`;
-            }
-
-            const listItems = comp.waypoints.map((wp, idx) => {
-                const isOutside = entity ? self._isWaypointOutsideLifespan(entity, wp.time.arrival || wp.time.departure || wp.time) : false;
-                const cls = isOutside ? 'waypoint-item waypoint-outside-lifespan' : 'waypoint-item';
-                const arrival = wp.time.arrival || wp.time.departure || wp.time;
-                const departure = wp.time.departure || wp.time.arrival || wp.time;
-                const wpZoom = wp.resolution || zoomLevel;
-                const arrivalStr = TimeUtils.format(arrival, wpZoom);
-                const departureStr = TimeUtils.format(departure, wpZoom);
-                const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
-                const descStr = wp.description || '';
-                return `<li class="${cls}" data-component="motion" data-wp-index="${idx}">
-                    <div class="waypoint-item-content">
-                        <div class="waypoint-name-row">${locationStr}</div>
-                        <div class="waypoint-time-row"><span class="time-label">抵达</span><span class="time-badge">${arrivalStr}</span><span class="time-label">离开</span><span class="time-badge">${departureStr}</span></div>
-                        ${descStr ? `<div class="waypoint-desc-row">${descStr}</div>` : ''}
-                    </div>
-                    <div class="waypoint-btn-group">
-                        <button class="waypoint-btn" data-action="delete-wp" data-wp-index="${idx}" title="删除">${getIcon('delete', 12)}</button>
-                        <button class="waypoint-btn" data-action="add-after-wp" data-wp-index="${idx}" title="在此后插入">${getIcon('add', 12)}</button>
-                    </div>
-                </li>`;
-            }).join('');
-            return `<ul class="detail-waypoint-list">${firstAdd}${listItems}</ul>`;
-        },
-
-        nameHistory: comp => {
-            const zoomLevel = AppState.get('timeZoomLevel') || 'year';
-            const addIcon = getIcon('add', 14);
-
-            const firstAdd = `<li class="waypoint-item waypoint-add-first" title="在开头创建条目">
-                <button class="waypoint-btn" data-action="add-first-wp" data-component="nameHistory">${addIcon}</button>
-            </li>`;
-
-            if (!comp.entries || comp.entries.length === 0) {
-                return `<ul class="detail-waypoint-list">${firstAdd}</ul>`;
-            }
-
-            const listItems = comp.entries.map((e, idx) => {
-                const timeStr = TimeUtils.format(e.time, e.time.month ? (e.time.day ? 'day' : 'month') : zoomLevel);
-                return `<li class="waypoint-item" data-component="nameHistory" data-wp-index="${idx}">
-                    <div class="waypoint-item-content">
-                        <div class="waypoint-name-row">${e.name}</div>
-                        <div class="waypoint-time-row"><span class="time-label">始于</span><span class="time-badge">${timeStr}</span></div>
-                        ${e.description ? `<div class="waypoint-desc-row">${e.description}</div>` : ''}
-                    </div>
-                    <div class="waypoint-btn-group">
-                        <button class="waypoint-btn" data-action="delete-wp" data-wp-index="${idx}" title="删除">${getIcon('delete', 12)}</button>
-                        <button class="waypoint-btn" data-action="add-after-wp" data-wp-index="${idx}" title="在此后插入">${getIcon('add', 12)}</button>
-                    </div>
-                </li>`;
-            }).join('');
-            return `<ul class="detail-waypoint-list">${firstAdd}${listItems}</ul>`;
-        },
-
-        place: comp => {
-            const pos = comp.position;
-            return `
-            <div class="detail-property"><span class="property-label">位置</span><span class="property-value">${pos ? `(${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})` : '未知'}</span></div>
-            <div class="detail-property"><span class="property-label">描述</span><span class="property-value" data-component="place" data-field="description">${comp.description || '无'}</span></div>
-            `;
-        },
-
-        person: comp => {
-            const bt = comp.birthTime || { year: 0, month: 1, day: 1 };
-            const dt = comp.deathTime || { year: 0, month: 1, day: 1 };
-            return `
-            <div class="detail-property"><span class="property-label">出生时间</span>
-                <span class="property-value" data-component="person" data-field="birthTime-year">${bt.year}</span><span class="property-value-font">年</span>
-                <span class="property-value" data-component="person" data-field="birthTime-month">${bt.month}</span><span class="property-value-font">月</span>
-                <span class="property-value" data-component="person" data-field="birthTime-day">${bt.day}</span><span class="property-value-font">日</span>
-            </div>
-            <div class="detail-property"><span class="property-label">死亡时间</span>
-                <span class="property-value" data-component="person" data-field="deathTime-year">${dt.year}</span><span class="property-value-font">年</span>
-                <span class="property-value" data-component="person" data-field="deathTime-month">${dt.month}</span><span class="property-value-font">月</span>
-                <span class="property-value" data-component="person" data-field="deathTime-day">${dt.day}</span><span class="property-value-font">日</span>
-            </div>
-            <div class="detail-property"><span class="property-label">性别</span><span class="property-value" data-component="person" data-field="gender">${comp.gender ?? '未知'}</span></div>
-            <div class="detail-property"><span class="property-label">描述</span><span class="property-value" data-component="person" data-field="description">${comp.description || '无'}</span></div>
-            `;
-        },
-
-        organization: comp => `
-            <div class="detail-property"><span class="property-label">总部</span><span class="property-value" data-component="organization" data-field="headquarters">${comp.headquarters || '未知'}</span></div>
-            <div class="detail-property"><span class="property-label">领袖</span><span class="property-value" data-component="organization" data-field="leader">${comp.leader || '未知'}</span></div>
-            <div class="detail-property"><span class="property-label">成员</span><span class="property-value" data-component="organization" data-field="members">${comp.members || '未知'}</span></div>
-        `,
-
-        regime: comp => `
-            <div class="detail-property"><span class="property-label">首都</span><span class="property-value" data-component="regime" data-field="capital">${comp.capital || '未知'}</span></div>
-            <div class="detail-property"><span class="property-label">人口</span><span class="property-value" data-component="regime" data-field="population">${comp.population || '未知'}</span></div>
-            <div class="detail-property"><span class="property-label">政体</span><span class="property-value" data-component="regime" data-field="governmentType">${comp.governmentType || '未知'}</span></div>
-        `,
-
-        customTags: comp => {
-            const tags = comp.tags || [];
-            return `<div class="detail-property"><span class="property-label">标签</span><span class="property-value">${tags.join(', ') || '无'}</span></div>`;
+// 组件渲染器路由
+DetailPanel._getComponentRenderer = function (type) {
+    const helpers = {
+        entity: (AppState.get('selectedItem') || {}).data || null,
+        zoomLevel: AppState.get('timeZoomLevel') || 'year',
+        isWaypointOutsideLifespan: (entity, time) => {
+            const personComp = entity.components.person;
+            if (!personComp) return false;
+            const { birthTime, deathTime } = personComp;
+            if (birthTime == null && deathTime == null) return false;
+            if (birthTime != null && TimeUtils.compare(time, birthTime) < 0) return true;
+            if (deathTime != null && TimeUtils.compare(time, deathTime) > 0) return true;
+            return false;
         }
     };
 
-    return function (type) {
-        if (renderers[type]) return renderers[type];
-        return comp => {
-            const entries = Object.entries(comp).filter(([key]) => key !== 'type');
-            if (entries.length === 0) return '<div class="detail-property">无额外属性</div>';
-            return entries.map(([key, value]) =>
-                `<div class="detail-property"><span class="property-label">${key}</span><span class="property-value">${value}</span></div>`
-            ).join('');
-        };
+    const renderers = {
+        core: comp => renderCoreComponent(comp),
+        motion: comp => renderMotionComponent(comp, helpers),
+        nameHistory: comp => renderNameHistoryComponent(comp, helpers),
+        place: comp => renderPlaceComponent(comp),
+        person: comp => renderPersonComponent(comp),
+        organization: comp => renderOrganizationComponent(comp),
+        regime: comp => renderRegimeComponent(comp),
+        customTags: comp => renderCustomTagsComponent(comp)
+    };
+
+    if (renderers[type]) return renderers[type];
+
+    // 兜底渲染
+    return comp => {
+        const entries = Object.entries(comp).filter(([key]) => key !== 'type');
+        if (entries.length === 0) return '<div class="detail-property">无额外属性</div>';
+        return entries.map(([key, value]) =>
+            `<div class="detail-property"><span class="property-label">${key}</span><span class="property-value">${value}</span></div>`
+        ).join('');
     };
 };
 
@@ -367,19 +242,8 @@ DetailPanel._getComponentIcon = function (type) {
     })[type] || 'tag';
 };
 
-DetailPanel._isWaypointOutsideLifespan = function (entity, time) {
-    const personComp = entity.components.person;
-    if (!personComp) return false;
-    const { birthTime, deathTime } = personComp;
-    if (birthTime == null && deathTime == null) return false;
-    if (birthTime != null && TimeUtils.compare(time, birthTime) < 0) return true;
-    if (deathTime != null && TimeUtils.compare(time, deathTime) > 0) return true;
-    return false;
-};
+// ───── 初始化 ─────
 
-/**
- * 初始化 Primary Panel（覆盖 factory 的 init）
- */
 DetailPanel.init = function () {
     this.elements.body = document.body;
     this.elements.panel = document.querySelector('.detail:not(.detail-secondary)');
@@ -390,7 +254,6 @@ DetailPanel.init = function () {
     this.elements.btnClose.addEventListener('click', () => this._toggle(false));
     EventBus.on('state:change', this._onStateChange.bind(this));
 
-    // 事件委托：编辑 + waypoint 操作 + 二级面板
     this.elements.content.addEventListener('click', (e) => {
         const btn = e.target.closest('.waypoint-btn');
         if (btn) { e.stopPropagation(); this._handleWaypointAction(btn); return; }
@@ -409,10 +272,11 @@ DetailPanel.init = function () {
     }
 };
 
+// ───── 状态响应 ─────
+
 DetailPanel._onStateChange = function (data) {
     switch (data.key) {
         case 'selectedItem':
-            // 选中新实体时关闭 Secondary Panel
             if (AppState.get('isSecondaryPanelOpen')) {
                 AppState.set('isSecondaryPanelOpen', false);
             }
@@ -423,12 +287,13 @@ DetailPanel._onStateChange = function (data) {
             this._updateOpenState(data.value);
             break;
         case 'isSecondaryPanelOpen':
-            // Secondary 打开 → 隐藏 primary
             if (data.value) { this.elements.panel.classList.add('detail--covered'); }
             else { this.elements.panel.classList.remove('detail--covered'); }
             break;
     }
 };
+
+// ───── 渲染 ─────
 
 DetailPanel._renderComponentSection = function (component) {
     const type = component.type;
@@ -472,11 +337,12 @@ DetailPanel.renderDetail = function (entity) {
     });
 };
 
+// ───── 二级面板触发 ─────
+
 DetailPanel._openSecondaryPanel = function (wpLi) {
     const idx = parseInt(wpLi.dataset.wpIndex, 10);
     if (isNaN(idx)) return;
 
-    // 从 DOM 中查找对应的组件类型
     const componentType = wpLi.dataset.component
         || (wpLi.closest('[data-component]') && wpLi.closest('[data-component]').dataset.component);
     if (!componentType) return;
@@ -486,7 +352,6 @@ DetailPanel._openSecondaryPanel = function (wpLi) {
     const comp = selectedItem.data.components[componentType];
     if (!comp) return;
 
-    // 取对应条目
     const items = componentType === 'motion' ? comp.waypoints : comp.entries;
     if (!items || idx >= items.length) return;
 
@@ -495,7 +360,6 @@ DetailPanel._openSecondaryPanel = function (wpLi) {
         ? (item.name || `途径点 ${idx + 1}`)
         : (item.name || `名称条目 ${idx + 1}`);
 
-    // 构造扁平数据（用 data- 属性标记以便编辑）
     const data = { ...item, _componentType: componentType, _index: idx };
 
     AppState.set('secondaryPanelContent', { title, data });
@@ -609,11 +473,10 @@ DetailPanel._computeDefaultTime = function (items, afterIndex, step, getPrev, ge
     return TimeUtils.offsetToTime(lastOff + 10 * step);
 };
 
-DetailPanel._getComponentRenderer = DetailPanel._getComponentRenderer();
 window.DetailPanel = DetailPanel;
 
 // =====================================================================
-// Secondary Detail Panel — 渲染扁平数据 + 只读展示
+// Secondary Detail Panel — 按 _componentType 分发到对应条目渲染器
 // =====================================================================
 
 const SecondaryDetailPanel = createDetailPanel({
@@ -621,7 +484,6 @@ const SecondaryDetailPanel = createDetailPanel({
     bodyClosedClass: 'detail-secondary--closed'
 });
 
-// 先在定义阶段覆盖 _onStateChange，init 在 myMap.html 中调用
 SecondaryDetailPanel._onStateChange = function (data) {
     switch (data.key) {
         case 'secondaryPanelContent':
@@ -633,6 +495,15 @@ SecondaryDetailPanel._onStateChange = function (data) {
             this._updateOpenState(data.value);
             break;
     }
+};
+
+/**
+ * 二级面板条目渲染器注册表
+ * 新增组件类型时在此注册即可
+ */
+const secondaryItemRenderers = {
+    motion: renderMotionItem,
+    nameHistory: renderNameHistoryItem
 };
 
 SecondaryDetailPanel.renderDetail = function (content) {
@@ -649,49 +520,36 @@ SecondaryDetailPanel.renderDetail = function (content) {
     titleEl.textContent = title;
     this.elements.content.appendChild(titleEl);
 
-    // 字段标签映射
-    const fieldLabels = {
-        time: '时间', arrival: '抵达时间', departure: '离开时间',
-        lat: '纬度', lng: '经度', name: '名称',
-        description: '描述', resolution: '精度',
-        gender: '性别', birthTime: '出生', deathTime: '死亡'
-    };
-
-    // 遍历扁平数据，为每个字段生成带 data-component / data-field 的 DOM
-    Object.entries(data).forEach(([key, value]) => {
-        if (key === '_componentType' || key === '_index') return;
-
-        const label = fieldLabels[key] || key;
-        const row = document.createElement('div');
-        row.className = 'detail-property';
-
-        // { year, month, day } 时间对象：拆为三个可编辑分量
-        if (typeof value === 'object' && value !== null && value.year !== undefined) {
-            const y = value.year ?? 0;
-            const m = value.month ?? 1;
-            const d = value.day ?? 1;
-            row.innerHTML = `
-                <span class="property-label">${label}</span>
-                <span class="property-value" data-component="${compType}" data-field="${key}-year">${y}</span><span class="property-value-font">年</span>
-                <span class="property-value" data-component="${compType}" data-field="${key}-month">${m}</span><span class="property-value-font">月</span>
-                <span class="property-value" data-component="${compType}" data-field="${key}-day">${d}</span><span class="property-value-font">日</span>
-            `;
-            // { arrival, departure } 嵌套时间：只读格式化显示
-        } else if (typeof value === 'object' && value !== null && (value.arrival !== undefined || value.departure !== undefined)) {
-            const zl = AppState.get('timeZoomLevel') || 'year';
-            const aStr = value.arrival ? TimeUtils.format(value.arrival, zl) : '—';
-            const dStr = value.departure ? TimeUtils.format(value.departure, zl) : '—';
-            row.innerHTML = `<span class="property-label">${label}</span>
-                <span class="property-value-font">抵达 </span><span class="time-badge">${aStr}</span>
-                <span class="property-value-font">离开 </span><span class="time-badge">${dStr}</span>`;
-            // 简单标量字段（可编辑）
-        } else {
-            const displayValue = value != null ? String(value) : '未知';
-            row.innerHTML = `<span class="property-label">${label}</span><span class="property-value" data-component="${compType}" data-field="${key}">${displayValue}</span>`;
-        }
-
-        this.elements.content.appendChild(row);
-    });
+    // 按 _componentType 分发到对应条目渲染器
+    const renderer = secondaryItemRenderers[compType];
+    if (renderer) {
+        renderer(data, compType, this.elements.content);
+    } else {
+        // 兜底：通用字段遍历
+        Object.entries(data).forEach(([key, value]) => {
+            if (key === '_componentType' || key === '_index') return;
+            if (typeof value === 'object' && value !== null && value.year !== undefined) {
+                const y = value.year ?? 0;
+                const m = value.month ?? 1;
+                const d = value.day ?? 1;
+                const row = document.createElement('div');
+                row.className = 'detail-property';
+                row.innerHTML = `
+                    <span class="property-label">${key}</span>
+                    <span class="property-value" data-component="${compType}" data-field="${key}-year">${y}</span><span class="property-value-font">年</span>
+                    <span class="property-value" data-component="${compType}" data-field="${key}-month">${m}</span><span class="property-value-font">月</span>
+                    <span class="property-value" data-component="${compType}" data-field="${key}-day">${d}</span><span class="property-value-font">日</span>
+                `;
+                this.elements.content.appendChild(row);
+            } else {
+                const displayValue = value != null ? String(value) : '未知';
+                const row = document.createElement('div');
+                row.className = 'detail-property';
+                row.innerHTML = `<span class="property-label">${key}</span><span class="property-value" data-component="${compType}" data-field="${key}">${displayValue}</span>`;
+                this.elements.content.appendChild(row);
+            }
+        });
+    }
 };
 
 window.SecondaryDetailPanel = SecondaryDetailPanel;
