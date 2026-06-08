@@ -320,8 +320,17 @@ DetailPanel._onStateChange = function (data) {
             this._updateOpenState(data.value);
             break;
         case 'isSecondaryPanelOpen':
-            if (data.value) { this.elements.panel.classList.add('detail--covered'); }
-            else { this.elements.panel.classList.remove('detail--covered'); }
+            if (data.value) {
+                this.elements.panel.classList.add('detail--covered');
+            } else {
+                this.elements.panel.classList.remove('detail--covered');
+                // 二级面板关闭时，用最新数据重新渲染一级面板
+                const selectedItem = AppState.get('selectedItem');
+                if (selectedItem) {
+                    this.renderDetail(selectedItem);
+                    this._toggle(true);
+                }
+            }
             break;
     }
 };
