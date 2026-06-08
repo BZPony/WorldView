@@ -76,8 +76,20 @@
             </button>
         </div>
 
-        <div class="detail-content">
+        <div class="detail-content" id="detail-content">
             <div class="detail-content-title">detail</div>
+        </div>
+    </aside>
+
+    <aside class="detail detail-secondary">
+        <div class="detail-header">
+            <button class="detail-toggle-btn--close" id="detail-secondary-btn-close">
+                <span class="icon" data-name="cross"></span>
+            </button>
+        </div>
+
+        <div class="detail-content" id="detail-secondary-content">
+            <div class="detail-content-title"></div>
         </div>
     </aside>
 
@@ -165,7 +177,16 @@
             trackId: 'timeline-track'
         });
         Sidebar.init();
-        DetailPanel.init()
+        DetailPanel.init();
+
+        // Secondary Panel 初始化（函数已在 detail.js 中覆盖）
+        SecondaryDetailPanel.init({
+            containerSelector: '.detail-secondary',
+            contentSelector: '#detail-secondary-content',
+            btnCloseSelector: '#detail-secondary-btn-close',
+            allowEdit: false
+        });
+        SecondaryDetailPanel._updateOpenState(false);
 
         // 3. 初始渲染（地图已自动调用一次，此处可省略）
         // 侧边栏人物列表需手动触发一次

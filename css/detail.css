@@ -17,10 +17,11 @@
     display: flex;
     flex-direction: column;
     z-index: 999;
-    transition: left calc(var(--animation-duration) * 1.5) ease-in-out;
+    transition: left calc(var(--animation-duration) * 1.5) ease-in-out,
+        opacity 0.5s ease;
 }
 
-body.detail--closed .detail {
+body.detail--closed .detail:not(.detail-secondary) {
     left: -330px;
 }
 
@@ -320,4 +321,22 @@ body.detail--closed .detail {
 .detail-edit-color::-webkit-color-swatch {
     border: none;
     border-radius: 3px;
+}
+
+/* ──────────── 二级详情面板 ──────────── */
+
+/* 覆盖在一级面板之上 */
+.detail-secondary {
+    z-index: 1000;
+}
+
+/* 一级面板被覆盖时 */
+.detail--covered {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 二级面板关闭状态 */
+.detail-secondary--closed .detail-secondary {
+    left: -330px;
 }

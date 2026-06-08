@@ -8,6 +8,8 @@ const AppState = {
         timeZoomLevel: 'year',      // 当前时间轴缩放级别
         isSidebarOpen: true,        // 侧边栏是否打开
         isDetailPanelOpen: false,
+        isSecondaryPanelOpen: false,
+        secondaryPanelContent: { title: '', data: null },
 
         //应用数据，只能通过commandHandler模块修改
         entities: []
