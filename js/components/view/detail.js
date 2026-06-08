@@ -35,7 +35,7 @@ function createDetailPanel(config) {
             });
         },
 
-        _onStateChange(data) {},
+        _onStateChange(data) { },
 
         _toggle(open) {
             AppState.set(this.config.stateKey, open);
@@ -277,11 +277,19 @@ DetailPanel.init = function () {
 DetailPanel._onStateChange = function (data) {
     switch (data.key) {
         case 'selectedItem':
-            if (AppState.get('isSecondaryPanelOpen')) {
-                AppState.set('isSecondaryPanelOpen', false);
+            // 如果 Secondary Panel 打开且选中的是同一实体（数据同步），不关闭面板
+            if (data.value && AppState.get('isSecondaryPanelOpen')) {
+                const currentEntityId = this._lastData?.data?.id;
+                const newEntityId = data.value.data.id;
+                if (currentEntityId !== newEntityId) {
+                    AppState.set('isSecondaryPanelOpen', false);
+                }
             }
-            if (data.value) { this.renderDetail(data.value); this._toggle(true); }
-            else { this._toggle(false); }
+            // 没有 Secondary Panel 时，正常切换
+            if (!AppState.get('isSecondaryPanelOpen')) {
+                if (data.value) { this.renderDetail(data.value); this._toggle(true); }
+                else { this._toggle(false); }
+            }
             break;
         case 'isDetailPanelOpen':
             this._updateOpenState(data.value);
