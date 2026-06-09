@@ -311,6 +311,17 @@ DetailPanel._getComponentIcon = function (type) {
     })[type] || 'tag';
 };
 
+// ───── Picker 选项注册表 ─────
+
+DetailPanel._pickerOptions = {
+    resolution: () => TimeConfig.zoomLevels.map(z => ({ label: z.label, value: z.id }))
+};
+
+DetailPanel._getPickerOptions = function (field) {
+    const fn = this._pickerOptions[field];
+    return fn ? fn() : [];
+};
+
 // ───── 初始化 ─────
 
 DetailPanel.init = function () {
