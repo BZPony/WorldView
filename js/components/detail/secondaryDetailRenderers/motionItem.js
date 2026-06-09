@@ -45,12 +45,10 @@ function renderMotionItem(data, compType, container) {
 
     // 再处理其他有序字段
     fieldOrder.forEach(key => {
-        if (key in data) {
-            const displayValue = data[key] != null ? String(data[key]) : '未知';
-            const row = document.createElement('div');
-            row.className = 'detail-property';
-            row.innerHTML = `<span class="property-label">${fieldLabels[key] || key}</span><span class="property-value" data-component="${compType}" data-field="${key}">${displayValue}</span>`;
-            container.appendChild(row);
-        }
+        const displayValue = data[key] != null ? String(data[key]) : '未设置';
+        const row = document.createElement('div');
+        row.className = 'detail-property';
+        row.innerHTML = `<span class="property-label">${fieldLabels[key] || key}</span><span class="property-value" data-component="${compType}" data-field="${key}">${displayValue}</span>`;
+        container.appendChild(row);
     });
 }
