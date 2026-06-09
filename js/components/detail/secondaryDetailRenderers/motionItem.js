@@ -49,7 +49,11 @@ function renderMotionItem(data, compType, container) {
         const displayValue = data[key] != null ? String(data[key]) : '未设置';
         const row = document.createElement('div');
         row.className = 'detail-property';
-        row.innerHTML = `<span class="property-label">${fieldLabels[key] || key}</span><span class="property-value" data-component="${compType}" data-field="${key}">${displayValue}</span>`;
+        // picker 类型的字段添加 data-picker 标记和 data-value 原始值
+        const pickerAttr = key === 'resolution'
+            ? ` data-picker data-value="${data[key] ?? ''}"`
+            : '';
+        row.innerHTML = `<span class="property-label">${fieldLabels[key] || key}</span><span class="property-value" data-component="${compType}" data-field="${key}"${pickerAttr}>${displayValue}</span>`;
         container.appendChild(row);
     });
 }
