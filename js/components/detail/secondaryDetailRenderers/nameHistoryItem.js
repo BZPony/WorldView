@@ -24,7 +24,7 @@ function renderNameHistoryItem(data, compType, container) {
 
     // name
     if ('name' in data) {
-        const displayValue = data.name != null ? String(data.name) : '未知';
+        const displayValue = data.name != null ? String(data.name) : '未设置';
         const row = document.createElement('div');
         row.className = 'detail-property';
         row.innerHTML = `<span class="property-label">名称</span><span class="property-value" data-component="${compType}" data-field="name">${displayValue}</span>`;
@@ -33,7 +33,7 @@ function renderNameHistoryItem(data, compType, container) {
 
     // description
     if ('description' in data) {
-        const displayValue = data.description != null ? String(data.description) : '未知';
+        const displayValue = data.description != null ? String(data.description) : '未设置';
         const row = document.createElement('div');
         row.className = 'detail-property';
         row.innerHTML = `<span class="property-label">描述</span><span class="property-value" data-component="${compType}" data-field="description">${displayValue}</span>`;

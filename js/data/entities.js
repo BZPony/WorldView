@@ -149,7 +149,7 @@ function createPersonData({ name, lat, lng }) {
         id: newId,
         name: name,
         color: '#4f454f',
-        waypoints: [{ lat, lng, time: AppState.get('currentTime') || { year: 0 } }],
+        waypoints: [{ lat, lng, time: AppState.get('currentTime') || { year: 0, month: 1, day: 1 } }],
         birthTime: { year: 0, month: 1, day: 1 },
         deathTime: { year: 100, month: 1, day: 1 },
         gender: '男',
