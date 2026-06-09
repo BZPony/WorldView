@@ -150,11 +150,21 @@ function createDetailPanel(config) {
                 ? [itemsField, index, key]
                 : [key];
 
-            // —— 时间复合字段（birthTime-year / time-month 等）——
-            const timeMatch = field.match(/^(birthTime|deathTime|time)-(year|month|day)$/);
+            // —— 时间复合字段（birthTime-year / time-month / arrival-year 等）——
+            const timeMatch = field.match(/^(birthTime|deathTime|time|arrival|departure)-(year|month|day)$/);
             if (timeMatch) {
                 const [, baseField, part] = timeMatch;
-                const originalTime = getValue(baseField) || { year: 0, month: 1, day: 1 };
+                // arrival/departure 嵌套在 time 下，需特殊处理路径
+                const isTimeSubField = baseField === 'arrival' || baseField === 'departure';
+                let originalTime, timePath;
+                if (isNestedEdit && isTimeSubField) {
+                    const item = component[itemsField][index];
+                    originalTime = item.time?.[baseField] || { year: 0, month: 1, day: 1 };
+                    timePath = [itemsField, index, 'time', baseField];  // e.g. ['waypoints', 0, 'time', 'arrival']
+                } else {
+                    originalTime = getValue(baseField) || { year: 0, month: 1, day: 1 };
+                    timePath = buildPath(baseField);
+                }
                 const parsed = rawValue === '' ? null : Number(rawValue);
                 if (parsed == null || isNaN(parsed)) {
                     this.renderDetail(this._lastData);
@@ -169,7 +179,7 @@ function createDetailPanel(config) {
                     type: 'editEntityField',
                     entityId: entity.id,
                     componentType,
-                    path: buildPath(baseField),
+                    path: timePath,
                     oldValue: originalTime, newValue
                 });
                 return;
