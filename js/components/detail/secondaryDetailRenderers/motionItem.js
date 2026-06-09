@@ -46,13 +46,18 @@ function renderMotionItem(data, compType, container) {
 
     // 再处理其他有序字段
     fieldOrder.forEach(key => {
-        const displayValue = data[key] != null ? String(data[key]) : '未设置';
+        // resolution 显示中文标签，data-value 存储原始 id
+        let displayValue, pickerAttr;
+        if (key === 'resolution') {
+            const zl = TimeConfig.zoomLevels.find(z => z.id === data[key]);
+            displayValue = zl ? zl.label : (data[key] != null ? String(data[key]) : '未设置');
+            pickerAttr = ` data-picker data-value="${data[key] ?? ''}"`;
+        } else {
+            displayValue = data[key] != null ? String(data[key]) : '未设置';
+            pickerAttr = '';
+        }
         const row = document.createElement('div');
         row.className = 'detail-property';
-        // picker 类型的字段添加 data-picker 标记和 data-value 原始值
-        const pickerAttr = key === 'resolution'
-            ? ` data-picker data-value="${data[key] ?? ''}"`
-            : '';
         row.innerHTML = `<span class="property-label">${fieldLabels[key] || key}</span><span class="property-value" data-component="${compType}" data-field="${key}"${pickerAttr}>${displayValue}</span>`;
         container.appendChild(row);
     });
