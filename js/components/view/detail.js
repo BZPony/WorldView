@@ -69,6 +69,9 @@ function createDetailPanel(config) {
                 if (opt.value === currentValue) item.classList.add('selected');
                 item.addEventListener('mousedown', (e) => {
                     e.preventDefault();
+                    // 先更新 DOM 显示，再保存数据
+                    valueEl.textContent = opt.label;
+                    valueEl.dataset.value = opt.value;
                     this._saveField({
                         component: valueEl.dataset.component,
                         field: valueEl.dataset.field,
