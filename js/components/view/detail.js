@@ -49,7 +49,41 @@ function createDetailPanel(config) {
             const field = valueEl.dataset.field;
             if (field === 'color') this._editColor(valueEl);
             else if (field === 'icon') this._editIcon(valueEl);
+            else if ('picker' in valueEl.dataset) this._editPicker(valueEl, this._getPickerOptions(field));
             else this._editText(valueEl);
+        },
+
+        _editPicker(valueEl, options) {
+            const currentValue = valueEl.dataset.value || valueEl.textContent.trim();
+            const rect = valueEl.getBoundingClientRect();
+
+            const menu = document.createElement('div');
+            menu.className = 'detail-picker';
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom) + 'px';
+
+            options.forEach(opt => {
+                const item = document.createElement('div');
+                item.className = 'detail-picker-item';
+                item.textContent = opt.label;
+                if (opt.value === currentValue) item.classList.add('selected');
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    this._saveField({
+                        component: valueEl.dataset.component,
+                        field: valueEl.dataset.field,
+                        rawValue: opt.value
+                    });
+                    cleanup();
+                });
+                menu.appendChild(item);
+            });
+
+            const cleanup = () => { if (document.body.contains(menu)) document.body.removeChild(menu); };
+            menu.addEventListener('mousedown', (e) => e.stopPropagation());
+            document.addEventListener('mousedown', cleanup, { once: true });
+
+            document.body.appendChild(menu);
         },
 
         _editColor(valueEl) {
