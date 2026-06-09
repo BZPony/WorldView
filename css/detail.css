@@ -340,3 +340,31 @@ body.detail--closed .detail:not(.detail-secondary) {
 .detail-secondary--closed .detail-secondary {
     left: -330px;
 }
+
+/* ──────────── 属性下拉选择器 ──────────── */
+
+.detail-picker {
+    position: fixed;
+    background: rgba(30, 30, 30, 0.95);
+    color: #fff;
+    border-radius: 8px;
+    padding: 4px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 5000;
+    min-width: 100px;
+}
+
+.detail-picker-item {
+    padding: 4px 16px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.detail-picker-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.detail-picker-item.selected {
+    color: #ffd700;
+}
