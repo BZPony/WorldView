@@ -153,7 +153,7 @@ const MapView = {
         const tw = TimeConfig.trackWindow;
         const ws = tw && tw.enabled ? TimeUtils.subtract(currentTime, tw.value, tw.unit) : null;
         const wd = ws ? TimeUtils.diff(ws, currentTime) : 0;
-        const getOpacity = (t) => { if (!ws) return 1; const ft = 1/3; if (t >= ft) return 1; if (t <= 0) return 0; return t / ft; };
+        const getOpacity = (t) => { if (!ws) return 1; const ft = 1 / 3; if (t >= ft) return 1; if (t <= 0) return 0; return t / ft; };
 
         waypoints.forEach(wp => {
             const wt = wp.time.arrival || wp.time.departure || wp.time;
@@ -210,7 +210,7 @@ const MapView = {
             if (deathTime != null && (TimeUtils.compare(tA, deathTime) > 0 || TimeUtils.compare(tB, deathTime) > 0)) return true;
             return false;
         };
-        const getOpacity = (t) => { if (!ws) return 1; const ft = 1/3; if (t >= ft) return 1; if (t <= 0) return 0; return t / ft; };
+        const getOpacity = (t) => { if (!ws) return 1; const ft = 1 / 3; if (t >= ft) return 1; if (t <= 0) return 0; return t / ft; };
         const SUBDIVISIONS = 30;
 
         if (entity._segmentPolylines) {
@@ -226,12 +226,12 @@ const MapView = {
             if (ws && wd > 0) {
                 const aT = TimeUtils.diff(ws, a.time) / wd;
                 const bT = TimeUtils.diff(ws, b.time) / wd;
-                needsSub = Math.min(aT, bT) < 1/3;
+                needsSub = Math.min(aT, bT) < 1 / 3;
             }
             if (needsSub && baseOp > 0) {
                 const aT = TimeUtils.diff(ws, a.time) / wd;
                 const bT = TimeUtils.diff(ws, b.time) / wd;
-                const fadeRatio = Math.max(0, (1/3 - aT) / (bT - aT));
+                const fadeRatio = Math.max(0, (1 / 3 - aT) / (bT - aT));
                 const subEnd = Math.min(fadeRatio, 1);
                 const n = Math.max(2, Math.round(SUBDIVISIONS * subEnd * 2));
                 for (let s = 0; s < n; s++) {
