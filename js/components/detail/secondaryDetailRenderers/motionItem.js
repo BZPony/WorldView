@@ -90,8 +90,9 @@ function renderCoordsFields(lat, lng, name, compType, container) {
     posRow.className = 'detail-property';
     posRow.innerHTML = `
         <span class="property-label">位置</span>
+        <span class="property-value-font">纬度 </span>
         <span class="property-value" data-component="${compType}" data-field="pos-lat">${lat != null ? lat : 0}</span>
-        <span class="property-value-font">, </span>
+        <span class="property-value-font">经度</span>
         <span class="property-value" data-component="${compType}" data-field="pos-lng">${lng != null ? lng : 0}</span>
     `;
     container.appendChild(posRow);
