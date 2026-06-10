@@ -176,9 +176,9 @@ const entities = [
                 type: 'motion',
                 waypoints: [
                     { pos: { type: 'place', entityId: 'place_1' }, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day', description: '在此地结识了第一位同伴，踏上旅途' },
-                    { pos: { lat: 32, lng: 115, name: '白石渡' }, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day', description: '以白色石桥闻名的渡口' },
-                    { pos: { lat: 35, lng: 120, name: '临海城' }, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day', description: '繁华的沿海贸易都市' },
-                    { pos: { lat: 40, lng: 116, name: '北境关' }, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day', description: '抵御北方入侵的军事要塞' }
+                    { pos: { type: 'coords', lat: 32, lng: 115, name: '白石渡' }, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day', description: '以白色石桥闻名的渡口' },
+                    { pos: { type: 'coords', lat: 35, lng: 120, name: '临海城' }, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day', description: '繁华的沿海贸易都市' },
+                    { pos: { type: 'coords', lat: 40, lng: 116, name: '北境关' }, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day', description: '抵御北方入侵的军事要塞' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -50, month: 3, day: 15 }, deathTime: { year: 100, month: 8, day: 20 }, gender: '男', description: '一位旅行者' }
