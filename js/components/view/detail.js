@@ -187,6 +187,34 @@ function createDetailPanel(config) {
                 ? [itemsField, index, key]
                 : [key];
 
+            // —— pos 嵌套字段（pos-lat / pos-lng / pos-name）——
+            const posMatch = field.match(/^pos-(lat|lng|name)$/);
+            if (posMatch) {
+                const subKey = posMatch[1];
+                let originalValue, valuePath;
+                if (isNestedEdit) {
+                    const item = component[itemsField][index];
+                    originalValue = item.pos?.[subKey] ?? (subKey === 'name' ? '' : 0);
+                    valuePath = [itemsField, index, 'pos', subKey];
+                } else {
+                    originalValue = component.pos?.[subKey] ?? (subKey === 'name' ? '' : 0);
+                    valuePath = ['pos', subKey];
+                }
+                const newValue = subKey === 'name' ? (rawValue || '') : Number(rawValue);
+                if (newValue === originalValue) {
+                    this.renderDetail(this._lastData);
+                    return;
+                }
+                EventBus.emit('command:execute', {
+                    type: 'editEntityField',
+                    entityId: entity.id,
+                    componentType,
+                    path: valuePath,
+                    oldValue: originalValue, newValue
+                });
+                return;
+            }
+
             // —— 时间复合字段（birthTime-year / time-month / arrival-year 等）——
             const timeMatch = field.match(/^(birthTime|deathTime|time|arrival|departure)-(year|month|day)$/);
             if (timeMatch) {
@@ -456,7 +484,7 @@ DetailPanel._openSecondaryPanel = function (wpLi) {
 
     const item = items[idx];
     const title = componentType === 'motion'
-        ? (item.name || `途径点 ${idx + 1}`)
+        ? (this._getWaypointDisplayName(item) || `途径点 ${idx + 1}`)
         : (item.name || `名称条目 ${idx + 1}`);
 
     const data = { ...item, _componentType: componentType, _index: idx };
@@ -541,8 +569,8 @@ DetailPanel._createMotionDefault = function (items, afterIndex) {
     const defaultPos = this._computeDefaultPosition(items, afterIndex);
     return {
         time: { arrival: { ...defaultTime }, departure: { ...defaultTime } },
-        lat: defaultPos.lat, lng: defaultPos.lng,
-        name: '新途径点', description: '请输入描述', resolution: zoomLevel
+        pos: { type: 'coords', lat: defaultPos.lat, lng: defaultPos.lng, name: '新途径点' },
+        description: '请输入描述', resolution: zoomLevel
     };
 };
 
@@ -554,16 +582,20 @@ DetailPanel._createNameHistoryDefault = function (items, afterIndex) {
     return { time: { ...defaultTime }, name: '新名称', description: '请输入描述' };
 };
 
+// 复用 MapView 上的途径点位置/名称解析方法，避免重复实现
+DetailPanel._getWaypointPos = function (wp) { return MapView._getWaypointPosition(wp); };
+DetailPanel._getWaypointDisplayName = function (wp) { return MapView._getWaypointDisplayName(wp); };
+
 DetailPanel._computeDefaultPosition = function (items, afterIndex) {
+    const getPos = (item) => this._getWaypointPos(item) || { lat: 0, lng: 0 };
     if (items.length === 0) return { lat: 0, lng: 0 };
-    if (afterIndex === -1) return { lat: items[0].lat, lng: items[0].lng };
+    if (afterIndex === -1) return getPos(items[0]);
     if (afterIndex < items.length - 1) {
-        return {
-            lat: (items[afterIndex].lat + items[afterIndex + 1].lat) / 2,
-            lng: (items[afterIndex].lng + items[afterIndex + 1].lng) / 2
-        };
+        const a = getPos(items[afterIndex]);
+        const b = getPos(items[afterIndex + 1]);
+        return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
     }
-    return { lat: items[afterIndex].lat, lng: items[afterIndex].lng };
+    return getPos(items[afterIndex]);
 };
 
 DetailPanel._computeDefaultTime = function (items, afterIndex, step, getPrev, getNext) {

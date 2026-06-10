@@ -56,6 +56,43 @@ const MapView = {
     },
 
     /**
+     * 从 waypoint 的 pos 字段解析 {lat, lng}
+     * 支持两种格式：
+     *   coords: wp.pos = { type: 'coords', lat, lng }
+     *   place:  wp.pos = { type: 'place', entityId } → 从 entities 中读取对应 place 实体的 position
+     */
+    _getWaypointPosition(wp) {
+        if (!wp.pos) return null;
+        if (wp.pos.type === 'coords') {
+            return { lat: wp.pos.lat, lng: wp.pos.lng };
+        }
+        if (wp.pos.type === 'place') {
+            const entities = AppState.get('entities') || [];
+            const place = entities.find(e => e.id === wp.pos.entityId);
+            if (place && place.components.place && place.components.place.position) {
+                return { lat: place.components.place.position.lat, lng: place.components.place.position.lng };
+            }
+        }
+        return null;
+    },
+
+    /**
+     * 从 waypoint 的 pos 字段获取显示名称
+     * coords: wp.pos.name
+     * place:  对应 place entity 的 core.name
+     */
+    _getWaypointDisplayName(wp) {
+        if (!wp.pos) return '';
+        if (wp.pos.type === 'coords') return wp.pos.name || '';
+        if (wp.pos.type === 'place') {
+            const entities = AppState.get('entities') || [];
+            const place = entities.find(e => e.id === wp.pos.entityId);
+            if (place && place.components.core) return place.components.core.name || '';
+        }
+        return '';
+    },
+
+    /**
      * 实体位置计算
      *   place：返回固定位置
      *   motion：线性插值
@@ -73,8 +110,8 @@ const MapView = {
 
         if (waypoints.length === 1) {
             const d = waypoints[0].time.departure || waypoints[0].time.arrival || waypoints[0].time;
-            return TimeUtils.compare(time, d) === 0
-                ? { lat: waypoints[0].lat, lng: waypoints[0].lng } : null;
+            const wpPos = this._getWaypointPosition(waypoints[0]);
+            return wpPos && TimeUtils.compare(time, d) === 0 ? wpPos : null;
         }
 
         const first = waypoints[0].time.departure || waypoints[0].time.arrival || waypoints[0].time;
@@ -83,13 +120,16 @@ const MapView = {
 
         for (let i = 0; i < waypoints.length - 1; i++) {
             const a = waypoints[i], b = waypoints[i + 1];
+            const aPos = this._getWaypointPosition(a);
+            const bPos = this._getWaypointPosition(b);
+            if (!aPos || !bPos) continue;
             const ss = a.time.departure || a.time.arrival || a.time;
             const se = b.time.arrival || b.time.departure || b.time;
             if (TimeUtils.compare(time, ss) >= 0 && TimeUtils.compare(time, se) <= 0) {
                 const r = TimeUtils.diff(ss, se);
                 const o = TimeUtils.diff(ss, time);
                 const ratio = r !== 0 ? o / r : 0;
-                return { lat: a.lat + (b.lat - a.lat) * ratio, lng: a.lng + (b.lng - a.lng) * ratio };
+                return { lat: aPos.lat + (bPos.lat - aPos.lat) * ratio, lng: aPos.lng + (bPos.lng - aPos.lng) * ratio };
             }
         }
         return null;
@@ -161,9 +201,11 @@ const MapView = {
             let alpha = 1;
             if (ws && wd > 0) { const t = TimeUtils.diff(ws, wt) / wd; alpha = getOpacity(t); }
             if (alpha < 0.01) return;
-            const name = wp.name || `(${wp.lat.toFixed(2)}, ${wp.lng.toFixed(2)})`;
+            const wpPos = this._getWaypointPosition(wp);
+            if (!wpPos) return;
+            const name = this._getWaypointDisplayName(wp) || `(${wpPos.lat.toFixed(2)}, ${wpPos.lng.toFixed(2)})`;
             const icon = this._createWaypointIcon(color, alpha, name);
-            const marker = L.marker([wp.lat, wp.lng], { icon, interactive: false, zIndexOffset: -100, opacity: alpha }).addTo(this._entityLayerGroup);
+            const marker = L.marker([wpPos.lat, wpPos.lng], { icon, interactive: false, zIndexOffset: -100, opacity: alpha }).addTo(this._entityLayerGroup);
             entity._waypointMarkers.push(marker);
         });
     },
@@ -185,7 +227,9 @@ const MapView = {
         for (let i = 0; i < waypoints.length; i++) {
             const wt = waypoints[i].time.arrival || waypoints[i].time.departure || waypoints[i].time;
             if (TimeUtils.compare(wt, currentTime) <= 0) {
-                path.push({ lat: waypoints[i].lat, lng: waypoints[i].lng, time: wt });
+                const wpPos = this._getWaypointPosition(waypoints[i]);
+                if (!wpPos) continue;
+                path.push({ lat: wpPos.lat, lng: wpPos.lng, time: wt });
             } else {
                 const ip = this.getEntityPosition(entity, currentTime);
                 if (ip) path.push({ lat: ip.lat, lng: ip.lng, time: currentTime });

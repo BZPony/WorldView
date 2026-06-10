@@ -25,7 +25,8 @@ function renderMotionComponent(comp, helpers) {
         const wpZoom = wp.resolution || zoomLevel;
         const arrivalStr = TimeUtils.format(arrival, wpZoom);
         const departureStr = TimeUtils.format(departure, wpZoom);
-        const locationStr = wp.name || `(${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)})`;
+        const wpPos = MapView._getWaypointPosition(wp);
+        const locationStr = MapView._getWaypointDisplayName(wp) || (wpPos ? `(${wpPos.lat.toFixed(4)}, ${wpPos.lng.toFixed(4)})` : '未知位置');
         const descStr = wp.description || '';
         return `<li class="${cls}" data-component="motion" data-wp-index="${idx}">
             <div class="waypoint-item-content">

@@ -20,8 +20,16 @@ function createMotionComponent(waypoints = []) {
         const rawTime = wp.time || { arrival: { year: 0 }, departure: { year: 0 } };
         const arrival = rawTime.arrival ?? rawTime;
         const departure = rawTime.departure ?? rawTime;
+        // 兼容旧格式：将 wp.lat/lng/name 包装为 pos 对象
+        let pos;
+        if (wp.pos) {
+            pos = wp.pos;
+        } else {
+            pos = { type: 'coords', lat: wp.lat ?? 0, lng: wp.lng ?? 0, name: wp.name ?? '' };
+        }
         return {
             ...wp,
+            pos,
             time: { arrival, departure },
             resolution: wp.resolution || 'year'
         };
@@ -167,10 +175,10 @@ const entities = [
             motion: {
                 type: 'motion',
                 waypoints: [
-                    { lat: 30, lng: 110, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day', name: '起源镇', description: '在此地结识了第一位同伴，踏上旅途' },
-                    { lat: 32, lng: 115, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day', name: '白石渡', description: '以白色石桥闻名的渡口' },
-                    { lat: 35, lng: 120, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day', name: '临海城', description: '繁华的沿海贸易都市' },
-                    { lat: 40, lng: 116, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day', name: '北境关', description: '抵御北方入侵的军事要塞' }
+                    { pos: { type: 'place', entityId: 'place_1' }, time: { arrival: { year: 0, month: 6, day: 15 }, departure: { year: 0, month: 6, day: 15 } }, resolution: 'day', description: '在此地结识了第一位同伴，踏上旅途' },
+                    { pos: { lat: 32, lng: 115, name: '白石渡' }, time: { arrival: { year: 20, month: 3, day: 1 }, departure: { year: 20, month: 3, day: 1 } }, resolution: 'day', description: '以白色石桥闻名的渡口' },
+                    { pos: { lat: 35, lng: 120, name: '临海城' }, time: { arrival: { year: 40, month: 9, day: 10 }, departure: { year: 40, month: 9, day: 10 } }, resolution: 'day', description: '繁华的沿海贸易都市' },
+                    { pos: { lat: 40, lng: 116, name: '北境关' }, time: { arrival: { year: 80, month: 1, day: 1 }, departure: { year: 80, month: 1, day: 1 } }, resolution: 'day', description: '抵御北方入侵的军事要塞' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -50, month: 3, day: 15 }, deathTime: { year: 100, month: 8, day: 20 }, gender: '男', description: '一位旅行者' }
@@ -183,10 +191,10 @@ const entities = [
             motion: {
                 type: 'motion',
                 waypoints: [
-                    { lat: 31, lng: 120, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year', name: '小马谷', description: '在图书馆研读魔法古籍，结交了五位挚友占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符s' },
-                    { lat: 33, lng: 118, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day', name: '水晶帝国', description: '帮助音韵公主驱散阴影，点亮水晶之心' },
-                    { lat: 36, lng: 122, time: { arrival: { year: 50, month: 7, day: 14 }, departure: { year: 50, month: 7, day: 14 } }, resolution: 'day', name: '云中城', description: '参加赛博拉斯庆典，与云宝黛西翱翔天际' },
-                    { lat: 38, lng: 119, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month', name: '无尽之森', description: '探索远古遗迹，封印噩梦之影' }
+                    { pos: { type: 'place', entityId: 'place_2' }, time: { arrival: { year: -200, month: 5 }, departure: { year: -200, month: 5 } }, resolution: 'year', description: '在图书馆研读魔法古籍，结交了五位挚友占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符占位符s' },
+                    { pos: { type: 'coords', lat: 33, lng: 118, name: '水晶帝国' }, time: { arrival: { year: 0, month: 1, day: 1 }, departure: { year: 0, month: 1, day: 1 } }, resolution: 'day', description: '帮助音韵公主驱散阴影，点亮水晶之心' },
+                    { pos: { type: 'coords', lat: 36, lng: 122, name: '云中城' }, time: { arrival: { year: 50, month: 7, day: 14 }, departure: { year: 50, month: 7, day: 14 } }, resolution: 'day', description: '参加赛博拉斯庆典，与云宝黛西翱翔天际' },
+                    { pos: { type: 'coords', lat: 38, lng: 119, name: '无尽之森' }, time: { arrival: { year: 150, month: 12 }, departure: { year: 150, month: 12 } }, resolution: 'month', description: '探索远古遗迹，封印噩梦之影' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -250, month: 6, day: 1 }, deathTime: { year: 200, month: 12, day: 31 }, gender: '女', description: '小马谷的图书管理员' }
@@ -199,10 +207,10 @@ const entities = [
             motion: {
                 type: 'motion',
                 waypoints: [
-                    { lat: 28, lng: 115, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'year', name: '东京', description: '捡到死亡笔记，开始制裁罪犯的正义之路' },
-                    { lat: 30, lng: 118, time: { arrival: { year: 0, month: 6 }, departure: { year: 0, month: 6 } }, resolution: 'month', name: '京都', description: '与 L 展开巅峰对决，巧妙伪装身份' },
-                    { lat: 34, lng: 117, time: { arrival: { year: 30, month: 3, day: 15 }, departure: { year: 30, month: 3, day: 15 } }, resolution: 'day', name: '大阪', description: '潜入警视厅总部，获取关键调查情报' },
-                    { lat: 37, lng: 121, time: { arrival: { year: 70 }, departure: { year: 70 } }, resolution: 'year', name: '北海道', description: '在雪原别墅中设下最后陷阱，与尼亚对决' }
+                    { pos: { type: 'coords', lat: 28, lng: 115, name: '东京' }, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'year', description: '捡到死亡笔记，开始制裁罪犯的正义之路' },
+                    { pos: { type: 'coords', lat: 30, lng: 118, name: '京都' }, time: { arrival: { year: 0, month: 6 }, departure: { year: 0, month: 6 } }, resolution: 'month', description: '与 L 展开巅峰对决，巧妙伪装身份' },
+                    { pos: { type: 'coords', lat: 34, lng: 117, name: '大阪' }, time: { arrival: { year: 30, month: 3, day: 15 }, departure: { year: 30, month: 3, day: 15 } }, resolution: 'day', description: '潜入警视厅总部，获取关键调查情报' },
+                    { pos: { type: 'coords', lat: 37, lng: 121, name: '北海道' }, time: { arrival: { year: 70 }, departure: { year: 70 } }, resolution: 'year', description: '在雪原别墅中设下最后陷阱，与尼亚对决' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -100, month: 1, day: 28 }, deathTime: { year: 80, month: 11, day: 5 }, gender: '男', description: '卡密' }
@@ -215,10 +223,10 @@ const entities = [
             motion: {
                 type: 'motion',
                 waypoints: [
-                    { lat: 29, lng: 112, time: { arrival: { year: -100, month: 3 }, departure: { year: -100, month: 3 } }, resolution: 'year', name: '柏林', description: '末世废墟中与好友相遇，结伴同行寻找食物' },
-                    { lat: 31, lng: 114, time: { arrival: { year: -20, month: 9, day: 1 }, departure: { year: -20, month: 9, day: 1 } }, resolution: 'day', name: '慕尼黑', description: '在废弃图书馆发现旧世界的地图与唱片' },
-                    { lat: 33, lng: 116, time: { arrival: { year: 10, month: 5 }, departure: { year: 10, month: 5 } }, resolution: 'month', name: '科隆', description: '乘坐履带车穿越荒野，探索高层遗迹' },
-                    { lat: 36, lng: 118, time: { arrival: { year: 60, month: 1, day: 20 }, departure: { year: 60, month: 1, day: 20 } }, resolution: 'day', name: '汉堡', description: '到达海岸，遥望远方或许存在的文明' }
+                    { pos: { type: 'place', entityId: 'place_5' }, time: { arrival: { year: -100, month: 3 }, departure: { year: -100, month: 3 } }, resolution: 'year', description: '末世废墟中与好友相遇，结伴同行寻找食物' },
+                    { pos: { type: 'coords', lat: 31, lng: 114, name: '慕尼黑' }, time: { arrival: { year: -20, month: 9, day: 1 }, departure: { year: -20, month: 9, day: 1 } }, resolution: 'day', description: '在废弃图书馆发现旧世界的地图与唱片' },
+                    { pos: { type: 'coords', lat: 33, lng: 116, name: '科隆' }, time: { arrival: { year: 10, month: 5 }, departure: { year: 10, month: 5 } }, resolution: 'month', description: '乘坐履带车穿越荒野，探索高层遗迹' },
+                    { pos: { type: 'coords', lat: 36, lng: 118, name: '汉堡' }, time: { arrival: { year: 60, month: 1, day: 20 }, departure: { year: 60, month: 1, day: 20 } }, resolution: 'day', description: '到达海岸，遥望远方或许存在的文明' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -100, month: 4, day: 10 }, deathTime: { year: 60, month: 9, day: 15 }, gender: '女', description: '金发德国少女' }
@@ -231,10 +239,10 @@ const entities = [
             motion: {
                 type: 'motion',
                 waypoints: [
-                    { lat: 32, lng: 110, time: { arrival: { year: -150 }, departure: { year: -150 } }, resolution: 'era', name: '凯尔莫罕', description: '接受猎魔人训练，学习剑术与炼金术' },
-                    { lat: 35, lng: 113, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'decade', name: '维吉玛', description: '解决泰莫利亚宫廷的诅咒，获得狮鹫勋章' },
-                    { lat: 38, lng: 116, time: { arrival: { year: 50, month: 6 }, departure: { year: 50, month: 6 } }, resolution: 'month', name: '诺维格瑞', description: '追踪希里的线索，与永恒之火教会周旋' },
-                    { lat: 41, lng: 119, time: { arrival: { year: 150, month: 3, day: 5 }, departure: { year: 150, month: 3, day: 5 } }, resolution: 'day', name: '史凯利杰', description: '参加国王选举挑战，击败狂猎的远征队' }
+                    { pos: { type: 'place', entityId: 'place_3' }, time: { arrival: { year: -150 }, departure: { year: -150 } }, resolution: 'era', description: '接受猎魔人训练，学习剑术与炼金术' },
+                    { pos: { type: 'coords', lat: 35, lng: 113, name: '维吉玛' }, time: { arrival: { year: -50 }, departure: { year: -50 } }, resolution: 'decade', description: '解决泰莫利亚宫廷的诅咒，获得狮鹫勋章' },
+                    { pos: { type: 'coords', lat: 38, lng: 116, name: '诺维格瑞' }, time: { arrival: { year: 50, month: 6 }, departure: { year: 50, month: 6 } }, resolution: 'month', description: '追踪希里的线索，与永恒之火教会周旋' },
+                    { pos: { type: 'coords', lat: 41, lng: 119, name: '史凯利杰' }, time: { arrival: { year: 150, month: 3, day: 5 }, departure: { year: 150, month: 3, day: 5 } }, resolution: 'day', description: '参加国王选举挑战，击败狂猎的远征队' }
                 ]
             },
             person: { type: 'person', birthTime: { year: -300, month: 5, day: 1 }, deathTime: { year: 150, month: 7, day: 20 }, gender: '男', description: '传奇猎魔人' }

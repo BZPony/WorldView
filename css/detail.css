@@ -157,6 +157,19 @@ body.detail--closed .detail:not(.detail-secondary) {
     outline: none;
 }
 
+/* 只读属性值（place 绑定的位置，不可编辑） */
+.property-value--readonly {
+    color: #ccc;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 2px 6px;
+    min-height: 18px;
+    flex: 1;
+    cursor: default;
+    opacity: 0.8;
+}
+
 /* 颜色预览小圆块 */
 .color-swatch {
     display: inline-block;
