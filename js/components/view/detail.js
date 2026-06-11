@@ -631,6 +631,9 @@ SecondaryDetailPanel._onStateChange = function (data) {
             break;
         case 'isSecondaryPanelOpen':
             this._updateOpenState(data.value);
+            if (!data.value) {
+                AppState.set('isLocationPickerActive', false);
+            }
             break;
     }
 };

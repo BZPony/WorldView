@@ -174,7 +174,9 @@ const MapView = {
                     // 定位选取模式下不触发实体选择，改为定位到该实体
                     if (AppState.get('isLocationPickerActive')) {
                         L.DomEvent.stopPropagation(e.originalEvent);
-                        this._handleLocationPickerClick({ latlng: entity._marker.getLatLng() }, entity);
+                        // 仅 place 实体可绑定，其他实体视为普通点击
+                        const placeEntity = entity.components.place ? entity : null;
+                        this._handleLocationPickerClick({ latlng: entity._marker.getLatLng() }, placeEntity);
                         return;
                     }
                     EventBus.emit('ui:select', { type: 'entity', id: entity.id });
@@ -378,7 +380,7 @@ const MapView = {
     /**
      * 处理选取模式下的地图点击
      */
-    _handleLocationPickerClick(e) {
+    _handleLocationPickerClick(e, knownPlaceEntity) {
         const target = this._pickerTarget;
         if (!target) return;
 
@@ -390,8 +392,8 @@ const MapView = {
         if (!waypoints || target.index < 0 || target.index >= waypoints.length) return;
         const oldPos = waypoints[target.index].pos || {};
 
-        // 先检查是否点击到了 place 实体
-        const placeEntity = this._findPlaceEntityNear(e.latlng);
+        // 确定新位置：已知实体优先，否则查找邻近 place entity
+        const placeEntity = knownPlaceEntity || this._findPlaceEntityNear(e.latlng);
         let newPos;
         if (placeEntity) {
             newPos = { type: 'place', entityId: placeEntity.id };
