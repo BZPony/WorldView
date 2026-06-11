@@ -635,6 +635,27 @@ SecondaryDetailPanel._onStateChange = function (data) {
     }
 };
 
+// 处理定位按钮点击（代理到二级面板内容区）
+SecondaryDetailPanel._handleLocateClick = function (e) {
+    const btn = e.target.closest('.waypoint-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    const index = parseInt(btn.dataset.wpIndex, 10);
+    if (isNaN(index)) return;
+    // 设置选取模式
+    AppState.set('locationPickerTarget', { componentType: 'motion', index });
+    AppState.set('isLocationPickerActive', true);
+};
+
+// 覆盖 init 以加入定位按钮点击监听
+SecondaryDetailPanel._origInit = SecondaryDetailPanel.init;
+SecondaryDetailPanel.init = function (opts) {
+    this._origInit(opts);
+    if (this.elements.content) {
+        this.elements.content.addEventListener('click', this._handleLocateClick.bind(this));
+    }
+};
+
 /**
  * 二级面板条目渲染器注册表
  * 新增组件类型时在此注册即可
@@ -645,6 +666,9 @@ const secondaryItemRenderers = {
 };
 
 SecondaryDetailPanel.renderDetail = function (content) {
+
+    console.log('渲染二级面板', content.data.pos.name + '' + content.title);
+
     if (!this.elements.content) return;
     this._lastData = content;
     const data = content.data || {};

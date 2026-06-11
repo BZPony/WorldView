@@ -36,6 +36,16 @@ const MapView = {
         EventBus.on('state:change', (data) => {
             if (data.key === 'selectedItem') this.renderTimelineEntities();
         });
+        EventBus.on('state:change', (data) => {
+            if (data.key === 'isLocationPickerActive') {
+                if (data.value) {
+                    const target = AppState.get('locationPickerTarget');
+                    this._enableLocationPicker(target);
+                } else {
+                    this._disableLocationPicker();
+                }
+            }
+        });
     },
 
     /**
@@ -160,7 +170,13 @@ const MapView = {
                 entity._marker = L.marker([pos.lat, pos.lng], {
                     icon: this._createEntityIcon(entity)
                 }).addTo(this._entityLayerGroup);
-                entity._marker.addEventListener('click', () => {
+                entity._marker.addEventListener('click', (e) => {
+                    // 定位选取模式下不触发实体选择，改为定位到该实体
+                    if (AppState.get('isLocationPickerActive')) {
+                        L.DomEvent.stopPropagation(e.originalEvent);
+                        this._handleLocationPickerClick({ latlng: entity._marker.getLatLng() }, entity);
+                        return;
+                    }
                     EventBus.emit('ui:select', { type: 'entity', id: entity.id });
                 });
             } else {
@@ -314,6 +330,87 @@ const MapView = {
                 entity._segmentPolylines.push(pl);
             }
         }
+    },
+
+    // ───── 定位选取模式 ─────
+
+    /**
+     * 开启定位选取模式
+     * @param {Object} target - { componentType, index }
+     */
+    _enableLocationPicker(target) {
+        this._pickerTarget = target;
+        this.map.getContainer().style.cursor = 'crosshair';
+        this._pickerClickHandler = (e) => this._handleLocationPickerClick(e);
+        this.map.on('click', this._pickerClickHandler);
+    },
+
+    /**
+     * 关闭定位选取模式
+     */
+    _disableLocationPicker() {
+        this._pickerTarget = null;
+        this.map.getContainer().style.cursor = '';
+        if (this._pickerClickHandler) {
+            this.map.off('click', this._pickerClickHandler);
+            this._pickerClickHandler = null;
+        }
+    },
+
+    /**
+     * 查找点击位置附近是否有 place 实体的 marker
+     * @param {L.LatLng} latlng - 点击的经纬度
+     * @param {number} pixelThreshold - 像素阈值
+     * @returns {Object|null} place entity
+     */
+    _findPlaceEntityNear(latlng, pixelThreshold = 20) {
+        const entities = AppState.get('entities') || [];
+        const clickPoint = this.map.latLngToContainerPoint(latlng);
+        for (const entity of entities) {
+            if (!entity.components.place || !entity._marker) continue;
+            const markerPoint = this.map.latLngToContainerPoint(entity._marker.getLatLng());
+            const dist = clickPoint.distanceTo(markerPoint);
+            if (dist < pixelThreshold) return entity;
+        }
+        return null;
+    },
+
+    /**
+     * 处理选取模式下的地图点击
+     */
+    _handleLocationPickerClick(e) {
+        const target = this._pickerTarget;
+        if (!target) return;
+
+        // 获取当前选中实体
+        const selectedItem = AppState.get('selectedItem');
+        if (!selectedItem) return;
+        const entity = selectedItem.data;
+        const waypoints = entity.components.motion?.waypoints;
+        if (!waypoints || target.index < 0 || target.index >= waypoints.length) return;
+        const oldPos = waypoints[target.index].pos || {};
+
+        // 先检查是否点击到了 place 实体
+        const placeEntity = this._findPlaceEntityNear(e.latlng);
+        let newPos;
+        if (placeEntity) {
+            newPos = { type: 'place', entityId: placeEntity.id };
+        } else {
+            newPos = { type: 'coords', lat: e.latlng.lat, lng: e.latlng.lng, name: oldPos.name || '' };
+        }
+
+        // 执行编辑命令
+        EventBus.emit('command:execute', {
+            type: 'editEntityField',
+            entityId: entity.id,
+            componentType: 'motion',
+            path: ['waypoints', target.index, 'pos'],
+            oldValue: oldPos,
+            newValue: newPos
+        });
+
+        // 关闭选取模式
+        AppState.set('isLocationPickerActive', false);
     },
 
     _createWaypointIcon(color, opacity = 1, name = '') {

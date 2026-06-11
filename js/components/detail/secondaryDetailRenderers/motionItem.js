@@ -69,19 +69,23 @@ function renderMotionItem(data, compType, container) {
  */
 function renderPositionFields(data, compType, container) {
     const pos = data.pos;
-    if (!pos) {
-        // 无 pos 数据（旧格式兜底），尝试从 data.lat/lng 读取
-        if (data.lat != null && data.lng != null) {
-            renderCoordsFields(data.lat, data.lng, data.name, compType, container);
-        }
-        return;
-    }
 
     if (pos.type === 'coords') {
         renderCoordsFields(pos.lat, pos.lng, pos.name, compType, container);
     } else if (pos.type === 'place') {
         renderPlaceField(pos.entityId, compType, container);
     }
+    renderLocateButton(data._index, container);
+}
+
+/**
+ * 渲染"定位"按钮
+ */
+function renderLocateButton(index, container) {
+    const btnRow = document.createElement('div');
+    btnRow.className = 'waypoint-btn-group';
+    btnRow.innerHTML = `<button class="waypoint-btn" data-action="locate" data-wp-index="${index}">${getIcon('crosshair', 14)}</button>`;
+    container.appendChild(btnRow);
 }
 
 function renderCoordsFields(lat, lng, name, compType, container) {
@@ -91,9 +95,9 @@ function renderCoordsFields(lat, lng, name, compType, container) {
     posRow.innerHTML = `
         <span class="property-label">位置</span>
         <span class="property-value-font">纬度 </span>
-        <span class="property-value" data-component="${compType}" data-field="pos-lat">${lat != null ? lat : 0}</span>
+        <span class="property-value" data-component="${compType}" data-field="pos-lat">${lat != null ? Number(lat).toFixed(3) : 0}</span>
         <span class="property-value-font">经度</span>
-        <span class="property-value" data-component="${compType}" data-field="pos-lng">${lng != null ? lng : 0}</span>
+        <span class="property-value" data-component="${compType}" data-field="pos-lng">${lng != null ? Number(lng).toFixed(3) : 0}</span>
     `;
     container.appendChild(posRow);
 

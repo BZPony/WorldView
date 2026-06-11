@@ -10,6 +10,8 @@ const AppState = {
         isDetailPanelOpen: false,
         isSecondaryPanelOpen: false,
         secondaryPanelContent: { title: '', data: null },
+        isLocationPickerActive: false,       // 定位选取模式是否激活
+        locationPickerTarget: null,          // 目标途径点 { componentType, index }
 
         //应用数据，只能通过commandHandler模块修改
         entities: []

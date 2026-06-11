@@ -52,6 +52,8 @@ const CommandHandler = {
         this._redoStack = [];
         // 同步 selectedItem 引用，确保 DetailPanel 渲染最新数据
         this._syncSelectedItem();
+        // 同步 secondaryPanelContent，确保途径点编辑后二级面板即时刷新
+        this._syncSecondaryPanelContent();
         console.log(`[CommandHandler] 执行: ${command.description} (undoStack: ${this._undoStack.length})`);
     },
 
@@ -112,6 +114,36 @@ const CommandHandler = {
                 AppState.set('selectedItem', null);
             }
         }
+    },
+
+    /**
+     * 同步 secondaryPanelContent 中的 data 指向最新实体数据
+     * 与 _syncSelectedItem 对称，确保二级面板在编辑后即时刷新
+     */
+    _syncSecondaryPanelContent() {
+        if (!AppState.get('isSecondaryPanelOpen')) return;
+        const secContent = AppState.get('secondaryPanelContent');
+        if (!secContent || !secContent.data) return;
+        const compType = secContent.data._componentType;
+        const index = secContent.data._index;
+        if (compType == null || index == null) return;
+
+        const selectedItem = AppState.get('selectedItem');
+        if (!selectedItem) return;
+        const entity = selectedItem.data;
+        const comp = entity.components[compType];
+        if (!comp) return;
+        const itemsField = compType === 'motion' ? 'waypoints' : 'entries';
+        const items = comp[itemsField];
+        if (!items || index < 0 || index >= items.length) return;
+
+        // 重新计算标题（途径点名称可能已变更）
+        const item = items[index];
+        const title = compType === 'motion'
+            ? (MapView._getWaypointDisplayName(item) || `途径点 ${index + 1}`)
+            : (item.name || `名称条目 ${index + 1}`);
+        const updatedData = { ...item, _componentType: compType, _index: index };
+        AppState.set('secondaryPanelContent', { title: title, data: updatedData });
     },
 
     /**
