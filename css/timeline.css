@@ -33,12 +33,12 @@
 }
 
 .timeline-tick {
+    position: absolute;
     width: 100px;
     height: 100%;
 
     border-left: 1px solid #555;
     box-sizing: border-box;
-    flex: 0 0 100px;
     color: white;
     font-size: 12px;
 

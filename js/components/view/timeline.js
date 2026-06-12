@@ -32,12 +32,11 @@ const Timeline = {
      */
     init(options) {
         const t = TimeConfig.timeline || {};
-        // 保存配置，时间参数优先从 TimeConfig.timeline 读取
+        // 保存配置，tickStep 由 zoomLevel 动态计算，不再从配置读取
         this.config = {
-            startYear: options.startYear || t.startYear,
-            endYear: options.endYear || t.endYear,
-            tickStep: options.tickStep || t.tickStep,
-            tickWidth: options.tickWidth || t.tickWidth,
+            startYear: options.startYear || t.startYear || -1000,
+            endYear: options.endYear || t.endYear || 1000,
+            tickWidth: options.tickWidth || t.tickWidth || 100,
             containerId: options.containerId,
             trackId: options.trackId || 'timeline-track',
         };
@@ -51,17 +50,10 @@ const Timeline = {
             return;
         }
 
-        // 计算总刻度数和轨道总宽度
-        const { startYear, endYear, tickStep, tickWidth } = this.config;
-        this.config.totalTicks = (endYear - startYear) / tickStep;
-        this.config.trackWidth = this.config.totalTicks * tickWidth;
-
         // 计算时间戳范围（分钟级精度），用于像素与时间的精确转换
+        const { startYear, endYear } = this.config;
         this.config.startTimestamp = TimeUtils.toTimestamp({ year: startYear });
         this.config.endTimestamp = TimeUtils.toTimestamp({ year: endYear });
-
-        // 设置轨道宽度
-        this.track.style.width = this.config.trackWidth + 'px';
 
         // 生成刻度
         this._generateTicks();
@@ -90,12 +82,48 @@ const Timeline = {
      * 生成时间刻度并添加到轨道
      */
     _generateTicks() {
-        const { startYear, endYear, tickStep } = this.config;
-        this.track.innerHTML = ''; // 清空已有刻度
-        for (let year = startYear; year <= endYear; year += tickStep) {
+        const zoomLevel = AppState.get('timeZoomLevel') || 'year';
+        const level = TimeConfig.zoomLevels.find(z => z.id === zoomLevel);
+        if (!level) return;
+
+        const scale = TimeConfig.getScale();
+        const minUnitScale = scale[level.minUnit];
+        this._tickStepTs = minUnitScale * level.step;
+
+        const { startYear, endYear, tickWidth } = this.config;
+        const startTs = TimeUtils.toTimestamp({ year: startYear });
+        const endTs = TimeUtils.toTimestamp({ year: endYear });
+
+        const totalTicks = Math.ceil((endTs - startTs) / this._tickStepTs);
+        this.config.trackWidth = totalTicks * tickWidth;
+        this.config.timestampPerPixel = (endTs - startTs) / this.config.trackWidth;
+
+        this.track.style.width = this.config.trackWidth + 'px';
+
+        this._renderVisibleTicks(zoomLevel);
+    },
+
+    _renderVisibleTicks(zoomLevel) {
+        this.track.innerHTML = '';
+
+        const tickWidth = this.config.tickWidth;
+        const containerWidth = this.container.clientWidth;
+        const visibleCount = Math.ceil(containerWidth / tickWidth) + 6;
+
+        const centerTs = TimeUtils.toTimestamp(AppState.get('currentTime'));
+        const startYearTs = TimeUtils.toTimestamp({ year: this.config.startYear });
+        const tickIndexCenter = Math.round((centerTs - startYearTs) / this._tickStepTs);
+        const tickIndexStart = tickIndexCenter - Math.floor(visibleCount / 2);
+
+        for (let i = 0; i < visibleCount; i++) {
+            const globalIndex = tickIndexStart + i;
+            const tickTs = startYearTs + globalIndex * this._tickStepTs;
+            const tickTime = TimeUtils.timestampToTime(tickTs);
+            const label = TimeUtils.format(tickTime, zoomLevel);
             const tick = document.createElement('div');
             tick.className = 'timeline-tick';
-            tick.textContent = year;
+            tick.textContent = label;
+            tick.style.left = (globalIndex * tickWidth) + 'px';
             this.track.appendChild(tick);
         }
     },
@@ -146,20 +174,12 @@ const Timeline = {
     _onMouseMove(e) {
         if (!this.isDragging) return;
 
-        const containerWidth = this.container.clientWidth;
-        if (containerWidth === 0) return;
-
         const deltaX = e.clientX - this.startX;
-        const { startTimestamp, endTimestamp, trackWidth } = this.config;
-
-        const tsDelta = (endTimestamp - startTimestamp) * (-deltaX / trackWidth);
+        const tsDelta = -deltaX * this.config.timestampPerPixel;
         const newTimestamp = this.startTimestamp + tsDelta;
         const newTime = TimeUtils.timestampToTime(newTimestamp);
 
         AppState.set('currentTime', newTime);
-        console.log('Timeline: 拖动更新当前时间', newTime);
-        console.log('Timeline: 拖动时间差', tsDelta);
-        console.log('Timeline: 拖动时间戳', newTimestamp);
     },
 
     // ---------- 事件监听回调 ----------
@@ -177,12 +197,23 @@ const Timeline = {
      * @param {Object} time - 当前时间对象 { year, month?, day? }
     */
     render(time) {
-        console.log('Timeline: 渲染时间轴，当前时间', time);
         const containerWidth = this.container.clientWidth;
-        if (containerWidth === 0) return; // 防止未显示时计算错误
+        if (containerWidth === 0) return;
 
         const offsetX = this.timeToOffset(time) + containerWidth / 2;
         this.track.style.transform = `translateX(${offsetX}px)`;
+
+        this._checkTickShift(time);
+    },
+
+    _checkTickShift(time) {
+        const currentTs = TimeUtils.toTimestamp(time);
+        const startYearTs = TimeUtils.toTimestamp({ year: this.config.startYear });
+        const tickIndexCenter = Math.round((currentTs - startYearTs) / this._tickStepTs);
+        if (this._lastTickCenter === tickIndexCenter) return;
+        this._lastTickCenter = tickIndexCenter;
+        const zoomLevel = AppState.get('timeZoomLevel') || 'year';
+        this._renderVisibleTicks(zoomLevel);
     },
 
     _onLayoutChange() {
@@ -214,6 +245,7 @@ const Timeline = {
         const idx = levels.findIndex(z => z.id === currentId);
         if (idx < levels.length - 1) {
             AppState.set('timeZoomLevel', levels[idx + 1].id);
+            this._regenerateTicks();
         }
     },
 
@@ -223,7 +255,16 @@ const Timeline = {
         const idx = levels.findIndex(z => z.id === currentId);
         if (idx > 0) {
             AppState.set('timeZoomLevel', levels[idx - 1].id);
+            this._regenerateTicks();
         }
+    },
+
+    _regenerateTicks() {
+        this._lastTickCenter = undefined; // 强制重新生成可见刻度
+        this._generateTicks();
+        this._updateZoomButtons();
+        const currentTime = AppState.get('currentTime');
+        this.render(currentTime);
     },
 
     /**
