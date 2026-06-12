@@ -234,6 +234,13 @@ const Sidebar = {
             }
         })
 
+        // 保存当前展开状态
+        const expandedTypes = new Set();
+        container.querySelectorAll('.sidebar-content-panel-btn.active').forEach(btn => {
+            const type = btn.dataset.type;
+            if (type) expandedTypes.add(type);
+        });
+
         //清空面板
         container.innerHTML = '';
 
@@ -250,6 +257,7 @@ const Sidebar = {
             const config = typeConfig[type] || { label: type, icon: 'tag' };   // 用户自定义类型默认使用 tag 图标
             const btn = document.createElement('div');
             btn.className = 'sidebar-content-panel-btn';
+            btn.dataset.type = type;
             btn.innerHTML = `
                 <span class="icon" data-name="${config.icon}"></span>
                 ${config.label}
@@ -285,6 +293,11 @@ const Sidebar = {
             btn.addEventListener('click', () => {
                 btn.classList.toggle('active');
             });
+
+            // 恢复展开状态
+            if (expandedTypes.has(type)) {
+                btn.classList.add('active');
+            }
 
             container.appendChild(btn);
             container.appendChild(subPanel);
