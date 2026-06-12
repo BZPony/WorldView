@@ -31,12 +31,13 @@ const Timeline = {
      * @param {string} [options.trackId='timeline-track'] - 轨道元素 ID
      */
     init(options) {
-        // 保存配置
+        const t = TimeConfig.timeline || {};
+        // 保存配置，时间参数优先从 TimeConfig.timeline 读取
         this.config = {
-            startYear: options.startYear,
-            endYear: options.endYear,
-            tickStep: options.tickStep || 50,
-            tickWidth: options.tickWidth || 100,
+            startYear: options.startYear || t.startYear,
+            endYear: options.endYear || t.endYear,
+            tickStep: options.tickStep || t.tickStep,
+            tickWidth: options.tickWidth || t.tickWidth,
             containerId: options.containerId,
             trackId: options.trackId || 'timeline-track',
         };
@@ -54,6 +55,10 @@ const Timeline = {
         const { startYear, endYear, tickStep, tickWidth } = this.config;
         this.config.totalTicks = (endYear - startYear) / tickStep;
         this.config.trackWidth = this.config.totalTicks * tickWidth;
+
+        // 计算时间戳范围（分钟级精度），用于像素与时间的精确转换
+        this.config.startTimestamp = TimeUtils.toTimestamp({ year: startYear });
+        this.config.endTimestamp = TimeUtils.toTimestamp({ year: endYear });
 
         // 设置轨道宽度
         this.track.style.width = this.config.trackWidth + 'px';
@@ -101,10 +106,9 @@ const Timeline = {
      * @returns {number} 偏移量
      */
     timeToOffset(time) {
-        const { startYear, endYear, trackWidth } = this.config;
-        // 从时间对象中取 year 作为主刻度
-        const t = time ? (time.year || 0) : 0;
-        const ratio = (t - startYear) / (endYear - startYear);
+        const { startTimestamp, endTimestamp, trackWidth } = this.config;
+        const ts = time ? TimeUtils.toTimestamp(time) : 0;
+        const ratio = (ts - startTimestamp) / (endTimestamp - startTimestamp);
         return -ratio * trackWidth;
     },
 
@@ -114,10 +118,10 @@ const Timeline = {
      * @returns {Object} 时间对象
      */
     offsetToTime(offsetX) {
-        const { startYear, endYear, trackWidth } = this.config;
+        const { startTimestamp, endTimestamp, trackWidth } = this.config;
         const ratio = -offsetX / trackWidth;
-        const year = startYear + ratio * (endYear - startYear);
-        return { year: Math.round(year) };
+        const ts = startTimestamp + ratio * (endTimestamp - startTimestamp);
+        return TimeUtils.timestampToTime(Math.round(ts));
     },
 
     // ---------- 拖动事件处理 ----------
@@ -130,7 +134,7 @@ const Timeline = {
     _onMouseDown(e) {
         this.isDragging = true;
         this.startX = e.clientX;
-        this.startTime = AppState.get('currentTime'); // 注意：拖动起始基于当前状态
+        this.startTimestamp = TimeUtils.toTimestamp(AppState.get('currentTime')); // 精确时间戳
         this.track.style.cursor = 'grabbing';
     },
 
@@ -146,15 +150,16 @@ const Timeline = {
         if (containerWidth === 0) return;
 
         const deltaX = e.clientX - this.startX;
-        const { startYear, endYear, trackWidth } = this.config;
+        const { startTimestamp, endTimestamp, trackWidth } = this.config;
 
-        // startTime 现在是时间对象 { year }，取其 year 计算
-        const startYearVal = this.startTime ? (this.startTime.year || 0) : 0;
-        let newYear = startYearVal + (endYear - startYear) * (-deltaX / trackWidth);
-        newYear = Math.round(Math.max(startYear, Math.min(endYear, newYear)));
+        const tsDelta = (endTimestamp - startTimestamp) * (-deltaX / trackWidth);
+        const newTimestamp = this.startTimestamp + tsDelta;
+        const newTime = TimeUtils.timestampToTime(newTimestamp);
 
-        // 通过 AppState 更新时间（时间对象），触发 state:change 事件
-        AppState.set('currentTime', { year: newYear });
+        AppState.set('currentTime', newTime);
+        console.log('Timeline: 拖动更新当前时间', newTime);
+        console.log('Timeline: 拖动时间差', tsDelta);
+        console.log('Timeline: 拖动时间戳', newTimestamp);
     },
 
     // ---------- 事件监听回调 ----------
@@ -172,6 +177,7 @@ const Timeline = {
      * @param {Object} time - 当前时间对象 { year, month?, day? }
     */
     render(time) {
+        console.log('Timeline: 渲染时间轴，当前时间', time);
         const containerWidth = this.container.clientWidth;
         if (containerWidth === 0) return; // 防止未显示时计算错误
 

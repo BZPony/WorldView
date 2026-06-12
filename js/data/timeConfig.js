@@ -6,7 +6,7 @@
  */
 const TimeConfig = {
     // ───── 纪元起点 ─────
-    // 所有时间偏移量（toOffset）基于此计算
+    // 所有时间戳（toTimestamp）基于此计算
     epoch: { year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
 
     // ───── 时间换算规则（用户可自定义） ─────
@@ -20,6 +20,14 @@ const TimeConfig = {
     // 'minute' 为建议值，秒级精度极少用到
     // 使用 minute 可将一年缩放值控制在 100 万以内，避免数值溢出
     minUnit: 'minute',
+
+    // ───── 时间轴配置 ─────
+    timeline: {
+        startYear: -1000,
+        endYear: 1000,
+        tickStep: 1,
+        tickWidth: 100
+    },
 
     // ───── 轨迹显示窗口 ─────
     // 只显示当前时间往前 N 个时间单位内的轨迹，防止路径杂乱缠绕

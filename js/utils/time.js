@@ -2,7 +2,7 @@
  * 时间系统工具函数
  *
  * 所有时间运算基于 TimeConfig 全局配置，支持用户自定义的年月日换算规则。
- * 底层统一将时间对象转为距纪元起点（epoch）的偏移量（int64），用于排序、比较和插值。
+ * 底层统一将时间对象转为距纪元起点（epoch）的时间戳（分钟级整数），用于排序、比较和插值。
  *
  * 时间对象格式：
  *   { year: number, month?: number, day?: number, hour?: number, minute?: number, second?: number }
@@ -13,14 +13,14 @@
 const TimeUtils = {
 
     /**
-     * 将时间对象转为整数偏移量（距 TimeConfig.epoch 的 minUnit 数）
+     * 将时间对象转为整数时间戳（距 TimeConfig.epoch 的 minUnit 数）
      *
-     * 正负年处理：负年直接乘以年缩放系数，产生负偏移量，比较时天然正确。
+     * 正负年处理：负年直接乘以年缩放系数，产生负时间戳，比较时天然正确。
      *
      * @param {Object} t - 时间对象 { year, month?, day?, hour?, minute? }
-     * @returns {number} 偏移量（带符号）
+     * @returns {number} 时间戳（带符号）
      */
-    toOffset(t) {
+    toTimestamp(t) {
         if (t == null) return 0;
         const scale = TimeConfig.getScale();
         const year = t.year || 0;
@@ -37,13 +37,13 @@ const TimeUtils = {
     },
 
     /**
-     * 将偏移量反向计算为时间对象
-     * @param {number} offset
+     * 将时间戳反向计算为时间对象
+     * @param {number} timestamp - 时间戳
      * @returns {Object} { year, month, day, hour, minute }
      */
-    offsetToTime(offset) {
+    timestampToTime(timestamp) {
         const scale = TimeConfig.getScale();
-        let remaining = offset;
+        let remaining = timestamp;
 
         // 处理负偏移：正向取模
         const year = Math.floor(remaining / scale.year);
@@ -53,7 +53,7 @@ const TimeUtils = {
         // 这种情况下需要重新调整
         if (remaining < 0) {
             // 借位
-            return this.offsetToTime(offset - scale.month); // 简化处理
+            return this.timestampToTime(timestamp - scale.month); // 简化处理
         }
 
         const month = Math.floor(remaining / scale.month) + 1;
@@ -83,7 +83,7 @@ const TimeUtils = {
      * @returns {number}
      */
     diff(a, b) {
-        return this.toOffset(b) - this.toOffset(a);
+        return this.toTimestamp(b) - this.toTimestamp(a);
     },
 
     /**
@@ -94,10 +94,10 @@ const TimeUtils = {
      * @returns {Object} 新的时间对象
      */
     lerp(start, end, ratio) {
-        const startOff = this.toOffset(start);
-        const endOff = this.toOffset(end);
-        const midOff = startOff + (endOff - startOff) * ratio;
-        return this.offsetToTime(midOff);
+        const startTs = this.toTimestamp(start);
+        const endTs = this.toTimestamp(end);
+        const midTs = startTs + (endTs - startTs) * ratio;
+        return this.timestampToTime(midTs);
     },
 
     /**
@@ -110,7 +110,7 @@ const TimeUtils = {
         if (a == null && b == null) return 0;
         if (a == null) return -1;
         if (b == null) return 1;
-        const diff = this.toOffset(a) - this.toOffset(b);
+        const diff = this.toTimestamp(a) - this.toTimestamp(b);
         if (diff < 0) return -1;
         if (diff > 0) return 1;
         return 0;
@@ -185,15 +185,15 @@ const TimeUtils = {
         if (!t) return { year: 0 };
         const scale = TimeConfig.getScale();
         const unitScale = scale[unit] || scale.year;
-        const offset = this.toOffset(t);
-        return this.offsetToTime(offset - value * unitScale);
+        const ts = this.toTimestamp(t);
+        return this.timestampToTime(ts - value * unitScale);
     },
 
     /**
      * 获取当前时间分辨率对应的 minUnit 步进值
      *
      * @param {string} [zoomLevel] - 缩放级别 ID，默认从 AppState 读取
-     * @returns {number} 偏移量（minUnit）
+     * @returns {number} 步进值（minUnit）
      */
     getResolutionStep(zoomLevel) {
         const zl = zoomLevel || (window.AppState ? AppState.get('timeZoomLevel') : 'year') || 'year';

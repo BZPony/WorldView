@@ -623,14 +623,14 @@ DetailPanel._computeDefaultPosition = function (items, afterIndex) {
 DetailPanel._computeDefaultTime = function (items, afterIndex, step, getPrev, getNext) {
     if (items.length === 0) return AppState.get('currentTime') || { year: 0 };
     if (afterIndex === -1) {
-        const nextOff = TimeUtils.toOffset(getNext(items[0]));
-        return TimeUtils.offsetToTime(nextOff - 10 * step);
+        const nextTs = TimeUtils.toTimestamp(getNext(items[0]));
+        return TimeUtils.timestampToTime(nextTs - 10 * step);
     }
     if (afterIndex < items.length - 1) {
         return TimeUtils.lerp(getPrev(items[afterIndex]), getNext(items[afterIndex + 1]), 0.5);
     }
-    const lastOff = TimeUtils.toOffset(getPrev(items[afterIndex]));
-    return TimeUtils.offsetToTime(lastOff + 10 * step);
+    const lastTs = TimeUtils.toTimestamp(getPrev(items[afterIndex]));
+    return TimeUtils.timestampToTime(lastTs + 10 * step);
 };
 
 window.DetailPanel = DetailPanel;
