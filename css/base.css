@@ -158,3 +158,8 @@ body {
         1px 1px 1px rgba(0, 0, 0, 0.7);
     pointer-events: none;
 }
+
+.waypoint-marker {
+    width: fit-content !important;
+    height: auto !important;
+}
