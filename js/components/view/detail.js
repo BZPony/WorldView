@@ -362,6 +362,28 @@ DetailPanel.init = function () {
     this._allowEdit = true;
 
     this.elements.btnClose.addEventListener('click', () => this._toggle(false));
+
+    // 删除按钮
+    const btnDelete = document.querySelector('#detail-btn-delete');
+    if (btnDelete) {
+        btnDelete.addEventListener('click', () => {
+            const selectedItem = AppState.get('selectedItem');
+            if (!selectedItem) return;
+            const entity = selectedItem.data;
+            const name = entity.components.core?.name || '未命名实体';
+            Modal.openConfirm({
+                title: '删除实体',
+                message: `确定要删除 <strong>${name}</strong> 吗？`,
+                hint: '此操作可通过 Ctrl+Z 撤销。',
+                onConfirm: () => {
+                    AppState.set('isSecondaryPanelOpen', false);
+                    AppState.set('selectedItem', null);
+                    EventBus.emit('command:execute', { type: 'deleteEntity', entityId: entity.id });
+                }
+            });
+        });
+    }
+
     EventBus.on('state:change', this._onStateChange.bind(this));
 
     this.elements.content.addEventListener('click', (e) => {
@@ -669,8 +691,6 @@ const secondaryItemRenderers = {
 };
 
 SecondaryDetailPanel.renderDetail = function (content) {
-
-    console.log('渲染二级面板', content.data.pos.name + '' + content.title);
 
     if (!this.elements.content) return;
     this._lastData = content;

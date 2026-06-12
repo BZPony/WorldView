@@ -67,6 +67,42 @@ const Modal = {
         this._callback = null;
     },
 
+    // ───── 变体：Confirm ─────
+
+    /**
+     * 打开确认弹窗
+     * @param {Object} options
+     * @param {string} options.title       - 弹窗标题
+     * @param {string} options.message     - 提示消息（支持 HTML）
+     * @param {string} [options.hint]      - 辅助提示（可选，灰色小字）
+     * @param {Function} options.onConfirm - 确认回调
+     * @param {Function} [options.onCancel] - 取消回调
+     */
+    openConfirm(options = {}) {
+        const hint = options.hint ? `<br><small>${options.hint}</small>` : '';
+
+        const html = `
+            <p>${options.message || ''}${hint}</p>
+            <div class="modal-btn-row">
+                <button class="modal-btn modal-btn--cancel" id="modal-confirm-cancel">取消</button>
+                <button class="modal-btn modal-btn--confirm" id="modal-confirm-ok">确认</button>
+            </div>
+        `;
+
+        this.open({ title: options.title, html, callback: null });
+
+        // 绑定按钮事件（Modal.open 同步设置 innerHTML，元素立即可用）
+        const body = this.elements.body;
+        body.querySelector('#modal-confirm-cancel')?.addEventListener('click', () => {
+            this.close();
+            if (options.onCancel) options.onCancel();
+        });
+        body.querySelector('#modal-confirm-ok')?.addEventListener('click', () => {
+            this.close();
+            if (options.onConfirm) options.onConfirm();
+        });
+    },
+
     // ───── 变体：IconPicker ─────
 
     /**

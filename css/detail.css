@@ -61,6 +61,30 @@ body.detail--closed .detail:not(.detail-secondary) {
     transform: scale(1.1);
 }
 
+.detail-toggle-btn--delete {
+    position: absolute;
+    top: 48px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(200, 40, 40, 0.75);
+    border: 1px solid rgba(255, 80, 80, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff6b6b;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all var(--animation-duration) ease;
+}
+
+.detail-toggle-btn--delete:hover {
+    background-color: rgba(220, 30, 30, 0.9);
+    border-color: rgba(255, 100, 100, 0.6);
+    transform: scale(1.1);
+}
+
 /* ──────────── Content ──────────── */
 
 .detail-content {

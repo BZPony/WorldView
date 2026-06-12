@@ -261,9 +261,30 @@ const CommandHandler = {
                 this.execute(this.createEditFieldCommand(payload));
                 break;
 
+            case 'deleteEntity':
+                this._handleDeleteEntity(payload.entityId);
+                break;
+
             default:
                 console.warn(`CommandHandler: 未知的命令类型 '${type}'`);
         }
+    },
+
+    /**
+     * 删除实体
+     * @param {string} entityId
+     */
+    _handleDeleteEntity(entityId) {
+        const entities = AppState.get('entities');
+        const entity = entities.find(e => e.id === entityId);
+        if (!entity) return;
+        this.execute({
+            type: 'deleteEntity',
+            description: `删除实体 ${entity.components.core?.name || entityId}`,
+            execute: () => {
+                AppState.set('entities', entities.filter(e => e.id !== entityId));
+            }
+        });
     },
 
     /**
