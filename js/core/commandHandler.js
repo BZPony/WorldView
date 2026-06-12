@@ -244,6 +244,14 @@ const CommandHandler = {
                 this._handleCreatePerson(latlng);
                 break;
 
+            case 'createPlace':
+                this._handleCreatePlace(latlng);
+                break;
+
+            case 'createWaypoint':
+                this._handleCreateWaypoint(latlng);
+                break;
+
             default:
                 console.warn(`CommandHandler: 未知的 action '${action}'`);
         }
@@ -322,6 +330,70 @@ const CommandHandler = {
             selectAfter: true
         });
         this.execute(command);
+    },
+
+    /**
+     * 处理"创建地点"命令
+     */
+    async _handleCreatePlace(latlng) {
+        const newPlace = createPlaceData({ name: "新地点", lat: latlng.lat, lng: latlng.lng });
+        const command = this.createCreateEntityCommand({
+            description: '创建地点',
+            entity: newPlace,
+            selectAfter: true
+        });
+        this.execute(command);
+    },
+
+    /**
+     * 处理"创建途径点"命令
+     * 在当前选中实体的 waypoints 中按时间顺序插入新途径点
+     */
+    async _handleCreateWaypoint(latlng) {
+        const selectedItem = AppState.get('selectedItem');
+        if (!selectedItem) return;
+        const entity = selectedItem.data;
+        const waypoints = entity.components.motion?.waypoints;
+        if (!waypoints) return;
+
+        const items = waypoints;
+        const currentTime = AppState.get('currentTime') || { year: 0 };
+        const newItem = DetailPanel._createMotionDefault(items, items.length - 1);
+        newItem.time = {
+            arrival: { ...currentTime },
+            departure: { ...currentTime }
+        };
+        newItem.pos = { type: 'coords', lat: latlng.lat, lng: latlng.lng, name: '新途径点' };
+
+        // 按时间插入：找到离开时间小于当前时间的最后一个 waypoint，在其后插入
+        let insertIdx = items.length;
+        for (let i = 0; i < items.length; i++) {
+            const dep = items[i].time.departure || items[i].time.arrival || items[i].time;
+            if (TimeUtils.compare(dep, currentTime) > 0) {
+                insertIdx = i;
+                break;
+            }
+        }
+
+        const oldValue = JSON.parse(JSON.stringify(items));
+        const newValue = [...items];
+        newValue.splice(insertIdx, 0, newItem);
+
+        EventBus.emit('command:execute', {
+            type: 'editEntityField',
+            entityId: entity.id,
+            componentType: 'motion',
+            path: ['waypoints'],
+            oldValue,
+            newValue
+        });
+
+        // 创建后立即打开新途径点的二级面板
+        AppState.set('secondaryPanelContent', {
+            title: '新途径点',
+            data: { ...newItem, _componentType: 'motion', _index: insertIdx }
+        });
+        AppState.set('isSecondaryPanelOpen', true);
     },
 };
 

@@ -149,6 +149,21 @@ function createRegimeEntity({ id, name, color, icon, ...regimeOption }) {
 /**
  * 创建一个新的人物（纯数据操作）
  */
+function createPlaceData({ name, lat, lng }) {
+    const newId = Date.now().toString();
+    const currentTime = AppState.get('currentTime') || { year: 0, month: 1, day: 1 };
+
+    return createPlaceEntity({
+        id: newId,
+        name: name,
+        color: '#4a90d9',
+        icon: 'place',
+        position: { lat, lng },
+        nameHistory: [{ time: currentTime, name: name }],
+        description: '新地点'
+    });
+}
+
 function createPersonData({ name, lat, lng }) {
     const persons = AppState.get('entities') || [];
     const newId = Date.now().toString();

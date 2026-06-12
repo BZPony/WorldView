@@ -29,3 +29,9 @@ context-menu.css — 右键菜单样式
 .context-menu-item:hover {
     background: #505050d3;
 }
+
+.context-menu-item--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}

@@ -43,6 +43,15 @@ const ContextMenu = {
      * @param {number} y - 鼠标客户坐标 Y
      */
     show(x, y) {
+
+        // 控制"创建途径点"菜单项可用性：仅当选中的实体有 motion 组件时可用
+        const waypointItem = this.menu.querySelector('[data-action="createWaypoint"]');
+        if (waypointItem) {
+            const selectedItem = AppState.get('selectedItem');
+            const hasMotion = selectedItem && selectedItem.data.components.motion;
+            waypointItem.classList.toggle('context-menu-item--disabled', !hasMotion);
+        }
+
         this.menu.classList.remove('is-hidden');
 
         // 先设置初始位置，再读取尺寸（避免出现在上次位置导致跳动）
