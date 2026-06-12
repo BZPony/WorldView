@@ -10,7 +10,7 @@
     transform: translateX(-50%);
 
     width: calc((100vw - var(--left-total) - var(--right-total)) * 0.8);
-    height: 50px;
+    height: 70px;
 
     overflow: hidden;
     background: rgba(20, 20, 20, 0.8);
@@ -57,4 +57,41 @@
 
     background: red;
     transform: translateX(-50%);
+}
+
+/* ──── 缩放按钮 ──── */
+
+.timeline-zoom-btns {
+    position: fixed;
+    bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 1000;
+    transition: left var(--animation-duration) ease;
+}
+
+.timeline-zoom-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(25, 25, 25, 0.75);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all var(--animation-duration) ease;
+}
+
+.timeline-zoom-btn:hover {
+    background-color: rgba(100, 100, 100, 0.8);
+    transform: scale(1.1);
+}
+
+.timeline-zoom-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
 }

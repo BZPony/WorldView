@@ -64,15 +64,21 @@ const Timeline = {
         // 绑定拖动事件
         this._bindDragEvents();
 
+        // 初始化缩放按钮
+        this._initZoomButtons();
+
         // 监听布局变化事件（如侧边栏开关）
         EventBus.on('layout:change', this._onLayoutChange.bind(this));
 
-        // 监听 AppState 中 currentTime 的变化
+        // 监听 AppState 中 currentTime / timeZoomLevel 的变化
         EventBus.on('state:change', this._onStateChange.bind(this));
 
         // 初始渲染（使用 AppState 中的当前时间）
         const initialTime = AppState.get('currentTime');
         this.render(initialTime != null ? initialTime : { year: 0 });
+
+        // 初始缩放按钮状态
+        this._updateZoomButtons();
     },
 
     /**
@@ -156,6 +162,9 @@ const Timeline = {
         if (data.key === 'currentTime') {
             this.render(data.value);
         }
+        if (data.key === 'timeZoomLevel') {
+            this._updateZoomButtons();
+        }
     },
 
     /**
@@ -178,6 +187,56 @@ const Timeline = {
         setTimeout(() => {
             const currentTime = AppState.get('currentTime');
             this.render(currentTime);
+            this._updateZoomButtons();
         }, duration);
+    },
+
+    // ───── 缩放按钮 ─────
+
+    _initZoomButtons() {
+        this._btnZoomIn = document.getElementById('timeline-zoom-in');
+        this._btnZoomOut = document.getElementById('timeline-zoom-out');
+        if (!this._btnZoomIn || !this._btnZoomOut) return;
+
+        this._btnZoomIn.addEventListener('click', () => this._zoomIn());
+        this._btnZoomOut.addEventListener('click', () => this._zoomOut());
+    },
+
+    _zoomIn() {
+        const levels = TimeConfig.zoomLevels;
+        const currentId = AppState.get('timeZoomLevel');
+        const idx = levels.findIndex(z => z.id === currentId);
+        if (idx < levels.length - 1) {
+            AppState.set('timeZoomLevel', levels[idx + 1].id);
+        }
+    },
+
+    _zoomOut() {
+        const levels = TimeConfig.zoomLevels;
+        const currentId = AppState.get('timeZoomLevel');
+        const idx = levels.findIndex(z => z.id === currentId);
+        if (idx > 0) {
+            AppState.set('timeZoomLevel', levels[idx - 1].id);
+        }
+    },
+
+    /**
+     * 根据当前 timeZoomLevel 更新按钮 disabled 状态
+     * 并更新按钮位置
+     */
+    _updateZoomButtons() {
+        if (!this._btnZoomIn || !this._btnZoomOut) return;
+
+        const levels = TimeConfig.zoomLevels;
+        const currentId = AppState.get('timeZoomLevel');
+        const idx = levels.findIndex(z => z.id === currentId);
+
+        this._btnZoomIn.disabled = idx >= levels.length - 1;
+        this._btnZoomOut.disabled = idx <= 0;
+
+        // 位置：时间轴右侧 + 8px 间距
+        const containerRect = this.container.getBoundingClientRect();
+        const btns = this._btnZoomIn.parentElement;
+        btns.style.left = (containerRect.right + 8) + 'px';
     }
 };
