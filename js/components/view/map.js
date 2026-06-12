@@ -37,6 +37,9 @@ const MapView = {
             if (data.key === 'selectedItem') this.renderTimelineEntities();
         });
         EventBus.on('state:change', (data) => {
+            if (data.key === 'timeZoomLevel') this.renderTimelineEntities();
+        });
+        EventBus.on('state:change', (data) => {
             if (data.key === 'isLocationPickerActive') {
                 if (data.value) {
                     const target = AppState.get('locationPickerTarget');
@@ -214,6 +217,9 @@ const MapView = {
         const getOpacity = (t) => { if (!ws) return 1; const ft = 1 / 3; if (t >= ft) return 1; if (t <= 0) return 0; return t / ft; };
 
         waypoints.forEach((wp, idx) => {
+            // 分辨率过滤：全局精度 < waypoint 精度时跳过
+            const zoomLevel = AppState.get('timeZoomLevel') || 'year';
+            if (!TimeUtils.isVisible(wp.resolution || 'year', zoomLevel)) return;
             // place 绑定的途径点不创建 marker
             if (wp.pos && wp.pos.type === 'place') return;
             const wt = wp.time.arrival || wp.time.departure || wp.time;

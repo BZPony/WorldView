@@ -128,7 +128,7 @@ const TimeUtils = {
         const resIdx = TimeConfig.getZoomIndex(resolution);
         const zoomIdx = TimeConfig.getZoomIndex(currentZoomLevel);
         if (resIdx === -1 || zoomIdx === -1) return true; // 未知级别默认显示
-        return resIdx >= zoomIdx; // 索引越大精度越高
+        return zoomIdx >= resIdx; // 全局精度 ≥ waypoint 精度时显示
     },
 
     /**
