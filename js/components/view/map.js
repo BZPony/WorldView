@@ -213,7 +213,7 @@ const MapView = {
         const wd = ws ? TimeUtils.diff(ws, currentTime) : 0;
         const getOpacity = (t) => { if (!ws) return 1; const ft = 1 / 3; if (t >= ft) return 1; if (t <= 0) return 0; return t / ft; };
 
-        waypoints.forEach(wp => {
+        waypoints.forEach((wp, idx) => {
             // place 绑定的途径点不创建 marker
             if (wp.pos && wp.pos.type === 'place') return;
             const wt = wp.time.arrival || wp.time.departure || wp.time;
@@ -225,7 +225,20 @@ const MapView = {
             if (!wpPos) return;
             const name = this._getWaypointDisplayName(wp) || `(${wpPos.lat.toFixed(2)}, ${wpPos.lng.toFixed(2)})`;
             const icon = this._createWaypointIcon(color, alpha, name);
-            const marker = L.marker([wpPos.lat, wpPos.lng], { icon, interactive: false, zIndexOffset: -100, opacity: alpha }).addTo(this._entityLayerGroup);
+            const marker = L.marker([wpPos.lat, wpPos.lng], { icon, interactive: true, zIndexOffset: -100, opacity: alpha }).addTo(this._entityLayerGroup);
+            marker.addEventListener('click', (e) => {
+                if (AppState.get('isLocationPickerActive')) return;
+                L.DomEvent.stopPropagation(e.originalEvent);
+                // 选中实体 → 打开一级面板
+                EventBus.emit('ui:select', { type: 'entity', id: entity.id });
+                // 打开该途径点的二级面板
+                const item = entity.components.motion?.waypoints?.[idx];
+                if (!item) return;
+                const title = this._getWaypointDisplayName(item) || `途径点 ${idx + 1}`;
+                const data = { ...item, _componentType: 'motion', _index: idx };
+                AppState.set('secondaryPanelContent', { title, data });
+                AppState.set('isSecondaryPanelOpen', true);
+            });
             entity._waypointMarkers.push(marker);
         });
     },
