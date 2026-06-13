@@ -46,6 +46,11 @@ function createDetailPanel(config) {
         },
 
         _makeEditable(valueEl) {
+            // 如果已经在编辑中（内部已有 input 或 contentEditable），跳过
+            if (valueEl.querySelector('input, textarea') || valueEl.contentEditable === 'true') {
+                return;
+            }
+
             const field = valueEl.dataset.field;
             if (field === 'color') this._editColor(valueEl);
             else if (field === 'icon') this._editIcon(valueEl);
@@ -90,26 +95,40 @@ function createDetailPanel(config) {
         },
 
         _editColor(valueEl) {
+            // 直接在当前 valueEl 内部创建一个可见的颜色输入框
             const input = document.createElement('input');
             input.type = 'color';
             const colorMatch = valueEl.textContent.match(/#[0-9a-fA-F]{6}/);
             input.value = colorMatch ? colorMatch[0] : '#4f454f';
-            input.className = 'detail-edit-color';
-            input.style.cssText = 'position:absolute;opacity:0;pointer-events:none';
+            input.className = 'detail-edit-color-inline';  // 新的 CSS 类
             input.dataset.component = valueEl.dataset.component;
             input.dataset.field = 'color';
-            document.body.appendChild(input);
 
-            const cleanup = () => { if (document.body.contains(input)) document.body.removeChild(input); };
-            input.addEventListener('input', () => {
-                this._saveField({ component: input.dataset.component, field: 'color', rawValue: input.value });
-                cleanup();
-            });
-            input.addEventListener('blur', () => {
+            // 替换 valueEl 的内容
+            valueEl.textContent = '';
+            valueEl.appendChild(input);
+
+            const cleanup = () => {
+                if (valueEl.contains(input)) {
+                    valueEl.removeChild(input);
+                }
                 this.renderDetail(this._lastData);
+            };
+
+            input.addEventListener('input', () => {
+                this._saveField({
+                    component: input.dataset.component,
+                    field: 'color',
+                    rawValue: input.value
+                });
+            });
+
+            input.addEventListener('blur', () => {
                 cleanup();
             });
-            input.click();
+
+            // 用户需要自己点击这个 input 来打开颜色面板
+            // 不需要 input.click()
         },
 
         _editIcon(valueEl) {
