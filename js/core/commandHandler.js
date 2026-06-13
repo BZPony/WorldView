@@ -252,6 +252,10 @@ const CommandHandler = {
                 this._handleCreateWaypoint(latlng);
                 break;
 
+            case 'deleteEntity':
+                this._handleDeleteFromContextMenu(payload);
+                break;
+
             default:
                 console.warn(`CommandHandler: 未知的 action '${action}'`);
         }
@@ -343,6 +347,33 @@ const CommandHandler = {
             selectAfter: true
         });
         this.execute(command);
+    },
+
+    /**
+     * 处理来自 ContextMenu 的删除请求（Sidebar 右键）
+     * 弹出确认弹窗，确认后走 command:execute 路径
+     */
+    _handleDeleteFromContextMenu(payload) {
+        const entityId = payload.context?.entityId;
+        if (!entityId) return;
+        const entities = AppState.get('entities') || [];
+        const entity = entities.find(e => e.id === entityId);
+        if (!entity) return;
+        const name = entity.components.core?.name || '未命名实体';
+        Modal.openConfirm({
+            title: '删除实体',
+            message: `确定要删除 <strong>${name}</strong> 吗？`,
+            hint: '此操作可通过 Ctrl+Z 撤销。',
+            onConfirm: () => {
+                // 仅当删除的是当前选中的实体时才关闭面板
+                const sel = AppState.get('selectedItem');
+                if (sel && sel.data && sel.data.id === entityId) {
+                    AppState.set('isSecondaryPanelOpen', false);
+                    AppState.set('selectedItem', null);
+                }
+                EventBus.emit('command:execute', { type: 'deleteEntity', entityId });
+            }
+        });
     },
 
     /**

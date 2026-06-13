@@ -90,6 +90,19 @@ const Sidebar = {
             }
 
         });
+
+        container.addEventListener('contextmenu', (e) => {
+            const item = e.target.closest('.sidebar-content-subitem');
+            if (!item) return;
+            e.preventDefault();
+            const entityId = item.dataset.entityId;
+            if (entityId) {
+                ContextMenu.show(e.clientX, e.clientY, {
+                    type: 'sidebar-entity',
+                    entityId
+                });
+            }
+        });
     },
     /**
      * 响应 AppState 变化

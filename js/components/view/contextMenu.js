@@ -1,116 +1,109 @@
 /**
  * 右键菜单模块（全局单例）
  * 职责：
- * - 在地图右键时显示菜单
+ * - 根据调用场景（地图 / Sidebar 等）动态渲染不同的菜单项
  * - 自动调整位置，防止溢出屏幕
  * - 点击菜单外部自动隐藏
  * - 菜单项点击时通过 EventBus 通知外部
  */
 const ContextMenu = {
-    // DOM 元素缓存
     menu: null,
     map: null,
     lastClickLatLng: null,
+    _context: null,
 
-    /**
-     * 初始化模块
-     * @param {Object} mapInstance - Leaflet 地图实例
-     */
     init(mapInstance) {
         this.map = mapInstance;
         this.menu = document.getElementById('context-menu');
+        if (!this.menu) { console.error('ContextMenu: 找不到 #context-menu 元素'); return; }
 
-        if (!this.menu) {
-            console.error('ContextMenu: 找不到 #context-menu 元素');
-            return;
-        }
-
-        // 绑定地图右键事件
         this.map.on('contextmenu', this._onMapRightClick.bind(this));
-
-        // 点击其他地方关闭菜单
         document.addEventListener('mousedown', this._onDocumentMouseDown.bind(this));
-
-        // 为菜单项绑定点击事件
-        this.menu.querySelectorAll('.context-menu-item').forEach(item => {
-            item.addEventListener('click', this._onMenuItemClick.bind(this));
-        });
     },
 
     /**
      * 显示菜单
-     * @param {number} x - 鼠标客户坐标 X
-     * @param {number} y - 鼠标客户坐标 Y
+     * @param {number} x
+     * @param {number} y
+     * @param {Object} [context] — { type: 'map' | 'sidebar-entity', ... }
      */
-    show(x, y) {
-
-        // 控制"创建途径点"菜单项可用性：仅当选中的实体有 motion 组件时可用
-        const waypointItem = this.menu.querySelector('[data-action="createWaypoint"]');
-        if (waypointItem) {
-            const selectedItem = AppState.get('selectedItem');
-            const hasMotion = selectedItem && selectedItem.data.components.motion;
-            waypointItem.classList.toggle('context-menu-item--disabled', !hasMotion);
-        }
-
+    show(x, y, context = { type: 'map' }) {
+        this._buildMenuItems(context);
         this.menu.classList.remove('is-hidden');
 
-        // 先设置初始位置，再读取尺寸（避免出现在上次位置导致跳动）
         this.menu.style.left = x + 'px';
         this.menu.style.top = y + 'px';
 
-        // 读取菜单实际尺寸
         const menuWidth = this.menu.offsetWidth;
         const menuHeight = this.menu.offsetHeight;
-
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
-
-        // 超出右边界
-        if (x + menuWidth > screenW) {
-            x = screenW - menuWidth - 5;
-        }
-        // 超出下边界
-        if (y + menuHeight > screenH) {
-            y = screenH - menuHeight - 5;
-        }
-
+        if (x + menuWidth > screenW) x = screenW - menuWidth - 5;
+        if (y + menuHeight > screenH) y = screenH - menuHeight - 5;
         this.menu.style.left = x + 'px';
         this.menu.style.top = y + 'px';
     },
 
-    /**
-     * 隐藏菜单
-     */
     hide() {
         this.menu.classList.add('is-hidden');
     },
 
-    // ---------- 内部事件处理 ----------
+    // ───── 动态菜单构建 ─────
+
+    _buildMenuItems(context) {
+        this._context = context;
+        const items = this._getMenuConfig(context);
+        this.menu.innerHTML = '';
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'context-menu-item';
+            div.dataset.action = item.action;
+            div.textContent = item.label;
+            if (item.disabled) div.classList.add('context-menu-item--disabled');
+            div.addEventListener('click', () => { this._onItemClick(item.action); this.hide(); });
+            this.menu.appendChild(div);
+        });
+    },
+
+    _getMenuConfig(context) {
+        switch (context.type) {
+            case 'map':
+                return [
+                    { action: 'createPerson', label: '创建人物' },
+                    { action: 'createPlace', label: '创建地点' },
+                    { action: 'createWaypoint', label: '创建途径点', disabled: !this._hasMovableSelected() }
+                ];
+            case 'sidebar-entity':
+                return [
+                    { action: 'deleteEntity', label: '删除' }
+                ];
+            default:
+                return [];
+        }
+    },
+
+    _hasMovableSelected() {
+        const selectedItem = AppState.get('selectedItem');
+        return selectedItem && !!selectedItem.data.components.motion;
+    },
+
+    _onItemClick(action) {
+        EventBus.emit('contextMenu:action', {
+            action,
+            latlng: this.lastClickLatLng,
+            context: this._context
+        });
+    },
+
+    // ───── 地图右键 ─────
 
     _onMapRightClick(event) {
         event.originalEvent.preventDefault();
-        const x = event.originalEvent.clientX;
-        const y = event.originalEvent.clientY;
         this.lastClickLatLng = event.latlng;
-
-        this.show(x, y);
+        this.show(event.originalEvent.clientX, event.originalEvent.clientY, { type: 'map' });
     },
 
     _onDocumentMouseDown(event) {
-        // 左键点击菜单外部时关闭
-        if (event.button === 0 && !this.menu.contains(event.target)) {
-            this.hide();
-        }
-    },
-
-    _onMenuItemClick(event) {
-        const action = event.target.dataset.action;
-        if (action) {
-            EventBus.emit('contextMenu:action', {
-                action,
-                latlng: this.lastClickLatLng
-            });
-        }
-        this.hide();
+        if (event.button === 0 && !this.menu.contains(event.target)) this.hide();
     }
 };
