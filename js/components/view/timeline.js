@@ -55,6 +55,16 @@ const Timeline = {
         this.config.startTimestamp = TimeUtils.toTimestamp({ year: startYear });
         this.config.endTimestamp = TimeUtils.toTimestamp({ year: endYear });
 
+        // 创建刻度容器（绝对定位，占满整个 track 高度）
+        this._ticksLayer = document.createElement('div');
+        this._ticksLayer.className = 'timeline-ticks-layer';
+        this.track.appendChild(this._ticksLayer);
+
+        // 创建生命条容器
+        const layer = document.createElement('div');
+        layer.className = 'timeline-lifespan-layer';
+        this.track.appendChild(layer);
+
         // 生成刻度
         this._generateTicks();
 
@@ -101,10 +111,12 @@ const Timeline = {
         this.track.style.width = this.config.trackWidth + 'px';
 
         this._renderVisibleTicks(zoomLevel);
+        this._renderLifespanBars();
     },
 
     _renderVisibleTicks(zoomLevel) {
-        this.track.innerHTML = '';
+        if (!this._ticksLayer) return;
+        this._ticksLayer.innerHTML = '';
 
         const tickWidth = this.config.tickWidth;
         const containerWidth = this.container.clientWidth;
@@ -124,7 +136,7 @@ const Timeline = {
             tick.className = 'timeline-tick';
             tick.textContent = label;
             tick.style.left = (globalIndex * tickWidth) + 'px';
-            this.track.appendChild(tick);
+            this._ticksLayer.appendChild(tick);
         }
     },
 
@@ -190,6 +202,9 @@ const Timeline = {
         if (data.key === 'timeZoomLevel') {
             this._updateZoomButtons();
         }
+        if (data.key === 'selectedItem' || data.key === 'pinnedEntities') {
+            this._renderLifespanBars();
+        }
     },
 
     /**
@@ -214,6 +229,103 @@ const Timeline = {
         this._lastTickCenter = tickIndexCenter;
         const zoomLevel = AppState.get('timeZoomLevel') || 'year';
         this._renderVisibleTicks(zoomLevel);
+        this._renderLifespanBars();
+    },
+
+    // ───── 生命条 ─────
+
+    _renderLifespanBars() {
+        const layer = this.track.querySelector('.timeline-lifespan-layer');
+        if (!layer) { console.warn('Lifespan layer not found'); return; }
+        layer.innerHTML = '';
+
+        const entities = AppState.get('entities') || [];
+        const selectedItem = AppState.get('selectedItem');
+        const pinnedIds = AppState.get('pinnedEntities') || [];
+        const trackWidth = this.config.trackWidth;
+        const startTs = this.config.startTimestamp;
+        const totalTs = this.config.endTimestamp - startTs;
+
+        const toPx = (time) => {
+            const ts = TimeUtils.toTimestamp(time);
+            return ((ts - startTs) / totalTs) * trackWidth;
+        };
+
+        const toShow = [];
+        if (selectedItem && (selectedItem.data.components.motion || selectedItem.data.components.person)) {
+            toShow.push(selectedItem.data);
+        }
+        for (const eid of pinnedIds) {
+            const entity = entities.find(e => e.id === eid);
+            if (entity && !toShow.includes(entity)) {
+                toShow.push(entity);
+            }
+        }
+
+        console.log(`Lifespan: toShow=${toShow.length} entities, trackWidth=${trackWidth}`);
+
+        toShow.forEach((entity, rowIndex) => {
+            const span = getLifespan(entity);
+            if (!span || !span.start || !span.end) { console.log(`Lifespan skip: ${entity.components.core?.name} - no span`); return; }
+            const top = 30 - rowIndex * 8;
+            const color = entity.components.core.color || '#888';
+            const hasPerson = !!span.birthTime && !!span.deathTime && TimeUtils.compare(span.birthTime, span.deathTime) !== 0;
+
+            console.log(`Lifespan: ${entity.components.core?.name} start=${span.start?.year} end=${span.end?.year} birth=${span.birthTime?.year} death=${span.deathTime?.year} left=${toPx(span.start).toFixed(0)}px width=${(toPx(span.end) - toPx(span.start)).toFixed(0)}px`);
+
+            if (hasPerson) {
+                if (TimeUtils.compare(span.start, span.birthTime) < 0) {
+                    const bar = document.createElement('div');
+                    bar.className = 'timeline-lifespan-bar timeline-lifespan-bar--dashed';
+                    bar.style.left = toPx(span.start) + 'px';
+                    bar.style.width = (toPx(span.birthTime) - toPx(span.start)) + 'px';
+                    bar.style.top = top + 'px';
+                    bar.style.backgroundColor = color;
+                    layer.appendChild(bar);
+                }
+                const iconBaby = document.createElement('div');
+                iconBaby.className = 'timeline-lifespan-icon';
+                iconBaby.style.left = (toPx(span.birthTime) - 5) + 'px';
+                iconBaby.style.top = (top - 3) + 'px';
+                iconBaby.innerHTML = getIcon('baby', 10);
+                iconBaby.style.color = color;
+                layer.appendChild(iconBaby);
+
+                const barSolid = document.createElement('div');
+                barSolid.className = 'timeline-lifespan-bar';
+                barSolid.style.left = toPx(span.birthTime) + 'px';
+                barSolid.style.width = (toPx(span.deathTime) - toPx(span.birthTime)) + 'px';
+                barSolid.style.top = top + 'px';
+                barSolid.style.backgroundColor = color;
+                layer.appendChild(barSolid);
+
+                const iconSkull = document.createElement('div');
+                iconSkull.className = 'timeline-lifespan-icon';
+                iconSkull.style.left = (toPx(span.deathTime) - 5) + 'px';
+                iconSkull.style.top = (top - 3) + 'px';
+                iconSkull.innerHTML = getIcon('skull', 10);
+                iconSkull.style.color = color;
+                layer.appendChild(iconSkull);
+
+                if (TimeUtils.compare(span.deathTime, span.end) < 0) {
+                    const barAfter = document.createElement('div');
+                    barAfter.className = 'timeline-lifespan-bar timeline-lifespan-bar--dashed';
+                    barAfter.style.left = toPx(span.deathTime) + 'px';
+                    barAfter.style.width = (toPx(span.end) - toPx(span.deathTime)) + 'px';
+                    barAfter.style.top = top + 'px';
+                    barAfter.style.backgroundColor = color;
+                    layer.appendChild(barAfter);
+                }
+            } else {
+                const bar = document.createElement('div');
+                bar.className = 'timeline-lifespan-bar';
+                bar.style.left = toPx(span.start) + 'px';
+                bar.style.width = (toPx(span.end) - toPx(span.start)) + 'px';
+                bar.style.top = top + 'px';
+                bar.style.backgroundColor = color;
+                layer.appendChild(bar);
+            }
+        });
     },
 
     _onLayoutChange() {

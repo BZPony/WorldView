@@ -384,6 +384,25 @@ DetailPanel.init = function () {
         });
     }
 
+    // Thumbtack 按钮
+    this._updateThumbtackButton();
+    const btnThumbtack = document.querySelector('#detail-btn-thumbtack');
+    if (btnThumbtack) {
+        btnThumbtack.addEventListener('click', () => {
+            const sel = AppState.get('selectedItem');
+            if (!sel) return;
+            const pinned = AppState.get('pinnedEntities') || [];
+            const idx = pinned.indexOf(sel.data.id);
+            if (idx >= 0) {
+                pinned.splice(idx, 1);
+            } else {
+                pinned.push(sel.data.id);
+            }
+            AppState.set('pinnedEntities', pinned);
+            this._updateThumbtackButton();
+        });
+    }
+
     EventBus.on('state:change', this._onStateChange.bind(this));
 
     this.elements.content.addEventListener('click', (e) => {
@@ -422,6 +441,7 @@ DetailPanel._onStateChange = function (data) {
                 if (data.value) { this.renderDetail(data.value); this._toggle(true); }
                 else { this._toggle(false); }
             }
+            this._updateThumbtackButton();//你的改动
             break;
         case 'isDetailPanelOpen':
             this._updateOpenState(data.value);
@@ -631,6 +651,15 @@ DetailPanel._computeDefaultTime = function (items, afterIndex, step, getPrev, ge
     }
     const lastTs = TimeUtils.toTimestamp(getPrev(items[afterIndex]));
     return TimeUtils.timestampToTime(lastTs + 10 * step);
+};
+
+DetailPanel._updateThumbtackButton = function () {
+    const btn = document.getElementById('detail-btn-thumbtack');
+    if (!btn) return;
+    const sel = AppState.get('selectedItem');
+    if (!sel) return;
+    const pinned = AppState.get('pinnedEntities') || [];
+    btn.classList.toggle('active', pinned.includes(sel.data.id));
 };
 
 window.DetailPanel = DetailPanel;

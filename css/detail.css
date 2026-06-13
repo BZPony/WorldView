@@ -61,9 +61,37 @@ body.detail--closed .detail:not(.detail-secondary) {
     transform: scale(1.1);
 }
 
-.detail-toggle-btn--delete {
+.detail-toggle-btn--thumbtack {
     position: absolute;
     top: 48px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(25, 25, 25, 0.75);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all var(--animation-duration) ease;
+}
+
+.detail-toggle-btn--thumbtack:hover {
+    background-color: rgba(100, 100, 100, 0.8);
+    transform: scale(1.1);
+}
+
+.detail-toggle-btn--thumbtack.active {
+    background-color: rgba(50, 120, 230, 0.75);
+    border: 1px solid rgba(80, 150, 255, 0.5);
+}
+
+.detail-toggle-btn--delete {
+    position: absolute;
+    top: 86px;
     right: 10px;
     width: 32px;
     height: 32px;

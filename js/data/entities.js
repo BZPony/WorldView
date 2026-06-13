@@ -180,6 +180,43 @@ function createPersonData({ name, lat, lng }) {
     });
 }
 
+/**
+ * 获取实体的生命跨度（start = min(birth, firstWaypoint), end = max(death, lastWaypoint)）
+ * 用于时间轴生命条渲染
+ * @param {Object} entity
+ * @returns {Object|null} { start, end, birthTime?, deathTime? }
+ */
+function getLifespan(entity) {
+    const person = entity.components.person;
+    const motion = entity.components.motion;
+    const waypoints = motion ? motion.waypoints : [];
+    const birthTime = person ? person.birthTime : null;
+    const deathTime = person ? person.deathTime : null;
+
+    let start = birthTime;
+    if (waypoints.length > 0) {
+        const firstArrival = waypoints[0].time.arrival || waypoints[0].time.departure || waypoints[0].time;
+        if (firstArrival && (!start || TimeUtils.compare(firstArrival, start) < 0)) {
+            start = firstArrival;
+        }
+    }
+
+    let end = deathTime;
+    if (waypoints.length > 0) {
+        const lastDeparture = waypoints[waypoints.length - 1].time.departure
+            || waypoints[waypoints.length - 1].time.arrival
+            || waypoints[waypoints.length - 1].time;
+        if (lastDeparture && (!end || TimeUtils.compare(lastDeparture, end) > 0)) {
+            end = lastDeparture;
+        }
+    }
+
+    if (!start && !end) return null;
+    if (!start && end) start = end;
+    if (!end && start) end = start;
+    return { start, end, birthTime, deathTime };
+}
+
 // 新实体数组
 const entities = [
     // ---------- 人物 ----------

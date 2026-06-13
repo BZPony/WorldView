@@ -56,16 +56,6 @@
 
             <!-- 资源管理器 -->
             <div class="sidebar-content-panel sidebar-content-panel--explorer">
-                <!-- 
-                <div class="sidebar-content-panel-btn" data-name="characters">
-                    <span class="icon" data-name="person"></span>
-                    人物
-                    <span class="icon" data-name="rightArrow"></span>
-                </div>
-
-                <div class="sidebar-content-subpanel">
-                </div>
-                -->
             </div>
     </aside>
 
@@ -73,6 +63,9 @@
         <div class="detail-header">
             <button class="detail-toggle-btn--close" id="detail-btn-close">
                 <span class="icon" data-name="cross"></span>
+            </button>
+            <button class="detail-toggle-btn--thumbtack" id="detail-btn-thumbtack">
+                <span class="icon" data-name="thumbtack"></span>
             </button>
             <button class="detail-toggle-btn--delete" id="detail-btn-delete">
                 <span class="icon" data-name="delete"></span>
@@ -157,7 +150,7 @@
     <script src="js/components/view/modal.js"></script>
     <script src="js/components/view/timeline.js"></script>
     <script src="js/components/view/sidebar.js"></script>
-    <!-- Detail Panel 渲染器（renderHelpers → componentRenderers → secondaryRenderers → detail） -->
+    <!-- Detail Panel 渲染器 -->
     <script src="js/components/detail/componentRenderers/core.js"></script>
     <script src="js/components/detail/componentRenderers/motion.js"></script>
     <script src="js/components/detail/componentRenderers/nameHistory.js"></script>
