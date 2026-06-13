@@ -93,6 +93,64 @@
 - **`nameHistory`（名称演变）** — 负责实体名称随时间变化的记录
 - **`place`（固定位置）** — 负责静态实体的位置信息
 
+### 12. 途径点位置绑定
+
+途径点的 `pos` 字段支持两种类型，实现灵活的位置引用：
+
+- **坐标模式** — `{ type: 'coords', lat, lng, name }`，直接指定经纬度和显示名称
+- **地点绑定模式** — `{ type: 'place', entityId }`，绑定到已有的 place 实体，当 place 实体位置变更时途径点自动跟随移动
+
+详情面板中可通过 Location Picker 切换位置绑定类型。
+
+### 13. 地点选择器（Location Picker）
+
+途径点位置编辑时，可通过"定位"按钮激活地图点选模式：
+
+- 点击地点实体标记 → 绑定到该 place 实体（`type: 'place'`）
+- 点击地图空白处 → 创建坐标位置（`type: 'coords'`）
+- 按 ESC 键退出点选模式
+
+### 14. 时间轴缩放系统
+
+时间轴支持多个缩放级别，实现从百年到分钟的精度切换：
+
+- **缩放级别** — 百年 / 十年 / 年 / 月 / 日 五级缩放，通过时间轴上的缩放按钮切换
+- **动态刻度再生** — 每次缩放或滚动时重新计算可见刻度，仅渲染 ~14 个 DOM 节点（虚拟滚动）
+- **途径点按分辨率过滤** — 每个途径点携带 `resolution` 字段，低精度途径点在放大后自动显示
+
+### 15. Lifespan Bars & Thumbtack
+
+时间轴上方显示实体的活跃时间段彩色条带：
+
+- **Lifespan Bars** — 彩色条带从 `min(birth, firstWaypoint)` 到 `max(death, lastWaypoint)`，底部向上堆叠排列
+- **Person 实体** — 出生-死亡区间显示虚线 + 婴儿/骷髅图标，出生前/死亡后的活动区间显示虚线
+- **Motion 实体** — 仅显示实线表示途径点覆盖的时间范围
+- **Thumbtack 图钉** — 详情面板"图钉"按钮可将实体固定到时间轴显示其 lifespan bar，再次点击取消固定
+
+### 16. 右键菜单动态架构
+
+右键菜单从静态 HTML 重构为动态场景渲染：
+
+- **地图右键** — 根据点击位置动态显示创建 Place / Person / Organization / Regime / Waypoint
+- **侧边栏实体右键** — 仅显示删除选项
+- **创建途径点** — 自动插入到 motion 途径点数组的正确时间位置，创建后自动打开副面板编辑
+- 菜单项根据上下文动态启用/禁用
+
+### 17. 实体删除
+
+支持两种方式删除实体，均走 CommandHandler 支持 undo/redo：
+
+- **详情面板红色删除按钮** — 点击后弹出确认弹窗，确认后删除当前选中的实体
+- **侧边栏右键菜单** — 右键实体项选择删除，若删除的正是当前选中实体则自动关闭面板
+
+### 18. 副面板（Secondary Panel）
+
+支持同时编辑两个实体的详情面板：
+
+- 点击途径点标记或编辑途径点时自动打开副面板
+- 副面板与主面板独立，可同时显示不同实体的信息
+- 数据修改后自动同步刷新副面板内容
+
 ## 快速开始
 
 1. 克隆或下载项目，确保文件结构如上所示。
@@ -126,8 +184,22 @@ WorldView/
 ├── readme.md               # 项目文档
 ├── changeLog.md            # 版本变更日志
 ├── devlog/
-│   ├── component-refactor.md   # 组件拆分设计文档
-│   └── time-system-design.md   # 时间系统设计文档
+│   ├── component-refactor.md         # 组件拆分设计文档
+│   ├── time-system-design.md         # 时间系统设计文档
+│   ├── context-menu-create-place.md  # 右键创建 Place 设计
+│   ├── context-menu-create-waypoint.md # 右键创建途径点设计
+│   ├── context-menu-dynamic.md       # 动态右键菜单架构
+│   ├── entity-delete.md              # 实体删除功能设计
+│   ├── location-picker.md            # 地点选择器设计
+│   ├── resolution-picker.md          # 分辨率选择器设计
+│   ├── secondary-detail-panel.md     # 副面板设计
+│   ├── secondary-panel-edit.md       # 副面板编辑设计
+│   ├── time-edit-design.md           # 时间编辑设计
+│   ├── time-resolution-zoom.md       # 时间轴缩放置系统
+│   ├── timeline-lifespan-bars.md     # Lifespan Bars 设计
+│   ├── timeline-time-precision.md    # 时间轴精度提升设计
+│   ├── waypoint-crud.md              # 途径点 CRUD 设计
+│   └── waypoint-place-binding.md     # 途径点位置绑定设计
 ├── css/
 │   ├── base.css            # 基础样式 + 地图标记样式 + 途径点样式
 │   ├── sidebar.css         # 侧边栏样式
@@ -209,14 +281,13 @@ entities.push(newEntity);
 
 ## 未来优化方向
 
-- 完善除人物外的其他资源对象（组织、政权、事件、物品等）。
-- 完善右键地图创建资源功能。
-- 添加筛选显示功能。
-- 完善时间轴的显示功能。
-- 添加时间轴缩放功能。
-- 添加自定义地图功能。
-- 添加资源分组功能。
-- 添加历史大事件系统。
-- mirrowfish大模型支持
-- motion/nameHistory 途径点添加/删除功能
+- 完善除人物外的其他资源对象（事件、物品等组件）。
+- 添加自定义地图功能（地图主题切换、自定义瓦片源）。
+- 添加资源分组功能（按类别/标签筛选显示）。
+- 添加历史大事件系统（全局事件节点与可视化）。
+- 添加时间轴播放功能（自动推进时间的动画）。
+- 添加 entity 搜索功能。
+- 途径点子轨迹展开（嵌套途径点）。
+- 支持数据导入/导出（JSON 格式）。
+- mirrowfish 大模型支持。
 - ...

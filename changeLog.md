@@ -4,6 +4,45 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.6.0] - 2026-06-14
+
+### Added
+
+- **途径点位置绑定** — 途径点 `pos` 字段支持两种类型：`{ type: 'coords', lat, lng, name }` 直接坐标模式 和 `{ type: 'place', entityId }` 地点绑定模式，绑定后途径点自动跟随 place 实体位置变更
+- **地点选择器（Location Picker）** — 途径点位置编辑新增"定位"按钮，点击后激活地图点选模式，可绑定地点实体或选取新坐标
+- **时间轴缩放系统** — 支持百年 / 十年 / 年 / 月 / 日五级缩放级别，动态刻度再生 + 虚拟滚动（仅 ~14 个 DOM 节点），途径点按 `resolution` 分级过滤
+- **Lifespan Bars** — 时间轴上方显示实体活跃时间段的彩色条带，Person 实体出生-死亡区间显示虚线 + 👶💀 图标，Motion 实体显示实线，底部向上堆叠排列
+- **Thumbtack 图钉** — 详情面板"图钉"按钮可将实体固定到时间轴显示其 lifespan bar，按钮仅对有 motion 组件的实体可见
+- **副面板（Secondary Panel）** — 支持同时编辑两个实体的详情面板，点击途径点标记或创建途径点后自动打开，数据修改后自动同步刷新
+- **实体删除** — 详情面板红色删除按钮 + 侧边栏右键删除，统一走 `CommandHandler` 支持 undo/redo，删除选中实体时自动关闭面板
+- **右键菜单动态架构** — `ContextMenu` 从静态 HTML 重构为动态场景渲染（`_buildMenuItems` / `_getMenuConfig`），地图右键显示创建菜单，侧边栏实体右键仅显示删除
+- **右键创建 Place / Waypoint** — 地图右键菜单新增创建 Place 实体 和创建 Waypoint 到现有 motion 实体
+- **途径点 CRUD** — 支持添加/编辑/删除 motion 实体的途径点，地图和详情面板联动更新
+- **侧边栏状态保持** — `renderResourceList()` 刷新后保留面板展开/折叠状态
+- **途径点标记点击交互** — 途径点标记从 `interactive:false` 改为可点击，点击后选中实体并打开副面板
+- **时间轴精度提升** — 内部使用分钟级时间戳替代 `Math.round(year)`，像素到年份精度从 ±1 年提升到 ±1 分钟
+- **颜色编辑器改进** — 使用内联 `<input type="color">` 替代弹出式选择器，解决浏览器安全策略阻止 `input.click()` 的问题
+- 新增 `getLifespan()` 函数计算实体时间跨度
+- 新增 `pinnedEntities` 状态字段
+- 新增 Path、edit、newWindow、baby、skull SVG 图标
+
+### Changed
+
+- 途径点数据结构从 `lat/lng/name` 平铺改为 `pos` 嵌套对象
+- `TimeUtils.toOffset/offsetToTime` 重命名为 `toTimestamp/timestampToTime` 避免与 Timeline 像素偏移概念混淆
+- 时间轴刻度渲染改为操作独立的 `_ticksLayer` 容器，与 `_lifespanLayer` 分离避免 innerHTML 冲突
+- 详情面板按钮布局从绝对定位改为 flex 列布局，支持 Thumbtack 按钮显示/隐藏时的自适应折叠
+- `isVisible` 逻辑修正为 `zoomIdx >= resIdx`（放大时显示更多低精度途径点）
+- 右键菜单初始化签约为 `ContextMenu.init(map)`，不再依赖静态 HTML
+
+### Fixed
+
+- 修复时间轴刻度渲染清空 lifespan layer 导致条带不显示的问题（分离 `_ticksLayer`）
+- 修复副作用面板数据修改后内容不同步的问题（`_syncSecondaryPanelContent` 自动刷新）
+- 修复颜色编辑器因 `click` 事件重新触发 `_editColor` 导致输入框被反复销毁重建的问题
+- 修复 Thumbtack 按钮对无 motion 组件实体仍然显示的问题
+- 修复 lifespan bars 在选中实体后丢失的问题（监听 `selectedItem` 和 `pinnedEntities` 变更）
+
 ## [0.5.0] - 2026-06-06
 
 ### Added
