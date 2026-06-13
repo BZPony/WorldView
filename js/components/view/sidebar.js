@@ -21,15 +21,20 @@ const Sidebar = {
         this.elements.btnClose = document.getElementById('sidebar-btn-close');
         this.elements.btnOpen = document.getElementById('sidebar-btn-open');
         this.elements.explorerPanel = document.querySelector('.sidebar-content-panel--explorer');
+        this.elements.filterPanel = document.querySelector('.sidebar-content-panel--filter');
+        this.elements.filterTabBtn = document.querySelector('.sidebar-tabs-btn[data-name="filter"]');
 
         // 2. 绑定开关按钮事件
         this.elements.btnClose.addEventListener('click', () => this._toggle(false));
         this.elements.btnOpen.addEventListener('click', () => this._toggle(true));
 
-        // 3. 动态生成资源面板，并绑定点击事件
+        // 3. 初始化筛选面板
+        this._initFilterPanel();
+
+        // 4. 动态生成资源面板，并绑定点击事件
         this._initContentSubitemClick(this.elements.explorerPanel);
 
-        // 3. 绑定 Tab 切换
+        // 5. 绑定 Tab 切换
         this._initTabSwitching();
 
         // 4. 监听 AppState 变化
@@ -38,6 +43,16 @@ const Sidebar = {
         // 5. 根据初始状态设置 body 类
         if (AppState.get('isSidebarOpen') === false) {
             this.elements.body.classList.add('sidebar--closed');
+        }
+
+        // 6. 监听地图移动/缩放，当地图范围筛选启用时刷新列表
+        if (MapView.map) {
+            MapView.map.on('moveend', () => {
+                const criteria = AppState.get('filterCriteria');
+                if (criteria && criteria.mapBounds && criteria.mapBounds.enabled) {
+                    this.renderResourceList();
+                }
+            });
         }
     },
 
@@ -49,7 +64,226 @@ const Sidebar = {
         AppState.set('isSidebarOpen', open);
     },
 
+    /**
+     * 初始化筛选面板 UI
+     */
+    _initFilterPanel() {
+        const container = this.elements.filterPanel;
+        if (!container) return;
 
+        const criteria = AppState.get('filterCriteria');
+
+        container.innerHTML = `
+            <div class="filter-section" data-section="keyword">
+                <input type="text" class="filter-search-input" id="filter-search-input" placeholder="搜索实体名称..." value="${this._escapeHtml(criteria.keyword)}">
+            </div>
+            <div class="filter-section" data-section="entityTypes">
+                <div class="filter-section-header">
+                    <span class="filter-section-title">实体类型</span>
+                </div>
+                <div class="filter-checkbox-group" id="filter-type-checkboxes">
+                    <label class="filter-checkbox"><input type="checkbox" data-type="person" ${criteria.entityTypes.person ? 'checked' : ''}> <span class="icon" data-name="person"></span>人物</label>
+                    <label class="filter-checkbox"><input type="checkbox" data-type="place" ${criteria.entityTypes.place ? 'checked' : ''}> <span class="icon" data-name="place"></span>地点</label>
+                    <label class="filter-checkbox"><input type="checkbox" data-type="organization" ${criteria.entityTypes.organization ? 'checked' : ''}> <span class="icon" data-name="organization"></span>组织</label>
+                    <label class="filter-checkbox"><input type="checkbox" data-type="regime" ${criteria.entityTypes.regime ? 'checked' : ''}> <span class="icon" data-name="regime"></span>政权</label>
+                    <label class="filter-checkbox"><input type="checkbox" data-type="customTags" ${criteria.entityTypes.customTags ? 'checked' : ''}> <span class="icon" data-name="tag"></span>自定义标签</label>
+                </div>
+                <div class="filter-type-actions">
+                    <button class="filter-btn-sm" id="filter-type-all">全选</button>
+                    <button class="filter-btn-sm" id="filter-type-none">取消全选</button>
+                </div>
+            </div>
+            <div class="filter-section" data-section="time">
+                <div class="filter-section-header">
+                    <span class="filter-section-title">时间筛选</span>
+                    <label class="filter-toggle">
+                        <input type="checkbox" id="filter-time-toggle" ${criteria.timeFilter.enabled ? 'checked' : ''}>
+                        <span class="filter-toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="filter-time-body" id="filter-time-body" style="display:${criteria.timeFilter.enabled ? 'block' : 'none'}">
+                    <label class="filter-radio"><input type="radio" name="filter-time-mode" value="followTimeline" ${criteria.timeFilter.followTimeline ? 'checked' : ''}> 跟随时间轴</label>
+                    <label class="filter-radio"><input type="radio" name="filter-time-mode" value="custom" ${!criteria.timeFilter.followTimeline ? 'checked' : ''}> 自定义时间</label>
+                    <div class="filter-time-custom" id="filter-time-custom" style="display:${!criteria.timeFilter.followTimeline ? 'flex' : 'none'}">
+                        <input type="number" class="filter-time-input" id="filter-time-from-year" placeholder="年" value="${criteria.timeFilter.from?.year ?? ''}" min="-9999" max="9999">
+                        <input type="number" class="filter-time-input" id="filter-time-from-month" placeholder="月" value="${criteria.timeFilter.from?.month ?? ''}" min="1" max="12">
+                        <span class="filter-time-sep">—</span>
+                        <input type="number" class="filter-time-input" id="filter-time-to-year" placeholder="年" value="${criteria.timeFilter.to?.year ?? ''}" min="-9999" max="9999">
+                        <input type="number" class="filter-time-input" id="filter-time-to-month" placeholder="月" value="${criteria.timeFilter.to?.month ?? ''}" min="1" max="12">
+                    </div>
+                </div>
+            </div>
+            <div class="filter-section" data-section="mapBounds">
+                <div class="filter-section-header">
+                    <span class="filter-section-title">地图范围</span>
+                    <label class="filter-toggle">
+                        <input type="checkbox" id="filter-map-toggle" ${criteria.mapBounds.enabled ? 'checked' : ''}>
+                        <span class="filter-toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="filter-section-hint">仅显示当前地图视野内的实体</div>
+            </div>
+            <div class="filter-section" data-section="reset">
+                <button class="filter-reset-btn" id="filter-reset-btn">重置所有筛选</button>
+            </div>
+        `;
+
+        // 初始化 SVG 图标
+        initIconsForContainer(container);
+
+        // 绑定事件
+        this._bindFilterEvents(container);
+    },
+
+    /**
+     * 绑定筛选面板事件
+     */
+    _bindFilterEvents(container) {
+        // 类型复选框
+        const typeCheckboxes = container.querySelectorAll('#filter-type-checkboxes input[type="checkbox"]');
+        typeCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => this._onTypeFilterChange());
+        });
+
+        // 全选 / 取消全选
+        container.querySelector('#filter-type-all').addEventListener('click', () => {
+            typeCheckboxes.forEach(cb => { cb.checked = true; });
+            this._onTypeFilterChange();
+        });
+        container.querySelector('#filter-type-none').addEventListener('click', () => {
+            typeCheckboxes.forEach(cb => { cb.checked = false; });
+            this._onTypeFilterChange();
+        });
+
+        // 搜索框 (debounce 300ms)
+        const searchInput = container.querySelector('#filter-search-input');
+        let searchTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this._updateFilterCriteria({ keyword: searchInput.value });
+            }, 300);
+        });
+
+        // 时间筛选 Toggle
+        container.querySelector('#filter-time-toggle').addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            container.querySelector('#filter-time-body').style.display = enabled ? 'block' : 'none';
+            const criteria = AppState.get('filterCriteria');
+            this._updateFilterCriteria({
+                timeFilter: { ...criteria.timeFilter, enabled }
+            });
+        });
+
+        // 时间模式切换
+        container.querySelectorAll('input[name="filter-time-mode"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const followTimeline = radio.value === 'followTimeline';
+                container.querySelector('#filter-time-custom').style.display = followTimeline ? 'none' : 'flex';
+                const criteria = AppState.get('filterCriteria');
+                this._updateFilterCriteria({
+                    timeFilter: { ...criteria.timeFilter, followTimeline }
+                });
+            });
+        });
+
+        // 自定义时间输入
+        const timeInputs = container.querySelectorAll('#filter-time-from-year, #filter-time-from-month, #filter-time-to-year, #filter-time-to-month');
+        timeInputs.forEach(input => {
+            input.addEventListener('change', () => this._onTimeCustomChange(container));
+        });
+
+        // 地图范围 Toggle
+        container.querySelector('#filter-map-toggle').addEventListener('change', (e) => {
+            this._updateFilterCriteria({
+                mapBounds: { enabled: e.target.checked }
+            });
+        });
+
+        // 重置按钮
+        container.querySelector('#filter-reset-btn').addEventListener('click', () => {
+            const defaultCriteria = {
+                entityTypes: { person: true, place: true, organization: true, regime: true, customTags: true },
+                timeFilter: { enabled: false, mode: 'moment', from: null, to: null, followTimeline: true },
+                mapBounds: { enabled: false },
+                keyword: '',
+                tags: []
+            };
+            AppState.set('filterCriteria', defaultCriteria);
+            this._initFilterPanel(); // 重建 UI
+        });
+    },
+
+    /**
+     * 类型筛选变化处理
+     */
+    _onTypeFilterChange() {
+        const checkboxes = this.elements.filterPanel.querySelectorAll('#filter-type-checkboxes input[type="checkbox"]');
+        const entityTypes = {};
+        checkboxes.forEach(cb => {
+            entityTypes[cb.dataset.type] = cb.checked;
+        });
+        this._updateFilterCriteria({ entityTypes });
+    },
+
+    /**
+     * 自定义时间变化处理
+     */
+    _onTimeCustomChange(container) {
+        const fromYear = parseInt(container.querySelector('#filter-time-from-year').value) || 0;
+        const fromMonth = parseInt(container.querySelector('#filter-time-from-month').value) || 1;
+        const toYear = parseInt(container.querySelector('#filter-time-to-year').value) || 0;
+        const toMonth = parseInt(container.querySelector('#filter-time-to-month').value) || 1;
+
+        const criteria = AppState.get('filterCriteria');
+        this._updateFilterCriteria({
+            timeFilter: {
+                ...criteria.timeFilter,
+                from: { year: fromYear, month: fromMonth, day: 1 },
+                to: { year: toYear, month: toMonth, day: 1 }
+            }
+        });
+    },
+
+    /**
+     * 更新筛选条件（局部合并）
+     */
+    _updateFilterCriteria(delta) {
+        const current = AppState.get('filterCriteria');
+        const merged = { ...current, ...delta };
+        AppState.set('filterCriteria', merged);
+    },
+
+    /**
+     * HTML 转义
+     */
+    _escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
+
+    /**
+     * 更新筛选 Tab badge
+     */
+    _updateFilterBadge() {
+        if (!this.elements.filterTabBtn) return;
+        const criteria = AppState.get('filterCriteria');
+        const count = FilterEngine.getActiveFilterCount(criteria);
+
+        let badge = this.elements.filterTabBtn.querySelector('.filter-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'filter-badge';
+                this.elements.filterTabBtn.appendChild(badge);
+            }
+            badge.textContent = count;
+            badge.style.display = 'flex';
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+    },
 
     /**
      * 初始化 Tab 切换逻辑
@@ -113,7 +347,11 @@ const Sidebar = {
                 this._updateOpenState(data.value);
                 break;
             case 'currentTime':
-                // 预留
+                // 若启用了时间筛选且跟随时间轴，刷新列表
+                const filterCriteria = AppState.get('filterCriteria');
+                if (filterCriteria && filterCriteria.timeFilter && filterCriteria.timeFilter.enabled && filterCriteria.timeFilter.followTimeline) {
+                    this.renderResourceList();
+                }
                 break;
             case 'entities':
                 // 如果人物数据变化，刷新列表
@@ -137,6 +375,11 @@ const Sidebar = {
                 } else {
                     this._highlightSelected(null);
                 }
+                break;
+            case 'filterCriteria':
+                // 筛选条件变化 → 刷新资源列表 + 更新 badge
+                this.renderResourceList();
+                this._updateFilterBadge();
                 break;
 
             // 其他状态变化...
@@ -217,7 +460,32 @@ const Sidebar = {
         const container = this.elements.explorerPanel;
         if (!container) return;
 
-        const entities = AppState.get('entities') || [];
+        const allEntities = AppState.get('entities') || [];
+        const criteria = AppState.get('filterCriteria');
+        const currentTime = AppState.get('currentTime');
+        const mapBounds = MapView.map ? MapView.map.getBounds() : null;
+
+        // 应用筛选
+        const entities = FilterEngine.apply(allEntities, criteria, { currentTime, mapBounds });
+
+        // 保存当前展开状态
+        const expandedTypes = new Set();
+        container.querySelectorAll('.sidebar-content-panel-btn.active').forEach(btn => {
+            const type = btn.dataset.type;
+            if (type) expandedTypes.add(type);
+        });
+
+        //清空面板
+        container.innerHTML = '';
+
+        // 空结果提示
+        if (entities.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'sidebar-content-empty';
+            emptyMsg.textContent = '没有匹配的实体';
+            container.appendChild(emptyMsg);
+            return;
+        }
 
         //按组件类型分类，默认组件类型为人物、组织、政权、地点，还有用户自定义tag
         const groups = {};
@@ -246,16 +514,6 @@ const Sidebar = {
                 }
             }
         })
-
-        // 保存当前展开状态
-        const expandedTypes = new Set();
-        container.querySelectorAll('.sidebar-content-panel-btn.active').forEach(btn => {
-            const type = btn.dataset.type;
-            if (type) expandedTypes.add(type);
-        });
-
-        //清空面板
-        container.innerHTML = '';
 
         //为每种组件创建折叠区块
         for (const [type, entitiesInGroup] of Object.entries(groups)) {

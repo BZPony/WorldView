@@ -13,6 +13,13 @@ const AppState = {
         isLocationPickerActive: false,       // 定位选取模式是否激活
         locationPickerTarget: null,          // 目标途径点 { componentType, index }
         pinnedEntities: [],                  // 被图钉固定在时间轴上的实体 ID 列表
+        filterCriteria: {                    // 侧边栏筛选条件
+            entityTypes: { person: true, place: true, organization: true, regime: true, customTags: true },
+            timeFilter: { enabled: false, mode: 'moment', from: null, to: null, followTimeline: true },
+            mapBounds: { enabled: false },
+            keyword: '',
+            tags: []
+        },
 
         //应用数据，只能通过commandHandler模块修改
         entities: []
