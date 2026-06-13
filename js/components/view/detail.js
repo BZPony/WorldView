@@ -657,7 +657,11 @@ DetailPanel._updateThumbtackButton = function () {
     const btn = document.getElementById('detail-btn-thumbtack');
     if (!btn) return;
     const sel = AppState.get('selectedItem');
-    if (!sel) return;
+    if (!sel || !sel.data.components.motion) {
+        btn.style.display = 'none';
+        return;
+    }
+    btn.style.display = '';
     const pinned = AppState.get('pinnedEntities') || [];
     btn.classList.toggle('active', pinned.includes(sel.data.id));
 };

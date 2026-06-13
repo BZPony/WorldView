@@ -28,18 +28,19 @@ body.detail--closed .detail:not(.detail-secondary) {
 /* ──────────── Header ──────────── */
 
 .detail-header {
-    position: relative;
-    height: 30px;
-    padding: 10px 10px 5px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-}
-
-.detail-toggle-btn--close {
     position: absolute;
     top: 10px;
     right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    height: auto;
+    padding: 0;
+    z-index: 1001;
+}
+
+.detail-toggle-btn--close {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -52,7 +53,6 @@ body.detail--closed .detail:not(.detail-secondary) {
     font-weight: bold;
     color: white;
     cursor: pointer;
-    z-index: 1001;
     transition: all var(--animation-duration) ease;
 }
 
@@ -62,9 +62,6 @@ body.detail--closed .detail:not(.detail-secondary) {
 }
 
 .detail-toggle-btn--thumbtack {
-    position: absolute;
-    top: 48px;
-    right: 10px;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -75,7 +72,6 @@ body.detail--closed .detail:not(.detail-secondary) {
     justify-content: center;
     color: white;
     cursor: pointer;
-    z-index: 1001;
     transition: all var(--animation-duration) ease;
 }
 
@@ -90,9 +86,6 @@ body.detail--closed .detail:not(.detail-secondary) {
 }
 
 .detail-toggle-btn--delete {
-    position: absolute;
-    top: 86px;
-    right: 10px;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -103,7 +96,6 @@ body.detail--closed .detail:not(.detail-secondary) {
     justify-content: center;
     color: #ff6b6b;
     cursor: pointer;
-    z-index: 1001;
     transition: all var(--animation-duration) ease;
 }
 
