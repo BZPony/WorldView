@@ -267,7 +267,7 @@ const Timeline = {
         toShow.forEach((entity, rowIndex) => {
             const span = getLifespan(entity);
             if (!span || !span.start || !span.end) { console.log(`Lifespan skip: ${entity.components.core?.name} - no span`); return; }
-            const top = 30 - rowIndex * 8;
+            const top = 30 - rowIndex * 10;
             const color = entity.components.core.color || '#888';
             const hasPerson = !!span.birthTime && !!span.deathTime && TimeUtils.compare(span.birthTime, span.deathTime) !== 0;
 
