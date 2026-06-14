@@ -4,6 +4,28 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.7.0] - 2026-06-14
+
+### Added
+
+- **侧边栏筛选功能** — 筛选面板支持五个维度的叠加筛选：实体类型复选框（person/place/organization/regime/customTags + 全选/取消全选）、关键词搜索（debounce 300ms 模糊匹配）、时间范围筛选（跟随时间轴 / 自定义时段切换）、地图可视范围筛选（Toggle 开关，拖拽缩放地图实时过滤）、激活条件 badge 小红点
+- **重置筛选按钮** — 一键恢复所有筛选条件为默认值
+- 新增 `js/data/filter.js` — FilterEngine 纯数据筛选引擎，5 层流水线过滤
+- 新增 `AppState.filterCriteria` 状态字段
+- 新增筛选面板 CSS（Toggle 开关、复选框组、时间输入、badge 等 ~250 行样式）
+- 新增空结果提示"没有匹配的实体"
+- 新增 `MapView.map.getBounds()` 集成地图范围筛选
+
+### Changed
+
+- **readme.md 重写** — 从技术架构文档重构为情景教学式用户手册（423 行）。11 个场景从浅入深覆盖所有功能，面向零基础用户；开发者文档移至末尾
+- 筛选面板实体类型图标从 emoji 替换为 SVG icon 系统（person/place/organization/regime/tag）
+
+### Fixed
+
+- 修复地图范围筛选不生效的问题（`renderResourceList()` 未传入 `mapBounds` 参数）
+- 修复地图范围筛选不响应拖拽/缩放的问题（新增 Leaflet `moveend` 事件监听自动重新筛选）
+
 ## [0.6.0] - 2026-06-14
 
 ### Added
