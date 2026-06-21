@@ -43,14 +43,16 @@ https://bzpony.github.io/WorldView/
 - [06-course-mapping.md](06-course-mapping.md)：与课程主题的对应关系。
 - [07-participant-guide.md](07-participant-guide.md)：发给被试的简短试用说明。
 - [08-friend-invite-message.md](08-friend-invite-message.md)：发给熟人试用时可直接复制的消息。
+- [09-online-questionnaire-setup.md](09-online-questionnaire-setup.md)：把问卷搬到问卷星、腾讯问卷或飞书表单的操作指南。
 
 ## 测试前准备
 
 1. 用电脑浏览器打开测试入口：`https://bzpony.github.io/WorldView/`。
 2. 确认能看到地图、左侧侧边栏和底部时间轴。
 3. 确认网络能加载地图瓦片和 Leaflet CDN。
-4. 准备计时工具、观察记录表和问卷。
-5. 每位被试测试前刷新页面，保证初始状态一致。
+4. 按 [09-online-questionnaire-setup.md](09-online-questionnaire-setup.md) 创建线上问卷，并保存问卷链接。
+5. 准备计时工具、观察记录表和问卷。
+6. 每位被试测试前刷新页面，保证初始状态一致。
 
 ## 推荐试用人数
 
