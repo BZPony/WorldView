@@ -108,4 +108,3 @@ https://bzpony.github.io/WorldView/
 - “测试方式”和“使用设备”使用单选题。
 - 问卷开头放测试入口链接和简化任务说明。
 
-更详细的线上搭建步骤见 [09-online-questionnaire-setup.md](09-online-questionnaire-setup.md)。

@@ -9,13 +9,7 @@
 试用链接：
 
 ```text
-https://bzpony.github.io/WorldView/myMap.html
-```
-
-问卷链接：
-
-```text
-这里替换成问卷星/腾讯问卷/飞书表单发布后的链接
+https://bzpony.github.io/WorldView/
 ```
 
 建议用电脑浏览器打开。试用后请帮我填一下问卷，谢谢！
@@ -27,7 +21,7 @@ https://bzpony.github.io/WorldView/myMap.html
 试用链接：
 
 ```text
-https://bzpony.github.io/WorldView/myMap.html
+https://bzpony.github.io/WorldView/
 ```
 
 请用电脑浏览器打开，然后大致做这几件事：
@@ -40,12 +34,6 @@ https://bzpony.github.io/WorldView/myMap.html
 6. 尝试修改地点名称或颜色。
 7. 完成后填写问卷。
 
-问卷链接：
-
-```text
-这里替换成问卷星/腾讯问卷/飞书表单发布后的链接
-```
-
 如果某一步不会做，可以跳过，但请在问卷里写一下哪里让你困惑。测试的不是你，是这个系统的易用性。
 
 ## 发给有创作兴趣的朋友
@@ -57,13 +45,7 @@ https://bzpony.github.io/WorldView/myMap.html
 试用链接：
 
 ```text
-https://bzpony.github.io/WorldView/myMap.html
-```
-
-问卷链接：
-
-```text
-这里替换成问卷星/腾讯问卷/飞书表单发布后的链接
+https://bzpony.github.io/WorldView/
 ```
 
 你可以重点从“它是否适合世界观设定创作”“地图和时间轴是否有帮助”“创建和编辑是否顺手”这些角度给反馈。
